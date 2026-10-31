@@ -1,0 +1,27 @@
+{
+  "name": "@yoyo/sdk",
+  "version": "1.0.0",
+  "description": "Official TypeScript/Node.js client SDK for the YOYO AI Model API Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "tsc"
+  },
+  "keywords": [
+    "yoyo",
+    "ai",
+    "llm",
+    "ollama",
+    "openai",
+    "inference",
+    "client"
+  ],
+  "author": "YOYO Platform Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "typescript": "^5.7.3"
+  }
+}
+

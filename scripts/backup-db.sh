@@ -23,3 +23,4 @@ echo "Pruning backups older than 30 days..."
 find "${BACKUP_DIR}" -type f -name "yoyo_db_*.sql.gz" -mtime +30 -delete
 
 echo "✔ Backup routine completed successfully."
+

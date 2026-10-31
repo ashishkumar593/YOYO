@@ -50,3 +50,4 @@ curl -I https://api.yoyo.ai/v1/health
 curl -I https://yoyo.ai
 ```
 Expected response: `HTTP/2 200 OK`.
+
