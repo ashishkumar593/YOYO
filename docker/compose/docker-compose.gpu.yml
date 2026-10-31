@@ -1,0 +1,162 @@
+version: '3.8'
+
+networks:
+  yoyo-public-net:
+    driver: bridge
+  yoyo-internal-net:
+    internal: true
+  yoyo-inference-net:
+    internal: true
+
+volumes:
+  pg_data:
+  redis_data:
+  yoyo_model_storage:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/yoyo/models
+
+services:
+  # Traefik Reverse Proxy & TLS Termination
+  traefik:
+    image: traefik:v3.1
+    container_name: yoyo-traefik
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - /var/lib/yoyo/acme.json:/acme.json
+    networks:
+      - yoyo-public-net
+      - yoyo-internal-net
+
+  # Next.js Frontend
+  web:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+    container_name: yoyo-frontend
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=https://api.yoyo.ai
+    networks:
+      - yoyo-internal-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`yoyo.ai`)"
+      - "traefik.http.routers.web.entrypoints=websecure"
+      - "traefik.http.routers.web.tls.certresolver=letsencrypt"
+
+  # NestJS Fastify Backend API Gateway
+  api:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    container_name: yoyo-backend
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://yoyo_user:yoyo_secure_pass@postgres:5432/yoyo_db?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=super_secret_jwt_key_replace_in_production
+      - OLLAMA_WORKER_0_URL=http://ollama-worker-gpu0:11434
+      - OLLAMA_WORKER_1_URL=http://ollama-worker-gpu1:11434
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - yoyo-internal-net
+      - yoyo-inference-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.yoyo.ai`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+
+  # PostgreSQL 16
+  postgres:
+    image: postgres:16-alpine
+    container_name: yoyo-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_USER: yoyo_user
+      POSTGRES_PASSWORD: yoyo_secure_pass
+      POSTGRES_DB: yoyo_db
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - yoyo-internal-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yoyo_user -d yoyo_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis 7 In-Memory Cache & Message Broker
+  redis:
+    image: redis:7.4-alpine
+    container_name: yoyo-redis-prod
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - yoyo-internal-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Ollama Inference Worker 1 (Assigned to GPU 0)
+  ollama-worker-gpu0:
+    image: ollama/ollama:latest
+    container_name: yoyo-ollama-gpu0
+    restart: always
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_NUM_PARALLEL=4
+      - OLLAMA_FLASH_ATTENTION=1
+    volumes:
+      - yoyo_model_storage:/root/.ollama
+    networks:
+      - yoyo-inference-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              device_ids: ['0']
+              capabilities: [gpu]
+
+  # Ollama Inference Worker 2 (Assigned to GPU 1)
+  ollama-worker-gpu1:
+    image: ollama/ollama:latest
+    container_name: yoyo-ollama-gpu1
+    restart: always
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_NUM_PARALLEL=4
+      - OLLAMA_FLASH_ATTENTION=1
+    volumes:
+      - yoyo_model_storage:/root/.ollama
+    networks:
+      - yoyo-inference-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              device_ids: ['1']
+              capabilities: [gpu]
+

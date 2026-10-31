@@ -1,0 +1,64 @@
+version: '3.8'
+
+networks:
+  yoyo-dev-net:
+    driver: bridge
+
+volumes:
+  pg_data:
+  redis_data:
+  ollama_models:
+
+services:
+  # PostgreSQL 16 Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: yoyo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: yoyo_user
+      POSTGRES_PASSWORD: yoyo_secure_pass
+      POSTGRES_DB: yoyo_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - yoyo-dev-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yoyo_user -d yoyo_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis 7 In-Memory Cache & Message Broker
+  redis:
+    image: redis:7.4-alpine
+    container_name: yoyo-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - yoyo-dev-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Ollama CPU / Mock Inference Worker
+  ollama-worker:
+    image: ollama/ollama:latest
+    container_name: yoyo-ollama-dev
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    networks:
+      - yoyo-dev-net
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+

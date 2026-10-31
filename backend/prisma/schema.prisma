@@ -1,0 +1,319 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  USER
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+}
+
+enum ModelCategory {
+  GENERAL
+  CODING
+  REASONING
+  MATHEMATICS
+  VISION
+  EMBEDDING
+  MULTILINGUAL
+  LIGHTWEIGHT
+}
+
+enum EngineType {
+  OLLAMA
+  VLLM
+  SGLANG
+  LLAMACPP
+}
+
+enum WorkerStatus {
+  ONLINE
+  OFFLINE
+  BUSY
+  DRAINING
+}
+
+enum DeploymentState {
+  PENDING
+  PULLING
+  LOADED
+  UNLOADED
+  ERROR
+}
+
+model User {
+  id                  String               @id @default(uuid()) @db.Uuid
+  email               String               @unique @db.VarChar(255)
+  passwordHash        String               @map("password_hash") @db.VarChar(255)
+  role                UserRole             @default(USER)
+  status              UserStatus           @default(ACTIVE)
+  emailVerified       Boolean              @default(false) @map("email_verified")
+  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime             @updatedAt @map("updated_at") @db.Timestamptz
+
+  profile             UserProfile?
+  sessions            Session[]
+  apiKeys             ApiKey[]
+  quota               UserQuota?
+  creditBalance       CreditBalance?
+  billingTransactions BillingTransaction[]
+  apiRequests         ApiRequest[]
+  usageRecords        UsageRecord[]
+  auditLogs           AuditLog[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id                      String   @id @default(uuid()) @db.Uuid
+  userId                  String   @unique @map("user_id") @db.Uuid
+  fullName                String?  @map("full_name") @db.VarChar(150)
+  companyName             String?  @map("company_name") @db.VarChar(150)
+  avatarUrl               String?  @map("avatar_url") @db.Text
+  notificationPreferences Json     @default("{\"usage_alerts\": true}") @map("notification_preferences")
+  updatedAt               DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model Session {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  refreshTokenHash String   @unique @map("refresh_token_hash") @db.VarChar(255)
+  userAgent        String?  @map("user_agent") @db.Text
+  ipAddress        String?  @map("ip_address") @db.VarChar(45)
+  expiresAt        DateTime @map("expires_at") @db.Timestamptz
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model ApiKey {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  name          String    @db.VarChar(100)
+  keyPrefix     String    @map("key_prefix") @db.VarChar(16)
+  keyHash       String    @unique @map("key_hash") @db.VarChar(64)
+  maskedKey     String    @map("masked_key") @db.VarChar(32)
+  allowedModels Json      @default("[\"*\"]") @map("allowed_models")
+  rateLimitRpm  Int       @default(60) @map("rate_limit_rpm")
+  rateLimitTpm  Int       @default(60000) @map("rate_limit_tpm")
+  expiresAt     DateTime? @map("expires_at") @db.Timestamptz
+  lastUsedAt    DateTime? @map("last_used_at") @db.Timestamptz
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiRequests   ApiRequest[]
+  usageRecords  UsageRecord[]
+
+  @@index([keyPrefix, isActive])
+  @@index([userId])
+  @@map("api_keys")
+}
+
+model Model {
+  id                   String            @id @default(uuid()) @db.Uuid
+  apiIdentifier        String            @unique @map("api_identifier") @db.VarChar(100)
+  name                 String            @db.VarChar(150)
+  providerFamily       String            @map("provider_family") @db.VarChar(100)
+  category             ModelCategory     @default(GENERAL)
+  description          String?           @db.Text
+  license              String?           @db.VarChar(100)
+  isActive             Boolean           @default(true) @map("is_active")
+  isPublic             Boolean           @default(true) @map("is_public")
+  defaultContextWindow Int               @default(8192) @map("default_context_window")
+  createdAt            DateTime          @default(now()) @map("created_at") @db.Timestamptz
+
+  versions             ModelVersion[]
+  deployments          ModelDeployment[]
+  apiRequests          ApiRequest[]
+  usageRecords         UsageRecord[]
+
+  @@map("models")
+}
+
+model ModelVersion {
+  id                String   @id @default(uuid()) @db.Uuid
+  modelId           String   @map("model_id") @db.Uuid
+  tag               String   @db.VarChar(100)
+  ollamaDigest      String?  @map("ollama_digest") @db.VarChar(255)
+  parameterSize     BigInt   @map("parameter_size")
+  quantizationLevel String   @map("quantization_level") @db.VarChar(50)
+  diskSizeBytes     BigInt   @map("disk_size_bytes")
+  vramRequiredBytes BigInt   @map("vram_required_bytes")
+  defaultParameters Json     @default("{\"temperature\": 0.7, \"top_p\": 0.9}") @map("default_parameters")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  model             Model    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([modelId, tag])
+  @@map("model_versions")
+}
+
+model ModelWorker {
+  id              String            @id @default(uuid()) @db.Uuid
+  workerName      String            @unique @map("worker_name") @db.VarChar(100)
+  endpointUrl     String            @map("endpoint_url") @db.VarChar(255)
+  engineType      EngineType        @default(OLLAMA) @map("engine_type")
+  status          WorkerStatus      @default(ONLINE)
+  gpuDeviceIndex  Int               @default(0) @map("gpu_device_index")
+  gpuModelName    String?           @map("gpu_model_name") @db.VarChar(150)
+  totalVramBytes  BigInt            @map("total_vram_bytes")
+  lastHeartbeatAt DateTime?         @map("last_heartbeat_at") @db.Timestamptz
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz
+
+  deployments     ModelDeployment[]
+
+  @@map("model_workers")
+}
+
+model ModelDeployment {
+  id                String          @id @default(uuid()) @db.Uuid
+  modelId           String          @map("model_id") @db.Uuid
+  workerId          String          @map("worker_id") @db.Uuid
+  state             DeploymentState @default(LOADED)
+  activeConcurrency Int             @default(0) @map("active_concurrency")
+  loadedAt          DateTime?       @map("loaded_at") @db.Timestamptz
+  updatedAt         DateTime        @updatedAt @map("updated_at") @db.Timestamptz
+
+  model             Model           @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  worker            ModelWorker     @relation(fields: [workerId], references: [id], onDelete: Cascade)
+
+  @@unique([modelId, workerId])
+  @@map("model_deployments")
+}
+
+model ApiRequest {
+  id               String       @id @default(uuid()) @db.Uuid
+  userId           String       @map("user_id") @db.Uuid
+  apiKeyId         String?      @map("api_key_id") @db.Uuid
+  modelId          String?      @map("model_id") @db.Uuid
+  endpoint         String       @db.VarChar(100)
+  statusCode       Int          @map("status_code")
+  promptTokens     Int          @default(0) @map("prompt_tokens")
+  completionTokens Int          @default(0) @map("completion_tokens")
+  totalTokens      Int          @default(0) @map("total_tokens")
+  latencyMs        Int          @map("latency_ms")
+  ttftMs           Int?         @default(0) @map("ttft_ms")
+  ipAddress        String?      @map("ip_address") @db.VarChar(45)
+  errorCode        String?      @map("error_code") @db.VarChar(100)
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiKey           ApiKey?      @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  model            Model?       @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  usageRecord      UsageRecord?
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([apiKeyId, createdAt(sort: Desc)])
+  @@map("api_requests")
+}
+
+model UsageRecord {
+  id               String      @id @default(uuid()) @db.Uuid
+  userId           String      @map("user_id") @db.Uuid
+  apiRequestId     String      @unique @map("api_request_id") @db.Uuid
+  modelId          String?     @map("model_id") @db.Uuid
+  apiKeyId         String?     @map("api_key_id") @db.Uuid
+  promptTokens     Int         @map("prompt_tokens")
+  completionTokens Int         @map("completion_tokens")
+  totalTokens      Int         @map("total_tokens")
+  computeCostUsd   Decimal     @default(0.0) @map("compute_cost_usd") @db.Decimal(10, 6)
+  periodDate       DateTime    @map("period_date") @db.Date
+  createdAt        DateTime    @default(now()) @map("created_at") @db.Timestamptz
+
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiRequest       ApiRequest  @relation(fields: [apiRequestId], references: [id], onDelete: Cascade)
+  model            Model?      @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  apiKey           ApiKey?     @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+
+  @@index([userId, periodDate])
+  @@map("usage_records")
+}
+
+model UserQuota {
+  id                       String   @id @default(uuid()) @db.Uuid
+  userId                   String   @unique @map("user_id") @db.Uuid
+  monthlyTokenLimit        BigInt   @default(5000000) @map("monthly_token_limit")
+  monthlyRequestLimit      Int      @default(10000) @map("monthly_request_limit")
+  currentMonthTokensUsed   BigInt   @default(0) @map("current_month_tokens_used")
+  currentMonthRequestsUsed Int      @default(0) @map("current_month_requests_used")
+  maxApiKeys               Int      @default(5) @map("max_api_keys")
+  resetsAt                 DateTime @map("resets_at") @db.Timestamptz
+  updatedAt                DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_quotas")
+}
+
+model CreditBalance {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @unique @map("user_id") @db.Uuid
+  balanceUsd   Decimal  @default(10.0) @map("balance_usd") @db.Decimal(10, 4) // Complimentary $10 starting balance
+  currency     String   @default("USD") @db.VarChar(10)
+  autoRecharge Boolean  @default(false) @map("auto_recharge")
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credit_balances")
+}
+
+model BillingTransaction {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id") @db.Uuid
+  amountUsd       Decimal  @map("amount_usd") @db.Decimal(10, 4)
+  type            String   @db.VarChar(50)
+  description     String?  @db.Text
+  stripeSessionId String?  @map("stripe_session_id") @db.VarChar(255)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("billing_transactions")
+}
+
+model ModelPricing {
+  id                   String   @id @default(uuid()) @db.Uuid
+  modelIdentifier      String   @unique @map("model_identifier") @db.VarChar(100)
+  inputCostPerMillion  Decimal  @map("input_cost_per_million") @db.Decimal(10, 4)
+  outputCostPerMillion Decimal  @map("output_cost_per_million") @db.Decimal(10, 4)
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("model_pricings")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String?  @map("user_id") @db.Uuid
+  action       String   @db.VarChar(100)
+  resourceType String   @map("resource_type") @db.VarChar(100)
+  resourceId   String?  @map("resource_id") @db.VarChar(255)
+  metadata     Json?
+  ipAddress    String?  @map("ip_address") @db.VarChar(45)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, action])
+  @@map("audit_logs")
+}
