@@ -181,5 +181,6 @@ export class Yoyo {
   }
 }
 
+export { Yoyo as YoyoClient };
 export default Yoyo;
 
