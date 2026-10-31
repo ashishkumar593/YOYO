@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { apiRequest } from '@/lib/api';
+import { useToast } from '@/components/ui/toast';
 import {
   Send,
   Terminal,
@@ -17,6 +18,11 @@ import {
   Clock,
   Sparkles,
   Cpu,
+  Square,
+  Bot,
+  User,
+  Sliders,
+  ChevronDown,
 } from 'lucide-react';
 
 interface Message {
@@ -24,25 +30,47 @@ interface Message {
   content: string;
 }
 
+const PROMPT_PRESETS = [
+  {
+    title: 'Code Architecture',
+    prompt: 'Write an asynchronous Redis sliding-window token bucket rate limiter in TypeScript with atomic Lua scripts.',
+  },
+  {
+    title: 'Deep Reasoning',
+    prompt: 'Analyze the architectural trade-offs between continuous batching in vLLM vs naive sequential batching in llama.cpp.',
+  },
+  {
+    title: 'Security Audit',
+    prompt: 'Identify top 5 security attack vectors against multi-tenant LLM inference gateways and suggest mitigations.',
+  },
+];
+
+const SYSTEM_PRESETS: Record<string, string> = {
+  'Code Master': 'You are an elite staff software architect and systems programmer. Provide robust, production-grade code with error handling.',
+  'Deep Reasoner': 'You are a logical reasoning engine. Think step-by-step, verify all mathematical logic, and be extremely rigorous.',
+  'General Assistant': 'You are YOYO, a helpful, ultra-low-latency AI assistant powered by open foundation models.',
+  'Concise Minimalist': 'Be as concise and direct as possible. Avoid introductory or concluding conversational filler.',
+};
+
 function PlaygroundInner() {
   const searchParams = useSearchParams();
   const initialModel = searchParams.get('model') || 'llama3.3:8b';
+  const { success, error, info } = useToast();
 
   const [models, setModels] = useState<any[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>(initialModel);
   const [temperature, setTemperature] = useState<number>(0.7);
   const [topP, setTopP] = useState<number>(0.9);
   const [maxTokens, setMaxTokens] = useState<number>(2048);
-  const [systemPrompt, setSystemPrompt] = useState<string>(
-    'You are a high-performance AI assistant powered by YOYO.'
-  );
+  const [systemPromptPreset, setSystemPromptPreset] = useState<string>('General Assistant');
+  const [systemPrompt, setSystemPrompt] = useState<string>(SYSTEM_PRESETS['General Assistant']);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputPrompt, setInputPrompt] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [streamMetrics, setStreamMetrics] = useState<{ ttftMs?: number; totalTokens?: number }>({});
+  const [streamMetrics, setStreamMetrics] = useState<{ ttftMs?: number; totalTokens?: number; tokensPerSec?: number }>({});
   const [showCodeModal, setShowCodeModal] = useState<boolean>(false);
-  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -63,11 +91,16 @@ function PlaygroundInner() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputPrompt.trim() || isGenerating) return;
+  const handleSystemPresetChange = (name: string) => {
+    setSystemPromptPreset(name);
+    setSystemPrompt(SYSTEM_PRESETS[name] || '');
+  };
 
-    const userMessage: Message = { role: 'user', content: inputPrompt.trim() };
+  const handleSend = async (textToSend?: string) => {
+    const text = (textToSend || inputPrompt).trim();
+    if (!text || isGenerating) return;
+
+    const userMessage: Message = { role: 'user', content: text };
     const updatedMessages: Message[] = [
       ...(systemPrompt ? [{ role: 'system' as const, content: systemPrompt }] : []),
       ...messages,
@@ -80,7 +113,8 @@ function PlaygroundInner() {
     setStreamMetrics({});
 
     const startTime = Date.now();
-    let firstTokenReceived = false;
+    let firstTokenTime = 0;
+    let tokenCount = 0;
 
     const assistantMessage: Message = { role: 'assistant', content: '' };
     setMessages((prev) => [...prev, assistantMessage]);
@@ -137,9 +171,10 @@ function PlaygroundInner() {
             const parsed = JSON.parse(dataStr);
             const delta = parsed.choices?.[0]?.delta?.content;
             if (delta) {
-              if (!firstTokenReceived) {
-                firstTokenReceived = true;
-                const ttft = Date.now() - startTime;
+              tokenCount++;
+              if (firstTokenTime === 0) {
+                firstTokenTime = Date.now();
+                const ttft = firstTokenTime - startTime;
                 setStreamMetrics((m) => ({ ...m, ttftMs: ttft }));
               }
               accumulatedReply += delta;
@@ -159,13 +194,23 @@ function PlaygroundInner() {
           } catch {}
         }
       }
+
+      // Calculate generation speed
+      const totalGenTimeSec = (Date.now() - (firstTokenTime || startTime)) / 1000;
+      if (totalGenTimeSec > 0 && tokenCount > 0) {
+        setStreamMetrics((m) => ({
+          ...m,
+          tokensPerSec: parseFloat((tokenCount / totalGenTimeSec).toFixed(1)),
+        }));
+      }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
+        error(err.message || 'Stream error');
         setMessages((prev) => {
           const next = [...prev];
           next[next.length - 1] = {
             role: 'assistant',
-            content: `[Error: ${err.message || 'Stream disconnected'}]`,
+            content: `[Error: ${err.message || 'Inference stream disconnected'}]`,
           };
           return next;
         });
@@ -176,78 +221,59 @@ function PlaygroundInner() {
     }
   };
 
-  const handleReset = () => {
+  const handleStop = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+      setIsGenerating(false);
+      info('Generation stopped.');
     }
+  };
+
+  const handleReset = () => {
+    handleStop();
     setMessages([]);
     setStreamMetrics({});
+    info('Playground reset.');
   };
 
-  const generateCurlSnippet = () => {
-    return `curl -X POST http://localhost:4000/v1/chat/completions \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "model": "${selectedModel}",
-    "messages": [
-      {"role": "system", "content": "${systemPrompt}"},
-      {"role": "user", "content": "Hello!"}
-    ],
-    "temperature": ${temperature},
-    "stream": true
-  }'`;
-  };
-
-  const generatePythonSnippet = () => {
-    return `from openai import OpenAI
-
-client = OpenAI(
-    base_url="http://localhost:4000/v1",
-    api_key="YOUR_API_KEY"
-)
-
-stream = client.chat.completions.create(
-    model="${selectedModel}",
-    messages=[
-        {"role": "system", "content": "${systemPrompt}"},
-        {"role": "user", "content": "Hello!"}
-    ],
-    temperature=${temperature},
-    stream=True
-)
-
-for chunk in stream:
-    print(chunk.choices[0].delta.content or "", end="")
-`;
+  const copyMessage = (content: string, index: number) => {
+    navigator.clipboard.writeText(content);
+    setCopiedIndex(index);
+    success('Message copied to clipboard.');
+    setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] max-w-7xl mx-auto space-y-4">
       {/* Top Controls Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-card border border-border">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-card border border-border shadow-sm">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
             <Terminal className="w-4 h-4" />
           </div>
           <div>
-            <h1 className="text-base font-bold tracking-tight">Interactive Playground</h1>
-            <p className="text-xs text-muted-foreground">Direct streaming testbed with low-latency GPU execution</p>
+            <div className="flex items-center space-x-2">
+              <h1 className="text-base font-bold tracking-tight">Interactive Playground</h1>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                GPU LIVE
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">Streaming real-time inference via Server-Sent Events</p>
           </div>
         </div>
 
         <div className="flex items-center space-x-3">
           {/* Model Selector */}
-          <div className="flex items-center space-x-2 bg-muted/60 px-3 py-1.5 rounded-xl border border-border">
-            <Cpu className="w-3.5 h-3.5 text-muted-foreground" />
+          <div className="flex items-center space-x-2 bg-muted/60 px-3.5 py-2 rounded-xl border border-border">
+            <Cpu className="w-4 h-4 text-primary" />
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
-              className="bg-transparent text-xs font-mono font-medium focus:outline-none text-foreground"
+              className="bg-transparent text-xs font-mono font-semibold focus:outline-none text-foreground cursor-pointer"
             >
               {models.length > 0 ? (
                 models.map((m) => (
-                  <option key={m.id} value={m.apiIdentifier} className="bg-card text-foreground">
+                  <option key={m.id} value={m.apiIdentifier} className="bg-card text-foreground font-sans">
                     {m.name} ({m.apiIdentifier})
                   </option>
                 ))
@@ -259,109 +285,199 @@ for chunk in stream:
 
           <button
             onClick={() => setShowCodeModal(true)}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-card border border-border hover:bg-muted text-xs font-semibold text-muted-foreground hover:text-foreground transition-all"
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-card border border-border hover:bg-muted text-xs font-semibold text-muted-foreground hover:text-foreground transition-all shadow-sm"
           >
-            <Code className="w-3.5 h-3.5" />
-            <span>View Code</span>
+            <Code className="w-3.5 h-3.5 text-primary" />
+            <span>Code Export</span>
           </button>
 
           <button
             onClick={handleReset}
             title="Reset conversation"
-            className="p-2 rounded-xl bg-card border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
+            className="p-2.5 rounded-xl bg-card border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-all shadow-sm"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
+            <RotateCcw className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Main Workspace (Chat on Left, Parameters Drawer on Right) */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 min-h-0">
-        {/* Chat Area */}
-        <div className="md:col-span-3 flex flex-col rounded-2xl bg-card border border-border overflow-hidden">
-          <div className="flex-1 p-6 overflow-y-auto space-y-4">
+      {/* Main Workspace */}
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 min-h-0">
+        {/* Chat Stream Window */}
+        <div className="lg:col-span-3 flex flex-col rounded-2xl bg-card border border-border overflow-hidden shadow-sm">
+          {/* Messages list */}
+          <div className="flex-1 p-6 overflow-y-auto space-y-5">
             {messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground">
-                <Sparkles className="w-10 h-10 mb-3 text-primary opacity-60" />
-                <h3 className="font-semibold text-sm text-foreground">Playground Ready</h3>
-                <p className="text-xs max-w-sm mt-1">
-                  Type a prompt below to initiate an active streaming inference session against{' '}
-                  <span className="font-mono text-primary font-semibold">{selectedModel}</span>.
-                </p>
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-6">
+                <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                  <Sparkles className="w-6 h-6 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-foreground">Ready for Streaming Inference</h3>
+                  <p className="text-xs text-muted-foreground max-w-sm mt-1">
+                    Select a preset prompt below or compose your own to stream from{' '}
+                    <span className="font-mono text-primary font-semibold">{selectedModel}</span>.
+                  </p>
+                </div>
+
+                {/* Preset Prompts Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full max-w-xl text-left">
+                  {PROMPT_PRESETS.map((p, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => handleSend(p.prompt)}
+                      className="p-3.5 rounded-xl border border-border/80 bg-muted/30 hover:bg-muted/70 hover:border-primary/40 text-left transition-all"
+                    >
+                      <span className="text-[11px] font-bold text-primary block mb-1">{p.title}</span>
+                      <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                        {p.prompt}
+                      </p>
+                    </button>
+                  ))}
+                </div>
               </div>
             ) : (
               messages.map((msg, i) => (
                 <div
                   key={i}
-                  className={`flex flex-col ${
-                    msg.role === 'user' ? 'items-end' : 'items-start'
+                  className={`flex items-start space-x-3 ${
+                    msg.role === 'user' ? 'justify-end' : 'justify-start'
                   }`}
                 >
-                  <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1 tracking-wider px-1">
-                    {msg.role === 'user' ? 'You' : msg.role === 'assistant' ? selectedModel : 'System'}
+                  {msg.role !== 'user' && (
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-1 shadow-sm">
+                      <Bot className="w-4 h-4" />
+                    </div>
+                  )}
+
+                  <div className={`flex flex-col group max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                    <div className="flex items-center space-x-2 text-[10px] uppercase font-bold text-muted-foreground/70 mb-1 px-1 tracking-wider">
+                      <span>{msg.role === 'user' ? 'You' : selectedModel}</span>
+                      {msg.role !== 'user' && msg.content && (
+                        <button
+                          onClick={() => copyMessage(msg.content, i)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                          title="Copy reply"
+                        >
+                          {copiedIndex === i ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                        </button>
+                      )}
+                    </div>
+                    <div
+                      className={`rounded-2xl p-4 text-xs leading-relaxed whitespace-pre-wrap ${
+                        msg.role === 'user'
+                          ? 'bg-primary text-primary-foreground font-medium rounded-tr-none shadow-md shadow-primary/20'
+                          : 'bg-muted/50 text-foreground border border-border/80 rounded-tl-none font-mono shadow-sm'
+                      }`}
+                    >
+                      {msg.content || (isGenerating && i === messages.length - 1 ? (
+                        <span className="inline-flex items-center space-x-1.5 text-primary animate-pulse font-mono font-medium">
+                          <span className="w-2 h-2 rounded-full bg-primary" />
+                          <span>Generating stream...</span>
+                        </span>
+                      ) : null)}
+                    </div>
                   </div>
-                  <div
-                    className={`max-w-[85%] rounded-2xl p-4 text-xs leading-relaxed whitespace-pre-wrap ${
-                      msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground font-medium rounded-tr-none'
-                        : msg.role === 'system'
-                        ? 'bg-muted/40 border border-border text-muted-foreground italic'
-                        : 'bg-muted/70 text-foreground border border-border/80 rounded-tl-none font-mono'
-                    }`}
-                  >
-                    {msg.content || (isGenerating && i === messages.length - 1 ? (
-                      <span className="animate-pulse">Thinking...</span>
-                    ) : null)}
-                  </div>
+
+                  {msg.role === 'user' && (
+                    <div className="w-7 h-7 rounded-lg bg-card border border-border flex items-center justify-center shrink-0 mt-1 text-muted-foreground">
+                      <User className="w-4 h-4" />
+                    </div>
+                  )}
                 </div>
               ))
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Telemetry bar */}
-          {(streamMetrics.ttftMs || streamMetrics.totalTokens) && (
-            <div className="px-6 py-2 border-t border-border/60 bg-muted/20 flex items-center space-x-6 text-[10px] font-mono text-muted-foreground">
+          {/* Telemetry Speedometer Bar */}
+          {(streamMetrics.ttftMs || streamMetrics.tokensPerSec || streamMetrics.totalTokens) && (
+            <div className="px-6 py-2.5 border-t border-border/60 bg-muted/30 flex items-center space-x-6 text-[11px] font-mono text-muted-foreground">
               {streamMetrics.ttftMs && (
-                <span className="flex items-center space-x-1">
-                  <Clock className="w-3 h-3 text-emerald-400" />
-                  <span>TTFT: {streamMetrics.ttftMs}ms</span>
+                <span className="flex items-center space-x-1.5">
+                  <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>TTFT: <strong className="text-foreground">{streamMetrics.ttftMs}ms</strong></span>
+                </span>
+              )}
+              {streamMetrics.tokensPerSec && (
+                <span className="flex items-center space-x-1.5">
+                  <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Speed: <strong className="text-foreground">{streamMetrics.tokensPerSec} t/s</strong></span>
                 </span>
               )}
               {streamMetrics.totalTokens && (
-                <span className="flex items-center space-x-1">
-                  <Zap className="w-3 h-3 text-amber-400" />
-                  <span>Tokens: {streamMetrics.totalTokens}</span>
+                <span className="flex items-center space-x-1.5">
+                  <Cpu className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Tokens: <strong className="text-foreground">{streamMetrics.totalTokens}</strong></span>
                 </span>
               )}
             </div>
           )}
 
-          {/* Input Box */}
-          <form onSubmit={handleSend} className="p-4 border-t border-border bg-card/60 flex items-center space-x-3">
+          {/* Prompt Input Form */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            className="p-4 border-t border-border bg-card/60 flex items-center space-x-3"
+          >
             <input
               type="text"
               value={inputPrompt}
               onChange={(e) => setInputPrompt(e.target.value)}
-              placeholder={`Message ${selectedModel}...`}
+              placeholder={`Message ${selectedModel}... (Press Enter)`}
               disabled={isGenerating}
-              className="flex-1 px-4 py-3 rounded-xl bg-muted/40 border border-border text-xs focus:border-primary focus:outline-none transition-all text-foreground"
+              className="flex-1 px-4 py-3 rounded-xl bg-muted/40 border border-border text-xs focus:border-primary focus:outline-none transition-all text-foreground font-medium"
             />
-            <button
-              type="submit"
-              disabled={isGenerating || !inputPrompt.trim()}
-              className="p-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all shadow-md shadow-primary/20 disabled:opacity-50"
-            >
-              <Send className="w-4 h-4" />
-            </button>
+
+            {isGenerating ? (
+              <button
+                type="button"
+                onClick={handleStop}
+                className="px-4 py-3 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 font-semibold hover:bg-red-500/20 transition-all flex items-center space-x-1.5 text-xs shadow-sm"
+              >
+                <Square className="w-3.5 h-3.5 fill-red-400" />
+                <span>Stop</span>
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={!inputPrompt.trim()}
+                className="p-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all shadow-md shadow-primary/20 disabled:opacity-40"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            )}
           </form>
         </div>
 
         {/* Right Drawer: Parameters */}
-        <div className="flex flex-col p-5 rounded-2xl bg-card border border-border space-y-6 overflow-y-auto">
+        <div className="flex flex-col p-5 rounded-2xl bg-card border border-border space-y-6 overflow-y-auto shadow-sm">
           <div className="flex items-center space-x-2 pb-3 border-b border-border">
-            <Settings className="w-4 h-4 text-primary" />
+            <Sliders className="w-4 h-4 text-primary" />
             <span className="text-xs font-bold uppercase tracking-wider">Inference Parameters</span>
+          </div>
+
+          {/* Presets */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground">Persona Preset</label>
+            <div className="grid grid-cols-2 gap-1.5">
+              {Object.keys(SYSTEM_PRESETS).map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => handleSystemPresetChange(preset)}
+                  className={`px-2.5 py-1.5 rounded-lg text-[10px] font-semibold border transition-all text-left truncate ${
+                    systemPromptPreset === preset
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-border bg-muted/40 text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {preset}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* System Prompt */}
@@ -371,7 +487,7 @@ for chunk in stream:
               rows={3}
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
-              className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs focus:border-primary focus:outline-none text-foreground font-mono"
+              className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs focus:border-primary focus:outline-none text-foreground font-mono leading-relaxed"
             />
           </div>
 
@@ -388,7 +504,7 @@ for chunk in stream:
               step="0.05"
               value={temperature}
               onChange={(e) => setTemperature(parseFloat(e.target.value))}
-              className="w-full accent-primary"
+              className="w-full accent-primary cursor-pointer"
             />
           </div>
 
@@ -405,7 +521,7 @@ for chunk in stream:
               step="0.05"
               value={topP}
               onChange={(e) => setTopP(parseFloat(e.target.value))}
-              className="w-full accent-primary"
+              className="w-full accent-primary cursor-pointer"
             />
           </div>
 
@@ -422,7 +538,7 @@ for chunk in stream:
               step="128"
               value={maxTokens}
               onChange={(e) => setMaxTokens(parseInt(e.target.value, 10))}
-              className="w-full accent-primary"
+              className="w-full accent-primary cursor-pointer"
             />
           </div>
         </div>
@@ -433,7 +549,7 @@ for chunk in stream:
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="w-full max-w-2xl bg-card border border-border rounded-2xl shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-border pb-3">
-              <h3 className="font-bold text-sm">Integration Code Snippets</h3>
+              <h3 className="font-bold text-sm">Developer SDK Integration</h3>
               <button
                 onClick={() => setShowCodeModal(false)}
                 className="text-xs text-muted-foreground hover:text-foreground"
@@ -442,45 +558,12 @@ for chunk in stream:
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-mono font-bold text-muted-foreground">cURL</span>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(generateCurlSnippet());
-                      setCopiedCode('curl');
-                      setTimeout(() => setCopiedCode(null), 2000);
-                    }}
-                    className="text-[11px] flex items-center space-x-1 text-primary"
-                  >
-                    {copiedCode === 'curl' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    <span>{copiedCode === 'curl' ? 'Copied!' : 'Copy'}</span>
-                  </button>
-                </div>
-                <pre className="p-3 bg-muted/60 rounded-xl text-[11px] font-mono text-foreground overflow-x-auto">
-                  {generateCurlSnippet()}
-                </pre>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-mono font-bold text-muted-foreground">Python (OpenAI SDK)</span>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(generatePythonSnippet());
-                      setCopiedCode('python');
-                      setTimeout(() => setCopiedCode(null), 2000);
-                    }}
-                    className="text-[11px] flex items-center space-x-1 text-primary"
-                  >
-                    {copiedCode === 'python' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    <span>{copiedCode === 'python' ? 'Copied!' : 'Copy'}</span>
-                  </button>
-                </div>
-                <pre className="p-3 bg-muted/60 rounded-xl text-[11px] font-mono text-foreground overflow-x-auto">
-                  {generatePythonSnippet()}
-                </pre>
+            <div className="space-y-4 text-xs font-mono">
+              <div className="p-3 bg-muted/60 rounded-xl overflow-x-auto">
+                <span className="text-muted-foreground block mb-1"># Python OpenAI Drop-In</span>
+                <span className="text-purple-400">from</span> openai <span className="text-purple-400">import</span> OpenAI<br />
+                client = OpenAI(base_url=&quot;http://localhost:4000/v1&quot;, api_key=&quot;YOUR_API_KEY&quot;)<br />
+                res = client.chat.completions.create(model=&quot;{selectedModel}&quot;, messages=[...], stream=True)
               </div>
             </div>
           </div>

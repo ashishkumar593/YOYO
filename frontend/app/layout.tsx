@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
+import { ToastProvider } from '@/components/ui/toast';
 
 export const metadata: Metadata = {
   title: 'YOYO — Production-Grade AI Model API Platform',
@@ -14,10 +15,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/30">
-        <AuthProvider>{children}</AuthProvider>
+      <body className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/30 font-sans">
+        <ToastProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );
 }
-

@@ -2,7 +2,20 @@
 
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '@/lib/api';
-import { Key, Plus, Copy, Check, Trash2, AlertTriangle, ShieldCheck, Clock } from 'lucide-react';
+import { useToast } from '@/components/ui/toast';
+import {
+  Key,
+  Plus,
+  Copy,
+  Check,
+  Trash2,
+  AlertTriangle,
+  ShieldCheck,
+  Lock,
+  Layers,
+  Sparkles,
+  Zap,
+} from 'lucide-react';
 
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<any[]>([]);
@@ -13,7 +26,8 @@ export default function ApiKeysPage() {
   const [rateLimitTpm, setRateLimitTpm] = useState(60000);
   const [createdSecret, setCreatedSecret] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
-  const [error, setError] = useState('');
+  const [errorText, setErrorText] = useState('');
+  const { success, error: toastError, info } = useToast();
 
   const loadKeys = async () => {
     try {
@@ -32,7 +46,7 @@ export default function ApiKeysPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setErrorText('');
 
     try {
       const res = await apiRequest('/api/keys', {
@@ -46,22 +60,25 @@ export default function ApiKeysPage() {
 
       setCreatedSecret(res.plaintextKey);
       setKeyName('');
+      success('API Key generated successfully.');
       await loadKeys();
     } catch (err: any) {
-      setError(err.message || 'Failed to create key.');
+      setErrorText(err.message || 'Failed to create key.');
+      toastError(err.message || 'Key generation failed.');
     }
   };
 
-  const handleRevoke = async (keyId: string) => {
-    if (!confirm('Are you sure you want to revoke this API key? This action is immediate and permanent.')) {
+  const handleRevoke = async (keyId: string, name: string) => {
+    if (!confirm(`Are you sure you want to permanently revoke "${name}"? Applications using this key will immediately receive HTTP 401.`)) {
       return;
     }
 
     try {
       await apiRequest(`/api/keys/${keyId}`, { method: 'DELETE' });
+      success(`API Key "${name}" revoked.`);
       await loadKeys();
     } catch (err: any) {
-      alert(err.message || 'Failed to revoke key.');
+      toastError(err.message || 'Failed to revoke key.');
     }
   };
 
@@ -69,6 +86,7 @@ export default function ApiKeysPage() {
     if (!createdSecret) return;
     navigator.clipboard.writeText(createdSecret);
     setCopiedKey(true);
+    success('Secret copied to clipboard!');
     setTimeout(() => setCopiedKey(false), 2000);
   };
 
@@ -77,7 +95,12 @@ export default function ApiKeysPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">API Key Management</h1>
+          <div className="flex items-center space-x-2">
+            <h1 className="text-2xl font-bold tracking-tight">API Key Management</h1>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+              SHA-256 HASHED
+            </span>
+          </div>
           <p className="text-sm text-muted-foreground mt-0.5">
             Create and manage cryptographically secured secret keys for calling YOYO endpoints.
           </p>
@@ -87,7 +110,7 @@ export default function ApiKeysPage() {
             setCreatedSecret(null);
             setShowCreateModal(true);
           }}
-          className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 text-xs flex items-center space-x-1.5 shadow-md shadow-primary/20 transition-all"
+          className="px-4 py-2.5 rounded-2xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 text-xs flex items-center space-x-1.5 shadow-lg shadow-primary/20 transition-all transform hover:-translate-y-0.5"
         >
           <Plus className="w-4 h-4" />
           <span>Create New API Key</span>
@@ -95,39 +118,42 @@ export default function ApiKeysPage() {
       </div>
 
       {/* Security Advisory */}
-      <div className="p-4 rounded-2xl bg-muted/40 border border-border flex items-start space-x-3">
+      <div className="p-5 rounded-2xl bg-muted/40 border border-border flex items-start space-x-3.5 shadow-sm">
         <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
         <div className="text-xs text-muted-foreground leading-relaxed">
-          <span className="font-semibold text-foreground">Zero-Knowledge Storage:</span> Keys are hashed with SHA-256 upon generation. Full secrets are never displayed again. Store your keys securely in your environment variables.
+          <span className="font-semibold text-foreground">Zero-Knowledge Storage Policy:</span> Full secrets are displayed once upon generation and never stored in plaintext. If lost, generate a new key and revoke the existing one.
         </div>
       </div>
 
       {/* Keys Table */}
-      <div className="rounded-2xl bg-card border border-border overflow-hidden">
+      <div className="rounded-3xl bg-card border border-border overflow-hidden shadow-sm">
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <span className="font-semibold text-sm">Active Secret Keys</span>
-          <span className="text-xs text-muted-foreground">{keys.length} of 10 keys used</span>
+          <span className="text-xs text-muted-foreground font-mono">{keys.length} of 10 keys allocated</span>
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-xs text-muted-foreground">Loading keys...</div>
+          <div className="p-16 text-center text-xs text-muted-foreground flex flex-col items-center justify-center space-y-3">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span>Loading active keys...</span>
+          </div>
         ) : keys.length === 0 ? (
-          <div className="p-12 text-center text-muted-foreground">
-            <Key className="w-8 h-8 mx-auto mb-2 opacity-40" />
-            <p className="text-sm font-medium">No API keys generated yet.</p>
-            <p className="text-xs mt-1">Create a key to connect client SDKs and applications.</p>
+          <div className="p-16 text-center text-muted-foreground">
+            <Key className="w-8 h-8 mx-auto mb-2 opacity-40 text-primary" />
+            <p className="text-sm font-semibold text-foreground">No API keys generated yet.</p>
+            <p className="text-xs mt-1 text-muted-foreground">Create a secret key to authenticate your SDKs and scripts.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border">
                 <tr>
-                  <th className="px-6 py-3">Key Name</th>
-                  <th className="px-6 py-3">Secret Key (Masked)</th>
-                  <th className="px-6 py-3">Rate Limit</th>
-                  <th className="px-6 py-3">Last Used</th>
-                  <th className="px-6 py-3">Created</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
+                  <th className="px-6 py-3.5">Name</th>
+                  <th className="px-6 py-3.5">Secret Key (Masked)</th>
+                  <th className="px-6 py-3.5">Rate Limit</th>
+                  <th className="px-6 py-3.5">Last Invoked</th>
+                  <th className="px-6 py-3.5">Created Date</th>
+                  <th className="px-6 py-3.5 text-right">Revoke</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -135,12 +161,13 @@ export default function ApiKeysPage() {
                   <tr key={k.id} className="hover:bg-muted/20 transition-colors">
                     <td className="px-6 py-4 font-semibold text-foreground">{k.name}</td>
                     <td className="px-6 py-4 font-mono text-muted-foreground">
-                      <span className="bg-muted px-2 py-1 rounded-md border border-border">
+                      <span className="bg-muted px-2.5 py-1 rounded-lg border border-border font-medium">
                         {k.maskedKey}
                       </span>
                     </td>
                     <td className="px-6 py-4 font-mono text-muted-foreground">
-                      {k.rateLimitRpm} RPM / {(k.rateLimitTpm / 1000).toFixed(0)}k TPM
+                      <span className="text-foreground font-semibold">{k.rateLimitRpm}</span> RPM /{' '}
+                      <span className="text-foreground font-semibold">{(k.rateLimitTpm / 1000).toFixed(0)}k</span> TPM
                     </td>
                     <td className="px-6 py-4 text-muted-foreground font-mono">
                       {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString() : 'Never'}
@@ -150,9 +177,9 @@ export default function ApiKeysPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
-                        onClick={() => handleRevoke(k.id)}
+                        onClick={() => handleRevoke(k.id, k.name)}
                         title="Revoke key"
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all"
+                        className="p-2 rounded-xl text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -168,11 +195,14 @@ export default function ApiKeysPage() {
       {/* Create Key Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6 space-y-5">
+          <div className="w-full max-w-md bg-card border border-border rounded-3xl shadow-2xl p-6 space-y-5">
             {!createdSecret ? (
               <>
                 <div className="flex items-center justify-between border-b border-border pb-3">
-                  <h3 className="font-bold text-base">Generate New API Key</h3>
+                  <div className="flex items-center space-x-2">
+                    <Key className="w-4 h-4 text-primary" />
+                    <h3 className="font-bold text-base">Generate API Key</h3>
+                  </div>
                   <button
                     onClick={() => setShowCreateModal(false)}
                     className="text-xs text-muted-foreground hover:text-foreground"
@@ -181,24 +211,24 @@ export default function ApiKeysPage() {
                   </button>
                 </div>
 
-                {error && (
+                {errorText && (
                   <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
-                    {error}
+                    {errorText}
                   </div>
                 )}
 
                 <form onSubmit={handleCreate} className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                      Key Name
+                      Key Name / Description
                     </label>
                     <input
                       type="text"
                       required
                       value={keyName}
                       onChange={(e) => setKeyName(e.target.value)}
-                      placeholder="e.g. Production Backend, Local Agent"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-muted/40 border border-border text-sm focus:border-primary focus:outline-none text-foreground"
+                      placeholder="e.g. Production Agent, Cursor IDE"
+                      className="w-full px-4 py-2.5 rounded-xl bg-muted/40 border border-border text-sm focus:border-primary focus:outline-none text-foreground font-medium"
                     />
                   </div>
 
@@ -243,29 +273,29 @@ export default function ApiKeysPage() {
             ) : (
               <div className="space-y-4">
                 <div className="text-center">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto mb-2">
-                    <Check className="w-5 h-5" />
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto mb-3 shadow-inner">
+                    <Check className="w-6 h-6" />
                   </div>
-                  <h3 className="font-bold text-base">API Key Generated!</h3>
+                  <h3 className="font-extrabold text-lg">API Key Ready</h3>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Copy this key now. It will never be shown to you again.
+                    Copy and store your secret key now. You will not be able to view it again.
                   </p>
                 </div>
 
-                <div className="p-3 bg-muted/60 rounded-xl border border-border flex items-center justify-between">
+                <div className="p-3 bg-muted/70 rounded-xl border border-border flex items-center justify-between">
                   <code className="text-xs font-mono break-all text-primary font-bold pr-2">
                     {createdSecret}
                   </code>
                   <button
                     onClick={copySecret}
-                    className="p-2 rounded-lg bg-primary text-primary-foreground font-semibold shrink-0 hover:bg-primary/90 transition-all text-xs flex items-center space-x-1"
+                    className="p-2.5 rounded-lg bg-primary text-primary-foreground font-semibold shrink-0 hover:bg-primary/90 transition-all text-xs flex items-center space-x-1"
                   >
                     {copiedKey ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copiedKey ? 'Copied' : 'Copy'}</span>
                   </button>
                 </div>
 
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs flex items-start space-x-2">
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs flex items-start space-x-2">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>
                     Keep this key confidential. If compromised, revoke it immediately from this console.
@@ -277,7 +307,7 @@ export default function ApiKeysPage() {
                     setCreatedSecret(null);
                     setShowCreateModal(false);
                   }}
-                  className="w-full py-2.5 rounded-xl bg-muted hover:bg-muted/80 text-xs font-semibold text-foreground"
+                  className="w-full py-3 rounded-xl bg-muted hover:bg-muted/80 text-xs font-semibold text-foreground"
                 >
                   Done
                 </button>
@@ -289,4 +319,3 @@ export default function ApiKeysPage() {
     </div>
   );
 }
-
