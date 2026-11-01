@@ -1,6 +1,9 @@
 import {
   Controller,
   Post,
+  Patch,
+  Delete,
+  Param,
   Body,
   Get,
   UseGuards,
@@ -47,5 +50,42 @@ export class AuthController {
   async me(@CurrentUser() user: any) {
     return this.authService.getMe(user.id);
   }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(
+    @CurrentUser() user: any,
+    @Body() body: { fullName?: string; companyName?: string; notificationPreferences?: any }
+  ) {
+    return this.authService.updateProfile(user.id, body);
+  }
+
+  @Post('password')
+  @UseGuards(JwtAuthGuard)
+  async updatePassword(
+    @CurrentUser() user: any,
+    @Body() body: { currentPassword: string; newPassword: string }
+  ) {
+    return this.authService.updatePassword(user.id, body.currentPassword, body.newPassword);
+  }
+
+  @Get('sessions')
+  @UseGuards(JwtAuthGuard)
+  async getSessions(@CurrentUser() user: any) {
+    return this.authService.getSessions(user.id);
+  }
+
+  @Delete('sessions/:id')
+  @UseGuards(JwtAuthGuard)
+  async revokeSession(@CurrentUser() user: any, @Param('id') sessionId: string) {
+    return this.authService.revokeSession(user.id, sessionId);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body('email') email: string) {
+    return this.authService.forgotPassword(email);
+  }
 }
+
 

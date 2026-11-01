@@ -15,7 +15,7 @@ describe('ApiKeyUtil', () => {
   });
 
   it('should produce identical SHA-256 hashes for the same key string', () => {
-    const key = 'sk_live_testprefix_randomsecretbytes123456';
+    const key = 'sk_live_test_prefix_random_secret_bytes_123456';
     const hash1 = hashApiKey(key);
     const hash2 = hashApiKey(key);
 

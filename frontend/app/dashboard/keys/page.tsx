@@ -15,53 +15,81 @@ import {
   Layers,
   Sparkles,
   Zap,
+  CheckSquare,
+  Square,
+  Globe,
 } from 'lucide-react';
 
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<any[]>([]);
+  const [availableModels, setAvailableModels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [keyName, setKeyName] = useState('');
   const [rateLimitRpm, setRateLimitRpm] = useState(60);
   const [rateLimitTpm, setRateLimitTpm] = useState(60000);
+  const [modelScopeMode, setModelScopeMode] = useState<'all' | 'restricted'>('all');
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [createdSecret, setCreatedSecret] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
   const [errorText, setErrorText] = useState('');
-  const { success, error: toastError, info } = useToast();
+  const { success, error: toastError } = useToast();
 
-  const loadKeys = async () => {
+  const loadData = async () => {
     try {
-      const data = await apiRequest('/api/keys');
-      setKeys(data || []);
+      const [keysData, modelsData] = await Promise.all([
+        apiRequest('/api/keys'),
+        apiRequest('/api/models/catalog'),
+      ]);
+      setKeys(keysData || []);
+      setAvailableModels(modelsData || []);
     } catch (err: any) {
-      console.error('Failed to load keys:', err);
+      console.error('Failed to load keys or models:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadKeys();
+    loadData();
   }, []);
+
+  const toggleModelSelection = (apiIdentifier: string) => {
+    if (selectedModels.includes(apiIdentifier)) {
+      setSelectedModels(selectedModels.filter((m) => m !== apiIdentifier));
+    } else {
+      setSelectedModels([...selectedModels, apiIdentifier]);
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorText('');
 
+    if (modelScopeMode === 'restricted' && selectedModels.length === 0) {
+      setErrorText('Please select at least one model for restricted access, or choose All Models.');
+      return;
+    }
+
     try {
+      const allowedModels = modelScopeMode === 'all' ? ['*'] : selectedModels;
+
       const res = await apiRequest('/api/keys', {
         method: 'POST',
         body: JSON.stringify({
           name: keyName,
           rateLimitRpm,
           rateLimitTpm,
+          allowedModels,
         }),
       });
 
       setCreatedSecret(res.plaintextKey);
       setKeyName('');
+      setModelScopeMode('all');
+      setSelectedModels([]);
       success('API Key generated successfully.');
-      await loadKeys();
+      await loadData();
     } catch (err: any) {
       setErrorText(err.message || 'Failed to create key.');
       toastError(err.message || 'Key generation failed.');
@@ -69,14 +97,18 @@ export default function ApiKeysPage() {
   };
 
   const handleRevoke = async (keyId: string, name: string) => {
-    if (!confirm(`Are you sure you want to permanently revoke "${name}"? Applications using this key will immediately receive HTTP 401.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to permanently revoke "${name}"? Applications using this key will immediately receive HTTP 401.`
+      )
+    ) {
       return;
     }
 
     try {
       await apiRequest(`/api/keys/${keyId}`, { method: 'DELETE' });
       success(`API Key "${name}" revoked.`);
-      await loadKeys();
+      await loadData();
     } catch (err: any) {
       toastError(err.message || 'Failed to revoke key.');
     }
@@ -102,7 +134,7 @@ export default function ApiKeysPage() {
             </span>
           </div>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Create and manage cryptographically secured secret keys for calling YOYO endpoints.
+            Create and manage cryptographically secured secret keys with granular model scoping for YOYO endpoints.
           </p>
         </div>
         <button
@@ -150,6 +182,7 @@ export default function ApiKeysPage() {
                 <tr>
                   <th className="px-6 py-3.5">Name</th>
                   <th className="px-6 py-3.5">Secret Key (Masked)</th>
+                  <th className="px-6 py-3.5">Model Scope</th>
                   <th className="px-6 py-3.5">Rate Limit</th>
                   <th className="px-6 py-3.5">Last Invoked</th>
                   <th className="px-6 py-3.5">Created Date</th>
@@ -157,35 +190,56 @@ export default function ApiKeysPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {keys.map((k) => (
-                  <tr key={k.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-foreground">{k.name}</td>
-                    <td className="px-6 py-4 font-mono text-muted-foreground">
-                      <span className="bg-muted px-2.5 py-1 rounded-lg border border-border font-medium">
-                        {k.maskedKey}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 font-mono text-muted-foreground">
-                      <span className="text-foreground font-semibold">{k.rateLimitRpm}</span> RPM /{' '}
-                      <span className="text-foreground font-semibold">{(k.rateLimitTpm / 1000).toFixed(0)}k</span> TPM
-                    </td>
-                    <td className="px-6 py-4 text-muted-foreground font-mono">
-                      {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString() : 'Never'}
-                    </td>
-                    <td className="px-6 py-4 text-muted-foreground font-mono">
-                      {new Date(k.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleRevoke(k.id, k.name)}
-                        title="Revoke key"
-                        className="p-2 rounded-xl text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {keys.map((k) => {
+                  const allowed: string[] = Array.isArray(k.allowedModels) ? k.allowedModels : ['*'];
+                  const isWildcard = allowed.includes('*');
+
+                  return (
+                    <tr key={k.id} className="hover:bg-muted/20 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-foreground">{k.name}</td>
+                      <td className="px-6 py-4 font-mono text-muted-foreground">
+                        <span className="bg-muted px-2.5 py-1 rounded-lg border border-border font-medium">
+                          {k.maskedKey}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {isWildcard ? (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+                            <Globe className="w-3 h-3" />
+                            <span>All Models</span>
+                          </span>
+                        ) : (
+                          <span
+                            title={allowed.join(', ')}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-mono bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold"
+                          >
+                            <Lock className="w-3 h-3" />
+                            <span>{allowed.length} model{allowed.length > 1 ? 's' : ''} restricted</span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 font-mono text-muted-foreground">
+                        <span className="text-foreground font-semibold">{k.rateLimitRpm}</span> RPM /{' '}
+                        <span className="text-foreground font-semibold">{(k.rateLimitTpm / 1000).toFixed(0)}k</span> TPM
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground font-mono">
+                        {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString() : 'Never'}
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground font-mono">
+                        {new Date(k.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => handleRevoke(k.id, k.name)}
+                          title="Revoke key"
+                          className="p-2 rounded-xl text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -194,8 +248,8 @@ export default function ApiKeysPage() {
 
       {/* Create Key Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="w-full max-w-md bg-card border border-border rounded-3xl shadow-2xl p-6 space-y-5">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-card border border-border rounded-3xl shadow-2xl p-6 space-y-5 max-h-[92vh] overflow-y-auto">
             {!createdSecret ? (
               <>
                 <div className="flex items-center justify-between border-b border-border pb-3">
@@ -227,9 +281,85 @@ export default function ApiKeysPage() {
                       required
                       value={keyName}
                       onChange={(e) => setKeyName(e.target.value)}
-                      placeholder="e.g. Production Agent, Cursor IDE"
-                      className="w-full px-4 py-2.5 rounded-xl bg-muted/40 border border-border text-sm focus:border-primary focus:outline-none text-foreground font-medium"
+                      placeholder="e.g. Production Agent, Cursor IDE, LangChain Worker"
+                      className="w-full px-4 py-2.5 rounded-xl bg-muted/40 border border-border text-xs focus:border-primary focus:outline-none text-foreground font-medium"
                     />
+                  </div>
+
+                  {/* Model Permissions Scope */}
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      Model Access Permissions
+                    </label>
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => setModelScopeMode('all')}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          modelScopeMode === 'all'
+                            ? 'border-primary bg-primary/10 text-primary font-semibold'
+                            : 'border-border bg-muted/30 text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Globe className="w-4 h-4" />
+                          <span className="text-xs font-bold">All Models (*)</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Key can call any active model in catalog
+                        </p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setModelScopeMode('restricted')}
+                        className={`p-3 rounded-xl border text-left transition-all ${
+                          modelScopeMode === 'restricted'
+                            ? 'border-primary bg-primary/10 text-primary font-semibold'
+                            : 'border-border bg-muted/30 text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Lock className="w-4 h-4" />
+                          <span className="text-xs font-bold">Restricted Scope</span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Limit key to select explicit model IDs
+                        </p>
+                      </button>
+                    </div>
+
+                    {modelScopeMode === 'restricted' && (
+                      <div className="p-3 rounded-xl border border-border bg-muted/30 space-y-2 max-h-40 overflow-y-auto">
+                        <span className="text-[10px] font-mono uppercase text-muted-foreground block">
+                          Select Allowed Models ({selectedModels.length} selected):
+                        </span>
+                        <div className="grid grid-cols-1 gap-1.5">
+                          {availableModels.map((m) => {
+                            const isChecked = selectedModels.includes(m.apiIdentifier);
+                            return (
+                              <button
+                                key={m.id}
+                                type="button"
+                                onClick={() => toggleModelSelection(m.apiIdentifier)}
+                                className={`flex items-center justify-between p-2 rounded-lg border text-xs text-left transition-all ${
+                                  isChecked
+                                    ? 'border-primary/50 bg-primary/10 text-foreground font-semibold'
+                                    : 'border-border/60 bg-card text-muted-foreground hover:text-foreground'
+                                }`}
+                              >
+                                <span className="font-mono text-[11px] truncate">{m.apiIdentifier}</span>
+                                {isChecked ? (
+                                  <CheckSquare className="w-3.5 h-3.5 text-primary shrink-0" />
+                                ) : (
+                                  <Square className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -243,7 +373,7 @@ export default function ApiKeysPage() {
                         max="1000"
                         value={rateLimitRpm}
                         onChange={(e) => setRateLimitRpm(parseInt(e.target.value, 10))}
-                        className="w-full px-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-mono"
+                        className="w-full px-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-mono focus:border-primary focus:outline-none"
                       />
                     </div>
                     <div>
@@ -253,20 +383,20 @@ export default function ApiKeysPage() {
                       <input
                         type="number"
                         min="10000"
-                        max="1000000"
+                        max="10000000"
                         step="10000"
                         value={rateLimitTpm}
                         onChange={(e) => setRateLimitTpm(parseInt(e.target.value, 10))}
-                        className="w-full px-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-mono"
+                        className="w-full px-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-mono focus:border-primary focus:outline-none"
                       />
                     </div>
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full mt-2 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 text-sm shadow-md shadow-primary/20"
+                    className="w-full mt-2 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 text-sm shadow-md shadow-primary/20 transition-all"
                   >
-                    Create Secret Key
+                    Generate Secret Key
                   </button>
                 </form>
               </>

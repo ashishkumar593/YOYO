@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { ArrowRight, Lock, Mail, User, AlertCircle } from 'lucide-react';
+import { YoyoLogo } from '@/components/ui/logo';
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
@@ -34,12 +35,12 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center p-6 bg-background">
       <div className="w-full max-w-md">
         {/* Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-xl mb-3 shadow-lg shadow-primary/20">
-            Y
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">Create your YOYO Account</h1>
-          <p className="text-sm text-muted-foreground mt-1">Get instant access to open-weights AI APIs with 5M free tokens</p>
+        <div className="flex flex-col items-center text-center mb-8">
+          <Link href="/" className="mb-4">
+            <YoyoLogo size={42} showText={true} />
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">Create Developer Account</h1>
+          <p className="text-xs text-muted-foreground mt-1 font-mono">Get instant access to open-weights AI APIs with 5M free tokens</p>
         </div>
 
         {/* Card */}
@@ -112,6 +113,17 @@ export default function RegisterPage() {
               <span>{loading ? 'Creating account...' : 'Create Account'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
+
+            <p className="text-[11px] text-muted-foreground text-center pt-2 leading-relaxed">
+              By creating an account, you agree to our{' '}
+              <Link href="/terms" className="text-primary hover:underline">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="text-primary hover:underline">
+                Zero-Retention Privacy Policy
+              </Link>.
+            </p>
           </form>
 
           <div className="mt-6 pt-6 border-t border-border/60 text-center text-xs text-muted-foreground">

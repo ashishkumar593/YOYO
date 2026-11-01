@@ -13,10 +13,11 @@ docker compose -f docker/compose/docker-compose.dev.yml up -d postgres redis
 echo -e "\n[2/3] Waiting for database to be ready..."
 sleep 3
 
-# 3. Generate Prisma client & seed default models
+# 3. Generate Prisma client, sync schema & seed default models
 echo -e "\n[3/3] Generating Prisma client and seeding foundation models..."
 cd backend
 pnpm db:generate
+pnpm db:push
 pnpm db:seed
 cd ..
 

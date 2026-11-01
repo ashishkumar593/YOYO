@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { apiRequest } from '@/lib/api';
-import { BarChart3, Activity, Zap, Cpu, Calendar, TrendingUp } from 'lucide-react';
+import { BarChart3, Activity, Zap, Cpu, Calendar, TrendingUp, Download, ArrowUpRight } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 
 export default function AnalyticsPage() {
@@ -29,6 +30,32 @@ export default function AnalyticsPage() {
   }, []);
 
   const modelUsage = summary?.modelUsage || [];
+
+  const exportCsv = () => {
+    if (!requests || requests.length === 0) return;
+    const headers = ['Request ID', 'Model', 'Key Name', 'Status Code', 'Prompt Tokens', 'Completion Tokens', 'Total Tokens', 'Latency (ms)', 'Timestamp'];
+    const rows = requests.map((r) => [
+      `"${r.id}"`,
+      `"${r.modelIdentifier}"`,
+      `"${r.keyName}"`,
+      r.statusCode,
+      r.promptTokens,
+      r.completionTokens,
+      r.totalTokens,
+      r.latencyMs,
+      `"${new Date(r.createdAt).toISOString()}"`,
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `yoyo_usage_audit_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -134,7 +161,26 @@ export default function AnalyticsPage() {
             <Activity className="w-4 h-4 text-primary" />
             <span className="font-semibold text-sm">Detailed Request Audit Ledger</span>
           </div>
-          <span className="text-xs text-muted-foreground">{requests.length} events</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">{requests.length} events</span>
+            <Link
+              href="/dashboard/logs"
+              className="text-xs text-primary hover:underline flex items-center gap-1 font-semibold"
+            >
+              <span>Full Explorer</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
+            {requests.length > 0 && (
+              <button
+                onClick={exportCsv}
+                className="px-3 py-1.5 rounded-xl bg-card border border-border hover:bg-muted text-xs font-semibold flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-all shadow-sm"
+                title="Download CSV export"
+              >
+                <Download className="w-3.5 h-3.5 text-primary" />
+                <span>Export CSV</span>
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="overflow-x-auto max-h-96">

@@ -52,7 +52,7 @@ export class BillingController {
     @Req() req: any
   ) {
     // Webhook receiver for Stripe checkout.session.completed events
-    return { received: true };
+    return this.billingService.handleStripeWebhook(req.body, signature);
   }
 }
 

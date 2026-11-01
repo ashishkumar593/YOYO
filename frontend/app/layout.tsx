@@ -4,8 +4,13 @@ import { AuthProvider } from '@/lib/auth-context';
 import { ToastProvider } from '@/components/ui/toast';
 
 export const metadata: Metadata = {
-  title: 'YOYO — Production-Grade AI Model API Platform',
-  description: 'Self-hosted, low-latency, OpenAI-compatible AI model inference platform powered by open weights.',
+  title: 'YOYO — Enterprise Cloud AI Model API Platform',
+  description: 'High-throughput, OpenAI-compatible cloud AI model API platform serving open-weights foundation models on dedicated NVIDIA H100 SXM5 and A100 GPU clusters.',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export default function RootLayout({

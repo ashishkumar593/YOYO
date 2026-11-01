@@ -3,23 +3,33 @@ import { TelemetryService } from './telemetry.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
-@Controller('api/usage')
-@UseGuards(JwtAuthGuard)
+@Controller()
 export class TelemetryController {
   constructor(private telemetryService: TelemetryService) {}
 
-  @Get('summary')
+  // Public Platform Status API
+  @Get('api/telemetry/status')
+  async getStatus() {
+    return this.telemetryService.getPublicSystemStatus();
+  }
+
+  @Get('api/usage/summary')
+  @UseGuards(JwtAuthGuard)
   async getSummary(@CurrentUser() user: any) {
     return this.telemetryService.getUserUsageSummary(user.id);
   }
 
-  @Get('requests')
+  @Get('api/usage/requests')
+  @UseGuards(JwtAuthGuard)
   async getRequests(
     @CurrentUser() user: any,
-    @Query('limit') limit?: string
+    @Query('limit') limit?: string,
+    @Query('status') status?: string,
+    @Query('model') model?: string
   ) {
     const limitNum = limit ? parseInt(limit, 10) : 50;
-    return this.telemetryService.getRecentRequests(user.id, limitNum);
+    return this.telemetryService.getRecentRequests(user.id, limitNum, status, model);
   }
 }
+
 

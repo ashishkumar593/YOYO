@@ -1,11 +1,13 @@
 import { Controller, Get, Header } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Controller()
 export class AppController {
   @Get()
   getRoot() {
     return {
-      platform: 'YOYO AI Model API Platform',
+      platform: 'YOYO Enterprise Cloud AI Model API Platform',
       version: '1.0.0',
       status: 'operational',
       endpoints: {
@@ -14,8 +16,31 @@ export class AppController {
         models: '/v1/models',
         health: '/v1/health',
         metrics: '/metrics',
+        openapi: '/openapi.json',
       },
       docs: '/docs',
+    };
+  }
+
+  @Get('openapi.json')
+  @Header('Content-Type', 'application/json')
+  getOpenApiSpec() {
+    const candidates = [
+      path.join(process.cwd(), '../doc/openapi.json'),
+      path.join(process.cwd(), 'doc/openapi.json'),
+      path.join(__dirname, '../doc/openapi.json'),
+    ];
+
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        return JSON.parse(fs.readFileSync(p, 'utf-8'));
+      }
+    }
+
+    return {
+      openapi: '3.1.0',
+      info: { title: 'YOYO Cloud AI Platform', version: '1.0.0' },
+      paths: {},
     };
   }
 

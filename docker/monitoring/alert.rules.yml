@@ -1,0 +1,43 @@
+groups:
+  - name: yoyo_platform_alerts
+    rules:
+      # Alert when an upstream cloud GPU worker is unreachable
+      - alert: CloudGpuWorkerOffline
+        expr: up{job=~".*gpu-workers"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Cloud GPU Inference Worker Offline (instance {{ $labels.instance }})"
+          description: "GPU worker has been down for over 1 minute. Dynamic failover is actively routing to remaining cluster nodes."
+
+      # Alert when Gateway p95 latency exceeds 1.5 seconds
+      - alert: HighInferenceLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Gateway Inference Latency"
+          description: "p95 latency is {{ $value }}s (> 1.5s) over the last 5 minutes."
+
+      # Alert when HTTP 5xx error rate exceeds 2%
+      - alert: HighGatewayErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[2m]) / rate(http_requests_total[2m]) > 0.02
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Elevated Gateway Error Rate"
+          description: "Gateway 5xx error rate is above 2% on {{ $labels.instance }}."
+
+      # Alert when vLLM KV Cache utilization exceeds 95%
+      - alert: HighGpuKvCacheUtilization
+        expr: vllm:gpu_cache_usage_factor > 0.95
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High GPU KV Cache Utilization on vLLM"
+          description: "PagedAttention KV cache memory is {{ $value | humanizePercentage }} full. Requests may experience queue delays."
+

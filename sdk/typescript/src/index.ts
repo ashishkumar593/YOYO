@@ -17,6 +17,8 @@ export interface ChatCompletionParams {
   max_tokens?: number;
   stream?: boolean;
   stop?: string | string[];
+  response_format?: { type: 'json_object' | 'text' };
+  [key: string]: any;
 }
 
 export interface ChatCompletionChoice {
@@ -68,22 +70,32 @@ export class Yoyo {
       throw new Error('YOYO API Key is required. Format: sk_live_...');
     }
     this.apiKey = options.apiKey;
-    this.baseUrl = (options.baseUrl || 'http://localhost:4000/v1').replace(/\/$/, '');
+    this.baseUrl = (options.baseUrl || 'https://api.yoyo.ai/v1').replace(/\/$/, '');
     this.timeoutMs = options.timeoutMs || 60000;
   }
 
   public readonly chat = {
     completions: {
       create: async (
-        params: ChatCompletionParams & { stream: true }
-      ): Promise<AsyncIterable<ChatCompletionChunk>> => {
-        return this.createStream(params);
-      },
-      createNonStreaming: async (
-        params: ChatCompletionParams & { stream?: false }
-      ): Promise<ChatCompletionResponse> => {
+        params: ChatCompletionParams
+      ): Promise<any> => {
+        if (params.stream) {
+          return this.createStream(params);
+        }
         return this.createNonStream(params);
       },
+      createStream: (params: ChatCompletionParams): AsyncIterable<ChatCompletionChunk> => {
+        return this.createStream(params);
+      },
+    },
+    create: async (params: ChatCompletionParams): Promise<any> => {
+      if (params.stream) {
+        return this.createStream(params);
+      }
+      return this.createNonStream(params);
+    },
+    createStream: (params: ChatCompletionParams): AsyncIterable<ChatCompletionChunk> => {
+      return this.createStream(params);
     },
   };
 

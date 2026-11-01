@@ -1,5 +1,18 @@
-import { Controller, Get, Param } from '@nestjs/common';
-import { ModelsService } from './models.service';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { ModelsService, CreateModelInput, UpdateModelInput } from './models.service';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
 
 @Controller()
 export class ModelsController {
@@ -19,8 +32,37 @@ export class ModelsController {
 
   // Platform Dashboard catalog endpoint
   @Get('api/models/catalog')
-  async getCatalog() {
-    return this.modelsService.listCatalog();
+  async getCatalog(@Query('all') all?: string) {
+    const includeInactive = all === 'true' || all === '1';
+    return this.modelsService.listCatalog(includeInactive);
+  }
+
+  // Super Admin: Create new model in platform catalog
+  @Post('api/models')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async createModel(@Body() body: CreateModelInput) {
+    return this.modelsService.createModel(body);
+  }
+
+  // Super Admin: Update model metadata or state
+  @Patch('api/models/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async updateModel(
+    @Param('id') id: string,
+    @Body() body: UpdateModelInput
+  ) {
+    return this.modelsService.updateModel(id, body);
+  }
+
+  // Super Admin: Deactivate model
+  @Delete('api/models/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('SUPER_ADMIN')
+  async deleteModel(@Param('id') id: string) {
+    return this.modelsService.deleteModel(id);
   }
 }
+
 

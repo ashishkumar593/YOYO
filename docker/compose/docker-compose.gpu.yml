@@ -160,3 +160,57 @@ services:
               device_ids: ['1']
               capabilities: [gpu]
 
+  # vLLM High-Throughput Inference Node (Assigned to Cloud GPU 0 - H100/A100)
+  vllm-worker-gpu0:
+    image: vllm/vllm-openai:latest
+    container_name: yoyo-vllm-gpu0
+    restart: always
+    command: --model Qwen/Qwen2.5-Coder-32B-Instruct --tensor-parallel-size 1 --gpu-memory-utilization 0.90 --max-model-len 32768 --port 8000
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
+    volumes:
+      - yoyo_model_storage:/root/.cache/huggingface
+    networks:
+      - yoyo-inference-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              device_ids: ['0']
+              capabilities: [gpu]
+
+  # Prometheus Telemetry Collector
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: yoyo-prometheus
+    restart: always
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../monitoring/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+    networks:
+      - yoyo-internal-net
+      - yoyo-inference-net
+
+  # Grafana Real-Time Operations Cockpit
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: yoyo-grafana
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - yoyo-internal-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.yoyo.ai`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+
+

@@ -47,9 +47,9 @@ async function bootstrap() {
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
   await app.listen(port, '0.0.0.0');
   console.log(`\n======================================================`);
-  console.log(`🚀 YOYO AI Platform Backend running on http://0.0.0.0:${port}`);
-  console.log(`📡 OpenAI-Compatible API: http://localhost:${port}/v1`);
-  console.log(`🏥 Health Check Endpoint: http://localhost:${port}/v1/health`);
+  console.log(`🚀 YOYO Cloud Gateway running on port ${port}`);
+  console.log(`📡 Public Edge Endpoint: https://api.yoyo.ai/v1`);
+  console.log(`🏥 Health Telemetry: https://api.yoyo.ai/v1/health`);
   console.log(`======================================================\n`);
 }
 

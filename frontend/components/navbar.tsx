@@ -27,15 +27,13 @@ export function Navbar() {
           <span>Playground</span>
         </Link>
 
-        <a
-          href="http://localhost:4000/v1/health"
-          target="_blank"
-          rel="noreferrer"
+        <Link
+          href="/status"
           className="flex items-center space-x-1.5 text-xs text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-lg hover:bg-muted transition-all"
         >
-          <Zap className="w-3.5 h-3.5 text-amber-400" />
-          <span>v1/health</span>
-        </a>
+          <Zap className="w-3.5 h-3.5 text-emerald-400" />
+          <span>System Status</span>
+        </Link>
 
         {user?.quota && (
           <div className="hidden md:flex flex-col text-right pl-4 border-l border-border">

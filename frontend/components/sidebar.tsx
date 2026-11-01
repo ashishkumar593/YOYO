@@ -8,13 +8,18 @@ import {
   Cpu,
   Terminal,
   Key,
+  ListFilter,
   BarChart3,
   CreditCard,
   ShieldAlert,
+  Settings,
+  BookOpen,
+  Activity,
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
+import { YoyoLogo } from '@/components/ui/logo';
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -25,8 +30,12 @@ export function Sidebar() {
     { label: 'Model Catalog', href: '/dashboard/models', icon: Cpu },
     { label: 'Playground', href: '/dashboard/playground', icon: Terminal },
     { label: 'API Keys', href: '/dashboard/keys', icon: Key },
+    { label: 'Request Logs', href: '/dashboard/logs', icon: ListFilter },
     { label: 'Usage & Analytics', href: '/dashboard/analytics', icon: BarChart3 },
     { label: 'Billing & Plans', href: '/dashboard/billing', icon: CreditCard },
+    { label: 'Documentation', href: '/docs', icon: BookOpen },
+    { label: 'System Status', href: '/status', icon: Activity },
+    { label: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];
 
   if (user?.role === 'SUPER_ADMIN') {
@@ -40,14 +49,10 @@ export function Sidebar() {
   return (
     <aside className="w-64 border-r border-border bg-card/60 backdrop-blur-md flex flex-col h-screen sticky top-0">
       {/* Brand */}
-      <div className="h-16 px-6 border-b border-border flex items-center space-x-3">
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center font-bold text-primary-foreground text-sm shadow-md shadow-primary/20">
-          Y
-        </div>
-        <div className="flex flex-col">
-          <span className="font-bold text-base tracking-tight leading-none">YOYO</span>
-          <span className="text-[10px] text-muted-foreground font-mono mt-0.5">Inference Platform</span>
-        </div>
+      <div className="h-16 px-5 border-b border-border flex items-center">
+        <Link href="/" className="flex items-center">
+          <YoyoLogo size={28} showText={true} />
+        </Link>
       </div>
 
       {/* Nav links */}

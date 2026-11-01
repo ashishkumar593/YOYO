@@ -7,7 +7,16 @@ export interface User {
   id: string;
   email: string;
   role: 'USER' | 'SUPER_ADMIN';
+  status?: string;
   fullName?: string;
+  createdAt?: string;
+  profile?: {
+    id?: string;
+    fullName?: string;
+    companyName?: string;
+    avatarUrl?: string;
+    notificationPreferences?: any;
+  } | null;
   quota?: {
     monthlyTokenLimit: number;
     currentMonthTokensUsed: number;

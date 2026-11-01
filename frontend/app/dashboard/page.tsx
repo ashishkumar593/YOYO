@@ -122,7 +122,7 @@ export default function DashboardOverviewPage() {
             </span>
             <div className="text-[11px] text-emerald-400 mt-1 flex items-center space-x-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Ollama GPU Ready</span>
+              <span>Cloud GPU Ready</span>
             </div>
           </div>
         </div>
@@ -180,7 +180,13 @@ export default function DashboardOverviewPage() {
             <Activity className="w-4 h-4 text-primary" />
             <span className="font-semibold text-sm">Recent API Invocations</span>
           </div>
-          <span className="text-xs text-muted-foreground">Latest 10 requests</span>
+          <Link
+            href="/dashboard/logs"
+            className="text-xs text-primary hover:underline flex items-center space-x-1 font-medium"
+          >
+            <span>View All Request Logs</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
 
         {recentRequests.length === 0 ? (

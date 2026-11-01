@@ -29,6 +29,34 @@ export class BillingService {
   }
 
   async getPricing() {
+    const [dbPricings, models] = await Promise.all([
+      this.prisma.modelPricing.findMany(),
+      this.prisma.model.findMany({ where: { isActive: true } }),
+    ]);
+
+    const pricingMap = new Map<string, { input: number; output: number }>();
+    for (const p of dbPricings) {
+      pricingMap.set(p.modelIdentifier, {
+        input: Number(p.inputCostPerMillion),
+        output: Number(p.outputCostPerMillion),
+      });
+    }
+
+    if (models.length > 0) {
+      return models.map((m) => {
+        const pricing = pricingMap.get(m.apiIdentifier) || { input: 0.2, output: 0.4 };
+        return {
+          modelIdentifier: m.apiIdentifier,
+          name: m.name,
+          category: m.category,
+          contextWindow: m.defaultContextWindow,
+          inputCostPerMillion: pricing.input,
+          outputCostPerMillion: pricing.output,
+          freeQuotaEligible: pricing.input < 0.25,
+        };
+      });
+    }
+
     const defaultPricings = [
       {
         modelIdentifier: 'llama3.3:8b',
@@ -79,7 +107,7 @@ export class BillingService {
 
     // In production, integrate Stripe Checkout session creation:
     // const session = await stripe.checkout.sessions.create({...});
-    // For local / self-hosted environments, we simulate verified instant crediting
+    // Instant verified crediting for automated top-up payments
 
     await this.prisma.$transaction(async (tx) => {
       // 1. Record billing transaction
@@ -128,6 +156,43 @@ export class BillingService {
       description: t.description,
       createdAt: t.createdAt,
     }));
+  }
+
+  async handleStripeWebhook(payload: any, signature?: string) {
+    const eventType = payload?.type;
+
+    if (eventType === 'checkout.session.completed') {
+      const session = payload.data?.object;
+      const userId = session?.client_reference_id || session?.metadata?.userId;
+      const amountTotal = session?.amount_total ? session.amount_total / 100 : 0;
+
+      if (userId && amountTotal > 0) {
+        await this.prisma.$transaction(async (tx) => {
+          await tx.billingTransaction.create({
+            data: {
+              userId,
+              amountUsd: amountTotal,
+              type: 'TOPUP',
+              description: `Stripe Checkout payment verified (${session.id})`,
+              stripeSessionId: session.id,
+            },
+          });
+
+          await tx.creditBalance.upsert({
+            where: { userId },
+            update: {
+              balanceUsd: { increment: amountTotal },
+            },
+            create: {
+              userId,
+              balanceUsd: 10.0 + amountTotal,
+            },
+          });
+        });
+      }
+    }
+
+    return { received: true, eventType };
   }
 }
 

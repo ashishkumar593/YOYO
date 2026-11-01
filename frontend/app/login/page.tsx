@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { ArrowRight, Lock, Mail, AlertCircle } from 'lucide-react';
+import { YoyoLogo } from '@/components/ui/logo';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -33,12 +34,12 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center p-6 bg-background">
       <div className="w-full max-w-md">
         {/* Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-xl mb-3 shadow-lg shadow-primary/20">
-            Y
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">Sign in to YOYO</h1>
-          <p className="text-sm text-muted-foreground mt-1">Access your models, API keys, and inference metrics</p>
+        <div className="flex flex-col items-center text-center mb-8">
+          <Link href="/" className="mb-4">
+            <YoyoLogo size={42} showText={true} />
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">Sign in to Console</h1>
+          <p className="text-xs text-muted-foreground mt-1 font-mono">Access your models, API keys, and inference metrics</p>
         </div>
 
         {/* Card */}
@@ -69,9 +70,17 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Password
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-primary hover:underline font-medium"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <div className="relative">
                 <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-muted-foreground" />
                 <input

@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { InferenceService } from './inference.service';
 import { ModelsService } from '../models/models.service';
 import { OllamaProvider } from './providers/ollama.provider';
+import { VllmProvider } from './providers/vllm.provider';
 import { MockProvider } from './providers/mock.provider';
 import { PrismaService } from '../../database/prisma.service';
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
@@ -26,6 +27,9 @@ describe('InferenceService', () => {
 
     modelsService = {
       findActiveWorkerForModel: jest.fn(),
+      findActiveWorkersForModel: jest.fn().mockResolvedValue([]),
+      incrementConcurrency: jest.fn().mockResolvedValue(undefined),
+      decrementConcurrency: jest.fn().mockResolvedValue(undefined),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -33,6 +37,7 @@ describe('InferenceService', () => {
         InferenceService,
         MockProvider,
         OllamaProvider,
+        VllmProvider,
         { provide: PrismaService, useValue: prismaService },
         { provide: ModelsService, useValue: modelsService },
       ],

@@ -2,7 +2,18 @@
 
 import React, { useEffect, useState } from 'react';
 import { apiRequest } from '@/lib/api';
-import { CreditCard, Plus, ArrowUpRight, Check, Zap, Sparkles, AlertCircle } from 'lucide-react';
+import {
+  CreditCard,
+  Plus,
+  ArrowUpRight,
+  Check,
+  Zap,
+  Sparkles,
+  AlertCircle,
+  Calculator,
+  TrendingDown,
+  ShieldCheck,
+} from 'lucide-react';
 
 export default function BillingPage() {
   const [balanceData, setBalanceData] = useState<any>(null);
@@ -13,6 +24,12 @@ export default function BillingPage() {
   const [topupAmount, setTopupAmount] = useState(25);
   const [processing, setProcessing] = useState(false);
   const [topupSuccess, setTopupSuccess] = useState('');
+
+  // Cost calculator states
+  const [calcModel, setCalcModel] = useState('llama-3.3-70b');
+  const [calcRequests, setCalcRequests] = useState(5000);
+  const [calcPromptTokens, setCalcPromptTokens] = useState(1200);
+  const [calcOutputTokens, setCalcOutputTokens] = useState(350);
 
   const loadBilling = async () => {
     try {
@@ -56,6 +73,34 @@ export default function BillingPage() {
       setProcessing(false);
     }
   };
+
+  const selectedPriceObj = pricing.find((p) => p.modelIdentifier === calcModel) || {
+    inputCostPerMillion: 0.2,
+    outputCostPerMillion: 0.4,
+  };
+
+  const monthlyRequests = calcRequests * 30;
+  const monthlyPromptTokens = monthlyRequests * calcPromptTokens;
+  const monthlyOutputTokens = monthlyRequests * calcOutputTokens;
+  const monthlyTotalTokens = monthlyPromptTokens + monthlyOutputTokens;
+
+  const billableRatio =
+    monthlyTotalTokens > 5_000_000 ? (monthlyTotalTokens - 5_000_000) / monthlyTotalTokens : 0;
+  const billablePrompt = monthlyPromptTokens * billableRatio;
+  const billableOutput = monthlyOutputTokens * billableRatio;
+
+  const estimatedYoyoCost =
+    (billablePrompt / 1_000_000) * Number(selectedPriceObj.inputCostPerMillion) +
+    (billableOutput / 1_000_000) * Number(selectedPriceObj.outputCostPerMillion);
+
+  const estimatedProprietaryCost =
+    (monthlyPromptTokens / 1_000_000) * 2.5 + (monthlyOutputTokens / 1_000_000) * 10.0;
+
+  const savingsAmount = Math.max(0, estimatedProprietaryCost - estimatedYoyoCost);
+  const savingsPercent =
+    estimatedProprietaryCost > 0
+      ? Math.round((savingsAmount / estimatedProprietaryCost) * 100)
+      : 0;
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -127,6 +172,138 @@ export default function BillingPage() {
                 <span>Unused Credits Never Expire</span>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Interactive Token Cost & Savings Calculator */}
+      <div className="p-6 rounded-3xl bg-card border border-border shadow-sm space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-border">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <Calculator className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-foreground">Interactive Cost & Savings Calculator</h3>
+              <p className="text-xs text-muted-foreground">
+                Estimate your monthly compute bill based on daily request volumes and compare against proprietary APIs.
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 self-start md:self-auto">
+            Zero Platform Markup
+          </span>
+        </div>
+
+        {/* Calculator inputs grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {/* Model picker */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-muted-foreground">Select Foundation Model</label>
+            <select
+              value={calcModel}
+              onChange={(e) => setCalcModel(e.target.value)}
+              className="w-full bg-muted/40 text-foreground border border-border rounded-xl px-3.5 py-2.5 text-xs font-mono focus:outline-none focus:border-primary cursor-pointer"
+            >
+              {pricing.length > 0 ? (
+                pricing.map((p) => (
+                  <option key={p.modelIdentifier} value={p.modelIdentifier}>
+                    {p.name} (${p.inputCostPerMillion}/in, ${p.outputCostPerMillion}/out)
+                  </option>
+                ))
+              ) : (
+                <option value="llama-3.3-70b">Llama 3.3 70B ($0.20/in, $0.40/out)</option>
+              )}
+            </select>
+          </div>
+
+          {/* Daily requests */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <label className="font-semibold text-muted-foreground">Daily Request Volume</label>
+              <span className="font-mono text-foreground font-bold">{calcRequests.toLocaleString()} / day</span>
+            </div>
+            <input
+              type="range"
+              min="500"
+              max="100000"
+              step="500"
+              value={calcRequests}
+              onChange={(e) => setCalcRequests(parseInt(e.target.value, 10))}
+              className="w-full accent-primary cursor-pointer"
+            />
+          </div>
+
+          {/* Prompt / Completion token sliders */}
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <label className="font-semibold text-muted-foreground">Avg Prompt Tokens</label>
+                <span className="font-mono text-cyan-400 font-bold">{calcPromptTokens} tok</span>
+              </div>
+              <input
+                type="range"
+                min="100"
+                max="8000"
+                step="100"
+                value={calcPromptTokens}
+                onChange={(e) => setCalcPromptTokens(parseInt(e.target.value, 10))}
+                className="w-full accent-cyan-400 cursor-pointer"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <label className="font-semibold text-muted-foreground">Avg Output Tokens</label>
+                <span className="font-mono text-purple-400 font-bold">{calcOutputTokens} tok</span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="4000"
+                step="50"
+                value={calcOutputTokens}
+                onChange={(e) => setCalcOutputTokens(parseInt(e.target.value, 10))}
+                className="w-full accent-purple-400 cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Calculations Results Bar */}
+        <div className="p-5 rounded-2xl bg-muted/30 border border-border grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-mono">
+          <div>
+            <span className="text-[10px] text-muted-foreground uppercase font-bold block">Monthly Traffic</span>
+            <span className="text-base font-extrabold text-foreground">
+              {(calcRequests * 30).toLocaleString()} requests
+            </span>
+            <span className="text-[10px] text-muted-foreground block">
+              {(monthlyTotalTokens / 1_000_000).toFixed(1)}M total tokens
+            </span>
+          </div>
+
+          <div>
+            <span className="text-[10px] text-muted-foreground uppercase font-bold block">Free Tier Deduction</span>
+            <span className="text-base font-extrabold text-emerald-400">-5,000,000 tokens</span>
+            <span className="text-[10px] text-muted-foreground block">Included free every month</span>
+          </div>
+
+          <div>
+            <span className="text-[10px] text-muted-foreground uppercase font-bold block">Estimated YOYO Bill</span>
+            <span className="text-2xl font-black text-emerald-400 font-mono">
+              ${estimatedYoyoCost.toFixed(2)}
+            </span>
+            <span className="text-[10px] text-muted-foreground block">per month</span>
+          </div>
+
+          <div>
+            <span className="text-[10px] text-muted-foreground uppercase font-bold block">Proprietary API Equivalent</span>
+            <span className="text-2xl font-black text-zinc-500 line-through font-mono">
+              ${estimatedProprietaryCost.toFixed(2)}
+            </span>
+            <span className="text-[10px] text-emerald-400 block font-semibold">
+              Save ${savingsAmount.toFixed(2)} ({savingsPercent}%)
+            </span>
           </div>
         </div>
       </div>

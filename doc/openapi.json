@@ -1,18 +1,18 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.1.0",
   "info": {
-    "title": "YOYO AI Model API Platform",
-    "description": "Production-grade, self-hosted AI model inference API platform with OpenAI compatibility.",
-    "version": "1.0.0"
+    "title": "YOYO Enterprise Cloud AI Model API Platform",
+    "description": "High-throughput, OpenAI-compatible cloud AI model inference platform serving open-weights foundation models across high-density NVIDIA H100 SXM5 and A100 GPU clusters.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "YOYO Cloud Engineering",
+      "url": "https://yoyo.ai"
+    }
   },
   "servers": [
     {
-      "url": "http://localhost:4000",
-      "description": "Local Development Server"
-    },
-    {
       "url": "https://api.yoyo.ai",
-      "description": "Production API Gateway"
+      "description": "Production Cloud API Gateway"
     }
   ],
   "components": {
@@ -20,13 +20,13 @@
       "ApiKeyAuth": {
         "type": "http",
         "scheme": "bearer",
-        "description": "API Key in format: sk_live_..."
+        "description": "API Secret Key in format: sk_live_..."
       },
       "JwtAuth": {
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT",
-        "description": "Access JWT for user and administrative routes"
+        "description": "Dashboard / Playground JWT session token"
       }
     },
     "schemas": {
@@ -38,29 +38,61 @@
             "type": "string",
             "enum": ["system", "user", "assistant", "tool"]
           },
-          "content": { "type": "string" }
+          "content": {
+            "type": "string"
+          }
         }
       },
       "ChatCompletionRequest": {
         "type": "object",
         "required": ["model", "messages"],
         "properties": {
-          "model": { "type": "string", "example": "llama3.3:8b" },
+          "model": {
+            "type": "string",
+            "example": "llama-3.3-70b"
+          },
           "messages": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/ChatMessage" }
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            }
           },
-          "temperature": { "type": "number", "default": 0.7 },
-          "top_p": { "type": "number", "default": 0.9 },
-          "max_tokens": { "type": "integer", "default": 2048 },
-          "stream": { "type": "boolean", "default": false }
+          "temperature": {
+            "type": "number",
+            "default": 0.7,
+            "minimum": 0,
+            "maximum": 2
+          },
+          "top_p": {
+            "type": "number",
+            "default": 0.9,
+            "minimum": 0,
+            "maximum": 1
+          },
+          "max_tokens": {
+            "type": "integer",
+            "default": 2048
+          },
+          "stream": {
+            "type": "boolean",
+            "default": false
+          },
+          "stop": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "array", "items": { "type": "string" } }
+            ]
+          }
         }
       },
       "EmbeddingRequest": {
         "type": "object",
         "required": ["model", "input"],
         "properties": {
-          "model": { "type": "string", "example": "nomic-embed-text:latest" },
+          "model": {
+            "type": "string",
+            "example": "nomic-embed-text"
+          },
           "input": {
             "oneOf": [
               { "type": "string" },
@@ -68,14 +100,53 @@
             ]
           }
         }
+      },
+      "CreateApiKeyRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "example": "Production Agent Key" },
+          "rateLimitRpm": { "type": "integer", "default": 60 },
+          "rateLimitTpm": { "type": "integer", "default": 60000 },
+          "allowedModels": {
+            "type": "array",
+            "items": { "type": "string" },
+            "default": ["*"]
+          },
+          "expiresAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string", "minLength": 8 },
+          "fullName": { "type": "string" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        }
+      },
+      "TopupRequest": {
+        "type": "object",
+        "required": ["amountUsd"],
+        "properties": {
+          "amountUsd": { "type": "number", "minimum": 5, "maximum": 1000 }
+        }
       }
     }
   },
   "paths": {
     "/v1/chat/completions": {
       "post": {
-        "summary": "Creates a chat completion (OpenAI compatible)",
-        "security": [{ "ApiKeyAuth": [] }],
+        "summary": "Create chat completion (OpenAI wire-protocol compliant)",
+        "security": [{ "ApiKeyAuth": [] }, { "JwtAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -85,16 +156,17 @@
           }
         },
         "responses": {
-          "200": { "description": "Successful completion or SSE stream" },
-          "401": { "description": "Invalid or missing API key" },
-          "429": { "description": "Rate limit exceeded" }
+          "200": { "description": "Chat completion response or Server-Sent Events (SSE) data stream" },
+          "401": { "description": "Missing, invalid, or revoked API key" },
+          "429": { "description": "Requests Per Minute (RPM) rate limit exceeded" },
+          "503": { "description": "Cloud GPU workers busy or offline (failover exhausted)" }
         }
       }
     },
     "/v1/embeddings": {
       "post": {
-        "summary": "Generates vector embeddings",
-        "security": [{ "ApiKeyAuth": [] }],
+        "summary": "Generate vector embeddings for semantic search and RAG",
+        "security": [{ "ApiKeyAuth": [] }, { "JwtAuth": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -104,67 +176,178 @@
           }
         },
         "responses": {
-          "200": { "description": "List of embedding vectors" }
+          "200": { "description": "Array of 768-dimensional float embedding vectors" },
+          "401": { "description": "Unauthorized" }
         }
       }
     },
     "/v1/models": {
       "get": {
-        "summary": "Lists all available models in OpenAI format",
+        "summary": "List all active cloud foundation models (OpenAI compatible)",
         "responses": {
-          "200": { "description": "List of active models" }
+          "200": { "description": "List of active foundation models" }
+        }
+      }
+    },
+    "/v1/models/{model_id}": {
+      "get": {
+        "summary": "Retrieve model metadata by identifier",
+        "parameters": [
+          { "name": "model_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Model details" },
+          "404": { "description": "Model not found" }
         }
       }
     },
     "/v1/health": {
       "get": {
-        "summary": "Health check probe",
+        "summary": "Public edge gateway health check",
         "responses": {
-          "200": { "description": "Service is healthy" }
+          "200": { "description": "Gateway operational telemetry" }
         }
       }
     },
-    "/api/auth/login": {
-      "post": {
-        "summary": "User sign in",
+    "/api/telemetry/status": {
+      "get": {
+        "summary": "Public platform cluster status, GPU health, and component latencies",
         "responses": {
-          "200": { "description": "Returns access and refresh tokens" }
+          "200": { "description": "Full cluster status payload for status dashboard" }
         }
       }
     },
-    "/api/auth/register": {
-      "post": {
-        "summary": "Create new developer account",
+    "/api/models/catalog": {
+      "get": {
+        "summary": "Retrieve full model catalog with pricing and hardware specs",
         "responses": {
-          "201": { "description": "Account created" }
+          "200": { "description": "Array of catalog models" }
         }
       }
     },
     "/api/keys": {
       "get": {
-        "summary": "List API keys",
+        "summary": "List API keys for authenticated user",
         "security": [{ "JwtAuth": [] }],
         "responses": {
-          "200": { "description": "Active API keys" }
+          "200": { "description": "List of masked API keys" }
         }
       },
       "post": {
-        "summary": "Generate new secret API key",
+        "summary": "Generate a new cryptographic API key with model scoping and rate limits",
+        "security": [{ "JwtAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateApiKeyRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Key created. Plaintext secret returned ONCE" }
+        }
+      }
+    },
+    "/api/keys/{id}": {
+      "delete": {
+        "summary": "Revoke an API key immediately",
+        "security": [{ "JwtAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Key revoked and purged from Redis cache" }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "Create new developer account with complimentary 5M monthly tokens",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created and authentication tokens returned" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Sign in with email and password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Access JWT and rotating refresh token" }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "summary": "Get authenticated user profile and quota meters",
         "security": [{ "JwtAuth": [] }],
         "responses": {
-          "201": { "description": "Plaintext key returned once" }
+          "200": { "description": "User profile with quota" }
         }
       }
     },
     "/api/billing/balance": {
       "get": {
-        "summary": "Get prepaid credit balance",
+        "summary": "Get current prepaid compute credit balance",
         "security": [{ "JwtAuth": [] }],
         "responses": {
           "200": { "description": "Balance in USD" }
         }
       }
+    },
+    "/api/billing/topup": {
+      "post": {
+        "summary": "Purchase compute credits",
+        "security": [{ "JwtAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TopupRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Payment credited to user ledger" }
+        }
+      }
+    },
+    "/api/admin/workers": {
+      "get": {
+        "summary": "List registered cloud GPU inference worker nodes (Super Admin only)",
+        "security": [{ "JwtAuth": [] }],
+        "responses": {
+          "200": { "description": "List of GPU nodes and warm model deployments" }
+        }
+      }
+    },
+    "/api/admin/workers/{id}/verify": {
+      "post": {
+        "summary": "Probe node health and ping latency in real-time (Super Admin only)",
+        "security": [{ "JwtAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Health status and round-trip ping latency in milliseconds" }
+        }
+      }
     }
   }
 }
-

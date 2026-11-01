@@ -170,5 +170,32 @@ export class ApiKeysService {
 
     return payload;
   }
+
+  async checkRateLimit(
+    keyId: string,
+    limitRpm: number
+  ): Promise<{ allowed: boolean; remaining: number }> {
+    if (!this.redis || this.redis.status !== 'ready') {
+      return { allowed: true, remaining: limitRpm };
+    }
+
+    const currentMinute = Math.floor(Date.now() / 60000);
+    const redisKey = `ratelimit:rpm:${keyId}:${currentMinute}`;
+
+    try {
+      const count = await this.redis.incr(redisKey);
+      if (count === 1) {
+        await this.redis.expire(redisKey, 70); // Expire cleanly after current minute window
+      }
+
+      if (count > limitRpm) {
+        return { allowed: false, remaining: 0 };
+      }
+
+      return { allowed: true, remaining: Math.max(0, limitRpm - count) };
+    } catch {
+      return { allowed: true, remaining: limitRpm };
+    }
+  }
 }
 

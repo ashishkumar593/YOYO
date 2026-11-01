@@ -3,6 +3,7 @@ import {
   ConflictException,
   UnauthorizedException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
@@ -185,6 +186,74 @@ export class AuthService {
             currentMonthTokensUsed: Number(user.quota.currentMonthTokensUsed),
           }
         : null,
+    };
+  }
+
+  async updateProfile(userId: string, data: { fullName?: string; companyName?: string; notificationPreferences?: any }) {
+    return this.prisma.userProfile.upsert({
+      where: { userId },
+      update: {
+        ...(data.fullName !== undefined ? { fullName: data.fullName } : {}),
+        ...(data.companyName !== undefined ? { companyName: data.companyName } : {}),
+        ...(data.notificationPreferences ? { notificationPreferences: data.notificationPreferences } : {}),
+      },
+      create: {
+        userId,
+        fullName: data.fullName || '',
+        companyName: data.companyName || '',
+        notificationPreferences: data.notificationPreferences || { usage_alerts: true },
+      },
+    });
+  }
+
+  async updatePassword(userId: string, currentPass: string, newPass: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found.');
+
+    const isValid = await bcrypt.compare(currentPass, user.passwordHash);
+    if (!isValid) throw new BadRequestException('Incorrect current password.');
+
+    const newHash = await bcrypt.hash(newPass, 12);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: newHash },
+    });
+
+    // Invalidate existing sessions
+    await this.prisma.session.deleteMany({ where: { userId } });
+
+    return { success: true, message: 'Password updated successfully. Please log in again.' };
+  }
+
+  async getSessions(userId: string) {
+    const sessions = await this.prisma.session.findMany({
+      where: { userId },
+      select: {
+        id: true,
+        userAgent: true,
+        ipAddress: true,
+        createdAt: true,
+        expiresAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return sessions;
+  }
+
+  async revokeSession(userId: string, sessionId: string) {
+    await this.prisma.session.deleteMany({
+      where: { id: sessionId, userId },
+    });
+    return { success: true };
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    // Don't leak user existence; return generic success
+    return {
+      success: true,
+      message: 'If an account exists with this email, password reset instructions have been dispatched.',
     };
   }
 

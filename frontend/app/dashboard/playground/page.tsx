@@ -28,6 +28,10 @@ import {
 interface Message {
   role: 'system' | 'user' | 'assistant';
   content: string;
+  tokens?: number;
+  cost?: number;
+  latencyMs?: number;
+  speed?: number;
 }
 
 const PROMPT_PRESETS = [
@@ -54,7 +58,7 @@ const SYSTEM_PRESETS: Record<string, string> = {
 
 function PlaygroundInner() {
   const searchParams = useSearchParams();
-  const initialModel = searchParams.get('model') || 'llama3.3:8b';
+  const initialModel = searchParams.get('model') || 'llama-3.3-70b';
   const { success, error, info } = useToast();
 
   const [models, setModels] = useState<any[]>([]);
@@ -64,6 +68,7 @@ function PlaygroundInner() {
   const [maxTokens, setMaxTokens] = useState<number>(2048);
   const [systemPromptPreset, setSystemPromptPreset] = useState<string>('General Assistant');
   const [systemPrompt, setSystemPrompt] = useState<string>(SYSTEM_PRESETS['General Assistant']);
+  const [jsonMode, setJsonMode] = useState<boolean>(false);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputPrompt, setInputPrompt] = useState<string>('');
@@ -71,6 +76,8 @@ function PlaygroundInner() {
   const [streamMetrics, setStreamMetrics] = useState<{ ttftMs?: number; totalTokens?: number; tokensPerSec?: number }>({});
   const [showCodeModal, setShowCodeModal] = useState<boolean>(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [codeTab, setCodeTab] = useState<'python' | 'typescript' | 'curl' | 'openai'>('python');
+  const [copiedCode, setCopiedCode] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -124,7 +131,8 @@ function PlaygroundInner() {
 
     try {
       const token = localStorage.getItem('yoyo_access_token');
-      const response = await fetch('http://localhost:4000/v1/chat/completions', {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.yoyo.ai';
+      const response = await fetch(`${apiBase}/v1/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -137,6 +145,7 @@ function PlaygroundInner() {
           top_p: topP,
           max_tokens: maxTokens,
           stream: true,
+          ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
         }),
         signal: abortController.signal,
       });
@@ -195,14 +204,40 @@ function PlaygroundInner() {
         }
       }
 
-      // Calculate generation speed
+      // Calculate generation speed and final metrics
       const totalGenTimeSec = (Date.now() - (firstTokenTime || startTime)) / 1000;
-      if (totalGenTimeSec > 0 && tokenCount > 0) {
+      const speed =
+        totalGenTimeSec > 0 && tokenCount > 0
+          ? parseFloat((tokenCount / totalGenTimeSec).toFixed(1))
+          : undefined;
+
+      if (speed) {
         setStreamMetrics((m) => ({
           ...m,
-          tokensPerSec: parseFloat((tokenCount / totalGenTimeSec).toFixed(1)),
+          tokensPerSec: speed,
         }));
       }
+
+      // Calculate cost based on model pricing
+      const currentModelObj = models.find((m) => m.apiIdentifier === selectedModel);
+      const outputRate = currentModelObj?.outputCostPerMillion || 0.4;
+      const finalTokens = tokenCount || Math.ceil(accumulatedReply.length / 4);
+      const estCost = (finalTokens / 1_000_000) * outputRate;
+      const totalElapsedMs = Date.now() - startTime;
+
+      setMessages((prev) => {
+        const next = [...prev];
+        if (next.length > 0 && next[next.length - 1].role === 'assistant') {
+          next[next.length - 1] = {
+            ...next[next.length - 1],
+            tokens: finalTokens,
+            cost: estCost,
+            latencyMs: totalElapsedMs,
+            speed,
+          };
+        }
+        return next;
+      });
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         error(err.message || 'Stream error');
@@ -243,6 +278,99 @@ function PlaygroundInner() {
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 
+  const getCodeSnippet = () => {
+    const formattedMessages = [
+      ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+      ...(messages.length > 0
+        ? messages.map((m) => ({ role: m.role, content: m.content }))
+        : [{ role: 'user', content: 'Explain zero-downtime deployment in 2 sentences.' }]),
+    ];
+
+    if (codeTab === 'python') {
+      return `from yoyo import Yoyo
+
+client = Yoyo(api_key="sk_live_your_api_key_here")
+
+response = client.chat.create(
+    model="${selectedModel}",
+    messages=${JSON.stringify(formattedMessages, null, 4)},
+    temperature=${temperature},
+    max_tokens=${maxTokens},
+    stream=True${jsonMode ? `,\n    response_format={"type": "json_object"}` : ''}
+)
+
+for chunk in response:
+    content = chunk.choices[0].delta.content
+    if content:
+        print(content, end="", flush=True)
+print()`;
+    }
+
+    if (codeTab === 'typescript') {
+      return `import { Yoyo } from '@yoyo-ai/sdk';
+
+const client = new Yoyo({
+  apiKey: 'sk_live_your_api_key_here'
+});
+
+const stream = await client.chat.createStream({
+  model: '${selectedModel}',
+  messages: ${JSON.stringify(formattedMessages, null, 2)},
+  temperature: ${temperature},
+  max_tokens: ${maxTokens},${jsonMode ? `\n  response_format: { type: 'json_object' },` : ''}
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0]?.delta?.content || '');
+}`;
+    }
+
+    if (codeTab === 'curl') {
+      return `curl https://api.yoyo.ai/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer sk_live_your_api_key_here" \\
+  -d '${JSON.stringify(
+    {
+      model: selectedModel,
+      messages: formattedMessages,
+      temperature,
+      max_tokens: maxTokens,
+      stream: true,
+      ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
+    },
+    null,
+    2
+  )}'`;
+    }
+
+    // OpenAI drop-in
+    return `from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.yoyo.ai/v1",
+    api_key="sk_live_your_api_key_here"
+)
+
+stream = client.chat.completions.create(
+    model="${selectedModel}",
+    messages=${JSON.stringify(formattedMessages, null, 4)},
+    temperature=${temperature},
+    max_tokens=${maxTokens},
+    stream=True${jsonMode ? `,\n    response_format={"type": "json_object"}` : ''}
+)
+
+for chunk in stream:
+    print(chunk.choices[0].delta.content or "", end="")
+print()`;
+  };
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(getCodeSnippet());
+    setCopiedCode(true);
+    success('Code snippet copied to clipboard.');
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] max-w-7xl mx-auto space-y-4">
       {/* Top Controls Bar */}
@@ -278,7 +406,7 @@ function PlaygroundInner() {
                   </option>
                 ))
               ) : (
-                <option value="llama3.3:8b">Llama 3.3 8B (llama3.3:8b)</option>
+                <option value="llama-3.3-70b">Llama 3.3 70B (llama-3.3-70b)</option>
               )}
             </select>
           </div>
@@ -377,6 +505,37 @@ function PlaygroundInner() {
                         </span>
                       ) : null)}
                     </div>
+
+                    {msg.role === 'assistant' && msg.content && (msg.tokens || msg.cost !== undefined) && (
+                      <div className="flex flex-wrap items-center gap-2 mt-1.5 px-1 text-[10px] font-mono text-muted-foreground">
+                        {msg.tokens && (
+                          <span className="inline-flex items-center space-x-1 text-zinc-400">
+                            <Cpu className="w-3 h-3 text-indigo-400" />
+                            <span>{msg.tokens} tokens</span>
+                          </span>
+                        )}
+                        {msg.cost !== undefined && (
+                          <>
+                            <span className="text-zinc-600">•</span>
+                            <span className="inline-flex items-center space-x-0.5 text-emerald-400 font-semibold">
+                              <span>~${msg.cost < 0.000001 ? '<$0.000001' : msg.cost.toFixed(6)}</span>
+                            </span>
+                          </>
+                        )}
+                        {msg.latencyMs && (
+                          <>
+                            <span className="text-zinc-600">•</span>
+                            <span className="text-zinc-400">{msg.latencyMs}ms</span>
+                          </>
+                        )}
+                        {msg.speed && (
+                          <>
+                            <span className="text-zinc-600">•</span>
+                            <span className="text-amber-400 font-semibold">{msg.speed} t/s</span>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {msg.role === 'user' && (
@@ -411,6 +570,23 @@ function PlaygroundInner() {
                   <span>Tokens: <strong className="text-foreground">{streamMetrics.totalTokens}</strong></span>
                 </span>
               )}
+            </div>
+          )}
+
+          {/* JSON Mode Banner */}
+          {jsonMode && (
+            <div className="px-4 py-2 bg-cyan-500/10 border-t border-cyan-500/20 flex items-center justify-between text-[11px] font-mono text-cyan-400">
+              <span className="flex items-center space-x-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                <span>Strict JSON Mode Active: Model constrained to valid JSON object schema</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setJsonMode(false)}
+                className="text-cyan-400/80 hover:text-cyan-200 underline text-[10px]"
+              >
+                Disable
+              </button>
             </div>
           )}
 
@@ -491,6 +667,34 @@ function PlaygroundInner() {
             />
           </div>
 
+          {/* Strict JSON Mode Toggle */}
+          <div className="p-3.5 rounded-xl bg-muted/30 border border-border space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-semibold text-foreground">Strict JSON Mode</span>
+                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  SCHEMA
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setJsonMode(!jsonMode)}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  jsonMode ? 'bg-cyan-500' : 'bg-muted-foreground/30'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    jsonMode ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Enforces valid JSON object schema via <code className="text-foreground font-mono">response_format</code>.
+            </p>
+          </div>
+
           {/* Temperature */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
@@ -546,10 +750,13 @@ function PlaygroundInner() {
 
       {/* Code Export Modal */}
       {showCodeModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
-          <div className="w-full max-w-2xl bg-card border border-border rounded-2xl shadow-2xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-card border border-border rounded-3xl shadow-2xl p-6 space-y-4 max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-border pb-3">
-              <h3 className="font-bold text-sm">Developer SDK Integration</h3>
+              <div className="flex items-center space-x-2">
+                <Code className="w-4 h-4 text-primary" />
+                <h3 className="font-bold text-sm text-foreground">Client SDK Integration Snippet</h3>
+              </div>
               <button
                 onClick={() => setShowCodeModal(false)}
                 className="text-xs text-muted-foreground hover:text-foreground"
@@ -558,13 +765,46 @@ function PlaygroundInner() {
               </button>
             </div>
 
-            <div className="space-y-4 text-xs font-mono">
-              <div className="p-3 bg-muted/60 rounded-xl overflow-x-auto">
-                <span className="text-muted-foreground block mb-1"># Python OpenAI Drop-In</span>
-                <span className="text-purple-400">from</span> openai <span className="text-purple-400">import</span> OpenAI<br />
-                client = OpenAI(base_url=&quot;http://localhost:4000/v1&quot;, api_key=&quot;YOUR_API_KEY&quot;)<br />
-                res = client.chat.completions.create(model=&quot;{selectedModel}&quot;, messages=[...], stream=True)
-              </div>
+            {/* Language Tabs */}
+            <div className="flex items-center space-x-2 border-b border-border pb-2 overflow-x-auto">
+              {[
+                { id: 'python', label: 'Python SDK (yoyo-ai)' },
+                { id: 'typescript', label: 'TypeScript (@yoyo-ai/sdk)' },
+                { id: 'curl', label: 'cURL Command' },
+                { id: 'openai', label: 'OpenAI Drop-In' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setCodeTab(tab.id as any)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
+                    codeTab === tab.id
+                      ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/20'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Code Body */}
+            <div className="relative flex-1 min-h-[220px] max-h-[360px] overflow-y-auto bg-muted/60 p-4 rounded-2xl border border-border">
+              <pre className="text-xs font-mono text-foreground leading-relaxed whitespace-pre-wrap break-all">
+                {getCodeSnippet()}
+              </pre>
+
+              <button
+                onClick={handleCopyCode}
+                className="absolute top-3 right-3 px-3 py-1.5 rounded-xl bg-card border border-border text-foreground hover:bg-muted text-xs font-semibold flex items-center space-x-1.5 shadow-sm transition-all"
+              >
+                {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedCode ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
+
+            <div className="text-[11px] text-muted-foreground flex items-center justify-between pt-1">
+              <span>Endpoint: <code className="text-foreground font-mono">https://api.yoyo.ai/v1/chat/completions</code></span>
+              <span className="text-emerald-400 font-mono font-semibold">Zero Cold Starts // Warm GPU Pool</span>
             </div>
           </div>
         </div>

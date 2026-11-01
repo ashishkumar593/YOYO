@@ -18,6 +18,9 @@ import {
   Flame,
   HardDrive,
   RefreshCw,
+  Plus,
+  Trash2,
+  Globe,
 } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 
@@ -30,6 +33,16 @@ export default function SuperAdminPage() {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [newLimit, setNewLimit] = useState<number>(5000000);
   const [loading, setLoading] = useState(true);
+
+  // Add Worker Modal State
+  const [showAddWorkerModal, setShowAddWorkerModal] = useState(false);
+  const [newWorkerName, setNewWorkerName] = useState('');
+  const [newEndpointUrl, setNewEndpointUrl] = useState('');
+  const [newEngineType, setNewEngineType] = useState('OLLAMA');
+  const [newGpuModel, setNewGpuModel] = useState('NVIDIA H100 80GB SXM5');
+  const [newVramGb, setNewVramGb] = useState(80);
+  const [addingWorker, setAddingWorker] = useState(false);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
   const loadAdminData = async () => {
     try {
@@ -69,10 +82,10 @@ export default function SuperAdminPage() {
         method: 'PATCH',
         body: JSON.stringify({ status: nextStatus }),
       });
-      success(`User ${targetUser.email} is now ${nextStatus}.`);
-      await loadAdminData();
+      success(`Updated status for ${targetUser.email} to ${nextStatus}.`);
+      loadAdminData();
     } catch (err: any) {
-      toastError(err.message || 'Status update failed.');
+      toastError(err.message || 'Failed to update user status.');
     }
   };
 
@@ -82,11 +95,75 @@ export default function SuperAdminPage() {
         method: 'PATCH',
         body: JSON.stringify({ monthlyTokenLimit: newLimit }),
       });
+      success('Updated monthly token ceiling.');
       setEditingUserId(null);
-      success('User quota ceiling updated.');
-      await loadAdminData();
+      loadAdminData();
     } catch (err: any) {
-      toastError(err.message || 'Quota update failed.');
+      toastError(err.message || 'Failed to update quota.');
+    }
+  };
+
+  const handleCreateWorker = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newWorkerName || !newEndpointUrl) {
+      toastError('Worker name and endpoint URL are required.');
+      return;
+    }
+
+    setAddingWorker(true);
+    try {
+      await apiRequest('/api/admin/workers', {
+        method: 'POST',
+        body: JSON.stringify({
+          workerName: newWorkerName,
+          endpointUrl: newEndpointUrl,
+          engineType: newEngineType,
+          gpuModelName: newGpuModel,
+          totalVramBytes: newVramGb * 1024 * 1024 * 1024,
+        }),
+      });
+      success(`Registered cloud worker "${newWorkerName}".`);
+      setShowAddWorkerModal(false);
+      setNewWorkerName('');
+      setNewEndpointUrl('');
+      loadAdminData();
+    } catch (err: any) {
+      toastError(err.message || 'Failed to register worker node.');
+    } finally {
+      setAddingWorker(false);
+    }
+  };
+
+  const handleDeleteWorker = async (workerId: string, name: string) => {
+    if (!confirm(`Are you sure you want to remove cloud worker "${name}"?`)) return;
+
+    try {
+      await apiRequest(`/api/admin/workers/${workerId}`, {
+        method: 'DELETE',
+      });
+      success(`Removed worker "${name}".`);
+      loadAdminData();
+    } catch (err: any) {
+      toastError(err.message || 'Failed to remove worker node.');
+    }
+  };
+
+  const handleVerifyWorker = async (workerId: string, name: string) => {
+    setVerifyingId(workerId);
+    try {
+      const res = await apiRequest(`/api/admin/workers/${workerId}/verify`, {
+        method: 'POST',
+      });
+      if (res.isHealthy) {
+        success(`Node "${name}" verified online (${res.latencyMs}ms latency).`);
+      } else {
+        toastError(`Node "${name}" unreachable: ${res.errorMessage || 'Check endpoint'}`);
+      }
+      loadAdminData();
+    } catch (err: any) {
+      toastError(err.message || 'Health check failed');
+    } finally {
+      setVerifyingId(null);
     }
   };
 
@@ -94,9 +171,9 @@ export default function SuperAdminPage() {
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center space-x-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-red-600 to-rose-500 text-white flex items-center justify-center font-bold shadow-lg shadow-red-500/20">
-            <ShieldAlert className="w-6 h-6" />
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+            <ShieldAlert className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
@@ -154,26 +231,57 @@ export default function SuperAdminPage() {
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Server className="w-4 h-4 text-primary" />
-            <span className="font-semibold text-sm">GPU Inference Worker Nodes</span>
+            <span className="font-semibold text-sm">Cloud GPU Inference Worker Nodes</span>
           </div>
-          <span className="text-xs text-muted-foreground font-mono">{workers.length} nodes connected</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground font-mono">{workers.length} nodes active</span>
+            <button
+              onClick={() => setShowAddWorkerModal(true)}
+              className="px-3 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold flex items-center gap-1.5 hover:bg-primary/90 transition-all shadow-md shadow-primary/20"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Cloud Worker</span>
+            </button>
+          </div>
         </div>
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           {workers.map((worker) => (
             <div
               key={worker.id}
-              className="p-6 rounded-2xl bg-muted/30 border border-border space-y-5"
+              className="p-6 rounded-2xl bg-muted/30 border border-border space-y-5 relative group"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-extrabold text-base text-foreground">{worker.workerName}</h4>
+                  <h4 className="font-extrabold text-base text-foreground flex items-center gap-2">
+                    <span>{worker.workerName}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-mono text-muted-foreground font-normal">
+                      {worker.engineType}
+                    </span>
+                  </h4>
                   <span className="text-xs font-mono text-muted-foreground">{worker.endpointUrl}</span>
                 </div>
-                <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>{worker.status}</span>
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>{worker.status}</span>
+                  </span>
+                  <button
+                    onClick={() => handleVerifyWorker(worker.id, worker.workerName)}
+                    className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                    title="Probe node health and ping latency"
+                    disabled={verifyingId === worker.id}
+                  >
+                    <RefreshCw className={`w-4 h-4 ${verifyingId === worker.id ? 'animate-spin text-primary' : ''}`} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteWorker(worker.id, worker.workerName)}
+                    className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-400 transition-colors"
+                    title="Remove worker"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Hardware stats */}
@@ -181,7 +289,7 @@ export default function SuperAdminPage() {
                 <div className="p-3 rounded-xl bg-card border border-border">
                   <span className="text-[10px] text-muted-foreground uppercase block mb-1">Compute Unit</span>
                   <span className="font-semibold text-foreground truncate block">
-                    {worker.gpuModelName || 'NVIDIA RTX 4090'}
+                    {worker.gpuModelName || 'NVIDIA H100 80GB SXM5'}
                   </span>
                 </div>
                 <div className="p-3 rounded-xl bg-card border border-border">
@@ -198,14 +306,18 @@ export default function SuperAdminPage() {
                   Loaded In-Memory Weights
                 </span>
                 <div className="flex flex-wrap gap-2">
-                  {worker.deployments?.map((d: any) => (
-                    <span
-                      key={d.id}
-                      className="px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-primary/10 text-primary border border-primary/20"
-                    >
-                      {d.apiIdentifier}
-                    </span>
-                  ))}
+                  {worker.deployments && worker.deployments.length > 0 ? (
+                    worker.deployments.map((d: any) => (
+                      <span
+                        key={d.id}
+                        className="px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-primary/10 text-primary border border-primary/20"
+                      >
+                        {d.apiIdentifier}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-muted-foreground italic">No model assigned yet</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -312,6 +424,106 @@ export default function SuperAdminPage() {
           </table>
         </div>
       </div>
+
+      {/* Add Worker Modal */}
+      {showAddWorkerModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card border border-border w-full max-w-lg rounded-3xl p-6 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Server className="w-5 h-5 text-primary" />
+                <h3 className="font-bold text-lg">Connect Cloud GPU Worker</h3>
+              </div>
+              <button
+                onClick={() => setShowAddWorkerModal(false)}
+                className="text-muted-foreground hover:text-foreground text-xs font-mono"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateWorker} className="space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-semibold text-foreground">Worker Node Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. runpod-h100-node-01"
+                  value={newWorkerName}
+                  onChange={(e) => setNewWorkerName(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-muted/60 border border-border text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-foreground">Worker Endpoint URL</label>
+                <input
+                  type="text"
+                  placeholder="e.g. https://xxx-11434.proxy.runpod.net or http://10.0.0.5:11434"
+                  value={newEndpointUrl}
+                  onChange={(e) => setNewEndpointUrl(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-muted/60 border border-border text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-foreground">Inference Engine</label>
+                  <select
+                    value={newEngineType}
+                    onChange={(e) => setNewEngineType(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-muted/60 border border-border text-foreground font-mono"
+                  >
+                    <option value="OLLAMA">Ollama</option>
+                    <option value="VLLM">vLLM</option>
+                    <option value="LLAMA_CPP">llama.cpp</option>
+                    <option value="TGI">HuggingFace TGI</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="font-semibold text-foreground">VRAM Capacity (GB)</label>
+                  <input
+                    type="number"
+                    value={newVramGb}
+                    onChange={(e) => setNewVramGb(Number(e.target.value))}
+                    className="w-full px-3 py-2 rounded-xl bg-muted/60 border border-border text-foreground font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-foreground">GPU Model Specification</label>
+                <input
+                  type="text"
+                  placeholder="e.g. NVIDIA H100 80GB SXM5"
+                  value={newGpuModel}
+                  onChange={(e) => setNewGpuModel(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-muted/60 border border-border text-foreground font-mono"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddWorkerModal(false)}
+                  className="px-4 py-2 rounded-xl border border-border hover:bg-muted font-semibold text-muted-foreground"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingWorker}
+                  className="px-5 py-2 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all shadow-md shadow-primary/25 disabled:opacity-50"
+                >
+                  {addingWorker ? 'Connecting...' : 'Connect Node'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

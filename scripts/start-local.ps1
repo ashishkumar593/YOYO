@@ -11,10 +11,11 @@ docker compose -f docker/compose/docker-compose.dev.yml up -d postgres redis
 Write-Host "`n[2/3] Waiting for database to be ready..." -ForegroundColor Yellow
 Start-Sleep -Seconds 3
 
-# 3. Generate Prisma client & seed default models
+# 3. Generate Prisma client, sync schema & seed default models
 Write-Host "`n[3/3] Generating Prisma client and seeding foundation models..." -ForegroundColor Yellow
 Set-Location backend
 pnpm db:generate
+pnpm db:push
 pnpm db:seed
 Set-Location ..
 

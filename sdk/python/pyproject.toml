@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "yoyo-ai"
+version = "1.0.0"
+authors = [
+  { name = "YOYO Platform Engineering", email = "engineering@yoyo.ai" },
+]
+description = "Official Python client for the YOYO Cloud AI Model API Platform"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = []
+
+[project.urls]
+"Homepage" = "https://yoyo.ai"
+"Documentation" = "https://yoyo.ai/docs"
+"Status" = "https://yoyo.ai/status"
+
