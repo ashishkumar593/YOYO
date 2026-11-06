@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: yoyo-frontend-svc
+  namespace: yoyo-system
+  labels:
+    app: yoyo-frontend
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http
+  selector:
+    app: yoyo-frontend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yoyo-frontend
+  namespace: yoyo-system
+  labels:
+    app: yoyo-frontend
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: yoyo-frontend
+  template:
+    metadata:
+      labels:
+        app: yoyo-frontend
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/ashishkumar593/yoyo-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: NEXT_PUBLIC_API_URL
+              value: "https://api.yoyo.ai"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 15
+

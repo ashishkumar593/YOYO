@@ -1,6 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+export const dynamic = 'force-dynamic';
+
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { apiRequest } from '@/lib/api';
 import { useToast } from '@/components/ui/toast';
@@ -47,7 +50,8 @@ interface ApiRequestLog {
   createdAt: string;
 }
 
-export default function RequestLogsPage() {
+function RequestLogsInner() {
+  const searchParams = useSearchParams();
   const [requests, setRequests] = useState<ApiRequestLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -61,6 +65,18 @@ export default function RequestLogsPage() {
 
   const { success, error: toastError } = useToast();
   const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync with URL query parameters if provided
+  useEffect(() => {
+    const q = searchParams.get('search');
+    if (q) setSearch(q);
+
+    const m = searchParams.get('model');
+    if (m) setModelFilter(m);
+
+    const s = searchParams.get('status');
+    if (s && ['2xx', '4xx', '5xx'].includes(s)) setStatusFilter(s as any);
+  }, [searchParams]);
 
   const fetchLogs = async (silent = false) => {
     if (!silent) setIsRefreshing(true);
@@ -670,6 +686,21 @@ export default function RequestLogsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function RequestLogsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-16 text-center text-xs text-muted-foreground flex flex-col items-center justify-center space-y-3">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span>Loading telemetry inspector...</span>
+        </div>
+      }
+    >
+      <RequestLogsInner />
+    </Suspense>
   );
 }
 

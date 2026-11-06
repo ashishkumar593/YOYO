@@ -23,7 +23,7 @@ export default function PrivacyPage() {
 
       <main className="flex-1 max-w-4xl mx-auto px-6 py-12 space-y-8">
         <div>
-          <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">// PRIVACY & DATA GOVERNANCE</span>
+          <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">Privacy & Data Governance</span>
           <h1 className="text-3xl font-black text-white mt-1">Zero Data Retention Policy</h1>
           <p className="text-zinc-400 text-xs font-mono mt-1">Last updated: October 2026</p>
         </div>
@@ -54,6 +54,13 @@ export default function PrivacyPage() {
             <h2 className="text-base font-bold text-white font-mono uppercase tracking-wider">4. Cryptographic Key Storage</h2>
             <p>
               API keys are hashed using one-way SHA-256 algorithms with salt before being stored in PostgreSQL. Raw API key secrets cannot be decrypted or retrieved by anyone, including system administrators.
+            </p>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="text-base font-bold text-white font-mono uppercase tracking-wider">5. Machine-Verifiable Audit Header</h2>
+            <p>
+              Every response emitted by the Fastify Edge Gateway carries the explicit enterprise audit compliance header: <code className="text-cyan-400 font-mono">x-yoyo-zero-data-retention: true</code>, allowing automated compliance tools, proxy monitors, and SOC2 auditors to mathematically verify that volatile zero-retention routing was maintained.
             </p>
           </section>
         </div>

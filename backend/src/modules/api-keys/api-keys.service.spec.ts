@@ -63,14 +63,15 @@ describe('ApiKeysService', () => {
   });
 
   describe('list', () => {
-    it('should list all active keys for user', async () => {
+    it('should list all active keys for user with invocation counts', async () => {
       prismaService.apiKey.findMany.mockResolvedValue([
-        { id: 'key_1', name: 'Primary', maskedKey: 'sk_live_...1234' },
+        { id: 'key_1', name: 'Primary', maskedKey: 'sk_live_...1234', _count: { apiRequests: 42 } },
       ]);
 
       const keys = await service.list('user_1');
       expect(keys.length).toBe(1);
       expect(keys[0].name).toBe('Primary');
+      expect(keys[0].totalRequests).toBe(42);
     });
   });
 
@@ -150,6 +151,12 @@ describe('ApiKeysService', () => {
       const res = await service.checkRateLimit('key_1', 60);
       expect(res.allowed).toBe(true);
       expect(res.remaining).toBe(60);
+    });
+
+    it('should allow token rate limit by default if Redis is offline', async () => {
+      const res = await service.checkTokenRateLimit('key_1', 60000, 150);
+      expect(res.allowed).toBe(true);
+      expect(res.remaining).toBe(60000);
     });
   });
 });

@@ -40,12 +40,24 @@ const PROMPT_PRESETS = [
     prompt: 'Write an asynchronous Redis sliding-window token bucket rate limiter in TypeScript with atomic Lua scripts.',
   },
   {
+    title: 'SQL Optimizer',
+    prompt: 'Write an optimized BigQuery SQL query to partition and cluster a 50TB event log table by date and organization_id with analytical window aggregations.',
+  },
+  {
+    title: 'JSON Extraction',
+    prompt: 'Extract the company name, founder, funding round, valuation in USD, and key investors from this press release into valid JSON.',
+  },
+  {
     title: 'Deep Reasoning',
     prompt: 'Analyze the architectural trade-offs between continuous batching in vLLM vs naive sequential batching in llama.cpp.',
   },
   {
     title: 'Security Audit',
-    prompt: 'Identify top 5 security attack vectors against multi-tenant LLM inference gateways and suggest mitigations.',
+    prompt: 'Identify top 5 security attack vectors against multi-tenant LLM inference gateways (e.g. prompt injection, side-channel KV cache leakage) and suggest code mitigations.',
+  },
+  {
+    title: 'RAG Context Synthesis',
+    prompt: 'Given the following 3 documentation passages about CUDA memory management, synthesize a clear guide on avoiding CUDA OOM errors during FP8 KV caching.',
   },
 ];
 
@@ -54,6 +66,8 @@ const SYSTEM_PRESETS: Record<string, string> = {
   'Deep Reasoner': 'You are a logical reasoning engine. Think step-by-step, verify all mathematical logic, and be extremely rigorous.',
   'General Assistant': 'You are YOYO, a helpful, ultra-low-latency AI assistant powered by open foundation models.',
   'Concise Minimalist': 'Be as concise and direct as possible. Avoid introductory or concluding conversational filler.',
+  'JSON Specialist': 'You are a structured data extractor. You must output exclusively valid JSON conforming to the requested schema. No conversational preamble.',
+  'Security Auditor': 'You are a principal security engineer conducting a threat model audit. Highlight critical CVE vulnerabilities, OWASP Top 10 LLM risks, and mitigation code.',
 };
 
 function PlaygroundInner() {
@@ -441,7 +455,7 @@ print()`;
                   <Sparkles className="w-6 h-6 animate-pulse" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-foreground">Ready for Streaming Inference</h3>
+                  <h3 className="font-bold text-base text-foreground">Interactive Playground</h3>
                   <p className="text-xs text-muted-foreground max-w-sm mt-1">
                     Select a preset prompt below or compose your own to stream from{' '}
                     <span className="font-mono text-primary font-semibold">{selectedModel}</span>.
@@ -804,7 +818,7 @@ print()`;
 
             <div className="text-[11px] text-muted-foreground flex items-center justify-between pt-1">
               <span>Endpoint: <code className="text-foreground font-mono">https://api.yoyo.ai/v1/chat/completions</code></span>
-              <span className="text-emerald-400 font-mono font-semibold">Zero Cold Starts // Warm GPU Pool</span>
+              <span className="text-muted-foreground font-mono">Dedicated GPU Pool</span>
             </div>
           </div>
         </div>

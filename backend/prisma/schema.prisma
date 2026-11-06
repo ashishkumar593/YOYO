@@ -70,6 +70,9 @@ model User {
   apiRequests         ApiRequest[]
   usageRecords        UsageRecord[]
   auditLogs           AuditLog[]
+  batchFiles          BatchFile[]
+  batchJobs           BatchJob[]
+  webhookEndpoints    WebhookEndpoint[]
 
   @@map("users")
 }
@@ -316,4 +319,100 @@ model AuditLog {
 
   @@index([userId, action])
   @@map("audit_logs")
+}
+
+enum BatchJobStatus {
+  VALIDATING
+  IN_PROGRESS
+  FINALIZING
+  COMPLETED
+  FAILED
+  EXPIRED
+  CANCELLING
+  CANCELLED
+}
+
+model BatchFile {
+  id        String     @id @default(uuid()) @db.Uuid
+  userId    String     @map("user_id") @db.Uuid
+  filename  String     @db.VarChar(255)
+  purpose   String     @default("batch") @db.VarChar(100)
+  bytes     Int
+  content   String     @db.Text
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz
+
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inputBatches  BatchJob[] @relation("BatchInputFile")
+  outputBatches BatchJob[] @relation("BatchOutputFile")
+  errorBatches  BatchJob[] @relation("BatchErrorFile")
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("batch_files")
+}
+
+model BatchJob {
+  id                String         @id @default(uuid()) @db.Uuid
+  userId            String         @map("user_id") @db.Uuid
+  endpoint          String         @default("/v1/chat/completions") @db.VarChar(100)
+  inputFileId       String         @map("input_file_id") @db.Uuid
+  outputFileId      String?        @map("output_file_id") @db.Uuid
+  errorFileId       String?        @map("error_file_id") @db.Uuid
+  completionWindow  String         @default("24h") @map("completion_window") @db.VarChar(20)
+  status            BatchJobStatus @default(IN_PROGRESS)
+  totalRequests     Int            @default(0) @map("total_requests")
+  completedRequests Int            @default(0) @map("completed_requests")
+  failedRequests    Int            @default(0) @map("failed_requests")
+  metadata          Json?
+  expiresAt         DateTime       @map("expires_at") @db.Timestamptz
+  completedAt       DateTime?      @map("completed_at") @db.Timestamptz
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inputFile         BatchFile      @relation("BatchInputFile", fields: [inputFileId], references: [id], onDelete: Cascade)
+  outputFile        BatchFile?     @relation("BatchOutputFile", fields: [outputFileId], references: [id], onDelete: SetNull)
+  errorFile         BatchFile?     @relation("BatchErrorFile", fields: [errorFileId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@map("batch_jobs")
+}
+
+enum WebhookStatus {
+  ACTIVE
+  PAUSED
+  DISABLED
+}
+
+model WebhookEndpoint {
+  id          String            @id @default(uuid()) @db.Uuid
+  userId      String            @map("user_id") @db.Uuid
+  url         String            @db.Text
+  secret      String            @db.VarChar(255)
+  description String?           @db.VarChar(255)
+  events      String[]          @default(["*"])
+  status      WebhookStatus     @default(ACTIVE)
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries  WebhookDelivery[]
+
+  @@index([userId])
+  @@map("webhook_endpoints")
+}
+
+model WebhookDelivery {
+  id           String          @id @default(uuid()) @db.Uuid
+  endpointId   String          @map("endpoint_id") @db.Uuid
+  eventType    String          @map("event_type") @db.VarChar(100)
+  payload      Json
+  statusCode   Int?            @map("status_code")
+  responseBody String?         @map("response_body") @db.Text
+  latencyMs    Int?            @map("latency_ms")
+  success      Boolean         @default(false)
+  createdAt    DateTime        @default(now()) @map("created_at") @db.Timestamptz
+
+  endpoint     WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([endpointId, createdAt(sort: Desc)])
+  @@map("webhook_deliveries")
 }

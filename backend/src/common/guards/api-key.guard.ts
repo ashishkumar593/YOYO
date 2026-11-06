@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiKeysService } from '../../modules/api-keys/api-keys.service';
 import { JwtService } from '@nestjs/jwt';
+import { estimateMessagesTokens, estimateTokens } from '../utils/token-estimator';
 
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
@@ -44,6 +45,40 @@ export class ApiKeyGuard implements CanActivate {
             {
               error: {
                 message: `Rate limit exceeded: Maximum ${keyData.rateLimitRpm} requests per minute allowed for this API key.`,
+                type: 'rate_limit_exceeded',
+                code: 429,
+              },
+            },
+            HttpStatus.TOO_MANY_REQUESTS
+          );
+        }
+      }
+
+      // Enforce sliding-window TPM (tokens-per-minute) rate limits
+      if (keyData.rateLimitTpm) {
+        let estimatedTokens = 50;
+        if (request.body?.messages) {
+          estimatedTokens = estimateMessagesTokens(request.body.messages);
+        } else if (typeof request.body?.input === 'string') {
+          estimatedTokens = estimateTokens(request.body.input);
+        } else if (Array.isArray(request.body?.input)) {
+          estimatedTokens = request.body.input.reduce(
+            (acc: number, str: string) => acc + estimateTokens(str),
+            0
+          );
+        }
+
+        const tpmCheck = await this.apiKeysService.checkTokenRateLimit(
+          keyData.keyId,
+          keyData.rateLimitTpm,
+          estimatedTokens
+        );
+
+        if (!tpmCheck.allowed) {
+          throw new HttpException(
+            {
+              error: {
+                message: `Rate limit exceeded: Maximum ${keyData.rateLimitTpm} tokens per minute allowed for this API key.`,
                 type: 'rate_limit_exceeded',
                 code: 429,
               },

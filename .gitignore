@@ -35,3 +35,8 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+

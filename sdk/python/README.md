@@ -86,7 +86,7 @@ asyncio.run(main())
 
 ---
 
-### 3. Vector Embeddings
+### 4. Vector Embeddings (`/v1/embeddings`)
 
 ```python
 from yoyo import Yoyo
@@ -104,9 +104,69 @@ print(f"Embedding vector dimensions: {len(vector)}")
 
 ---
 
-### 4. Custom Self-Hosted Base URL
+### 5. Semantic Reranking (`/v1/rerank`)
 
 ```python
+from yoyo import Yoyo
+
+client = Yoyo()  # Reads YOYO_API_KEY from environment
+
+ranked = client.rerank(
+    model="bge-reranker-large",
+    query="What are the storage guarantees of Kubernetes StatefulSets?",
+    documents=[
+        "Fastify is an extremely low-overhead web framework for Node.js.",
+        "Kubernetes StatefulSets provide persistent volume storage guarantees across pod rescheduling.",
+        "Redis is an in-memory key-value data store used for fast caching."
+    ],
+    top_n=2,
+    return_documents=True
+)
+
+for item in ranked["results"]:
+    print(f"Rank {item['index']} (Score: {item['relevance_score']:.4f}): {item['document']['text']}")
+```
+
+---
+
+### 6. Asynchronous Batch Inference (50% Off)
+
+```python
+from yoyo import Yoyo
+
+client = Yoyo()
+
+# 1. Upload JSONL file
+file_record = client.files.create(
+    filename="eval_batch.jsonl",
+    file_content='{"custom_id": "req-1", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "llama-3.3-70b", "messages": [{"role": "user", "content": "Explain quantum computing."}]}}',
+    purpose="batch"
+)
+
+# 2. Queue batch with 24-hour turnaround SLA
+batch = client.batches.create(
+    input_file_id=file_record["id"],
+    endpoint="/v1/chat/completions",
+    completion_window="24h"
+)
+
+print(f"Batch {batch['id']} queued with 50% discount!")
+```
+
+---
+
+### 7. Custom Self-Hosted Base URL & Ambient API Key
+
+```python
+import os
+
+# Set ambient API key
+os.environ["YOYO_API_KEY"] = "sk_live_..."
+
+# Client automatically reads the environment variable:
+client = Yoyo()
+
+# Or configure a custom self-hosted gateway:
 client = Yoyo(
     api_key="sk_live_...",
     base_url="https://api.yoyo.ai/v1"  # Or your self-hosted endpoint

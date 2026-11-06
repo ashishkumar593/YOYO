@@ -18,19 +18,16 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-RUN npm install -g pnpm@12.15.0
-
-COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --prod
-
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+
+RUN chmod +x ./docker-entrypoint.sh
 
 EXPOSE 4000
 ENV NODE_ENV=production
 ENV PORT=4000
 
-CMD ["node", "dist/main.js"]
-
+ENTRYPOINT ["/bin/sh", "./docker-entrypoint.sh"]

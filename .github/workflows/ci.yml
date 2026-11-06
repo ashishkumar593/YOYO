@@ -1,0 +1,124 @@
+name: YOYO CI / CD Pipeline
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-gateway:
+    name: Backend Gateway (NestJS + Fastify + Prisma)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.15.0
+
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: pnpm install --frozen-lockfile || pnpm install
+
+      - name: Generate Prisma Client
+        working-directory: ./backend
+        run: pnpm db:generate
+
+      - name: Run Backend Unit & Integration Tests
+        working-directory: ./backend
+        run: pnpm test
+
+      - name: Build NestJS Production Bundle
+        working-directory: ./backend
+        run: pnpm run build
+
+  frontend-platform:
+    name: Frontend Platform (Next.js 15 + App Router)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.15.0
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: pnpm install --frozen-lockfile || pnpm install
+
+      - name: TypeScript Type Check
+        working-directory: ./frontend
+        run: pnpm run typecheck
+
+      - name: Build Next.js Production Static & Dynamic Pages
+        working-directory: ./frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:4000
+        run: pnpm run build
+
+  sdk-python:
+    name: Python SDK (yoyo-ai)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run Python SDK Unit Tests
+        run: python sdk/python/test_yoyo.py
+
+  sdk-typescript:
+    name: TypeScript SDK (@yoyo-ai/sdk)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.15.0
+
+      - name: Install SDK Dependencies
+        working-directory: ./sdk/typescript
+        run: pnpm install
+
+      - name: Build TypeScript Dual Exports
+        working-directory: ./sdk/typescript
+        run: pnpm run build
+
+      - name: Verify In-Memory SDK Exports & Types
+        working-directory: ./sdk/typescript
+        run: node test.js
+

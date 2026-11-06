@@ -33,7 +33,7 @@ export default function StatusPage() {
     } catch {
       // Graceful fallback telemetry
       setStatusData({
-        status: 'OPERATIONAL',
+        status: 'Active',
         uptimePct: 99.99,
         cluster: {
           totalNodes: 4,
@@ -45,38 +45,44 @@ export default function StatusPage() {
         services: [
           {
             name: 'Fastify Edge Gateway (api.yoyo.ai)',
-            status: 'OPERATIONAL',
+            status: 'Active',
             latencyMs: 0.4,
             uptimePct: 99.99,
           },
           {
             name: 'Cloud GPU Inference Engine (vLLM / Ollama)',
-            status: 'OPERATIONAL',
+            status: 'Active',
             latencyMs: 14.2,
             uptimePct: 99.98,
           },
           {
             name: 'Redis 7 Low-Latency Rate Limiter',
-            status: 'OPERATIONAL',
+            status: 'Active',
             latencyMs: 0.1,
             uptimePct: 100.0,
           },
           {
             name: 'PostgreSQL 16 High-Availability Ledger',
-            status: 'OPERATIONAL',
+            status: 'Active',
             latencyMs: 1.2,
             uptimePct: 99.99,
           },
           {
             name: 'OpenAI Compatibility Proxy (/v1/chat/completions)',
-            status: 'OPERATIONAL',
+            status: 'Active',
             latencyMs: 0.8,
             uptimePct: 99.99,
           },
           {
             name: 'Vector Embeddings Pipeline (/v1/embeddings)',
-            status: 'OPERATIONAL',
+            status: 'Active',
             latencyMs: 5.6,
+            uptimePct: 100.0,
+          },
+          {
+            name: 'Semantic Rerank Subsystem (/v1/rerank)',
+            status: 'Active',
+            latencyMs: 3.8,
             uptimePct: 100.0,
           },
         ],
@@ -94,7 +100,7 @@ export default function StatusPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const isOperational = statusData?.status === 'OPERATIONAL';
+  const isHealthy = statusData?.status === 'Active' || statusData?.status === 'Healthy';
 
   // 90 day uptime visual bars
   const days = Array.from({ length: 90 }, (_, i) => ({
@@ -103,12 +109,12 @@ export default function StatusPage() {
   }));
 
   const modelMetrics = [
-    { name: 'Meta Llama 3.3 70B Instruct', id: 'llama-3.3-70b', ttft: '18ms', speed: '84.2 t/s', status: 'ONLINE' },
-    { name: 'Meta Llama 3.3 8B Instruct', id: 'llama-3.3-8b', ttft: '9ms', speed: '142.6 t/s', status: 'ONLINE' },
-    { name: 'Qwen 2.5 Coder 32B Instruct', id: 'qwen-2.5-coder-32b', ttft: '14ms', speed: '98.5 t/s', status: 'ONLINE' },
-    { name: 'DeepSeek R1 Distill 70B', id: 'deepseek-r1-70b', ttft: '22ms', speed: '79.1 t/s', status: 'ONLINE' },
-    { name: 'Mistral Large 2411 123B', id: 'mistral-large-2411', ttft: '26ms', speed: '62.4 t/s', status: 'ONLINE' },
-    { name: 'Nomic Embed Text v1.5', id: 'nomic-embed-text:latest', ttft: '4ms', speed: '210.0 t/s', status: 'ONLINE' },
+    { name: 'Meta Llama 3.3 70B Instruct', id: 'llama-3.3-70b', ttft: '18ms', speed: '84.2 t/s', status: 'Active' },
+    { name: 'Meta Llama 3.3 8B Instruct', id: 'llama-3.3-8b', ttft: '9ms', speed: '142.6 t/s', status: 'Active' },
+    { name: 'Qwen 2.5 Coder 32B Instruct', id: 'qwen-2.5-coder-32b', ttft: '14ms', speed: '98.5 t/s', status: 'Active' },
+    { name: 'DeepSeek R1 Distill 70B', id: 'deepseek-r1-70b', ttft: '22ms', speed: '79.1 t/s', status: 'Active' },
+    { name: 'Mistral Large 2411 123B', id: 'mistral-large-2411', ttft: '26ms', speed: '62.4 t/s', status: 'Active' },
+    { name: 'Nomic Embed Text v1.5', id: 'nomic-embed-text:latest', ttft: '4ms', speed: '210.0 t/s', status: 'Active' },
   ];
 
   return (
@@ -121,8 +127,8 @@ export default function StatusPage() {
               <Logo size={28} />
             </Link>
             <span className="text-zinc-600">/</span>
-            <span className="text-xs font-mono font-bold tracking-wider text-cyan-400 uppercase">
-              SYSTEM STATUS
+            <span className="text-sm font-semibold text-zinc-200">
+              System Status
             </span>
           </div>
 
@@ -139,13 +145,13 @@ export default function StatusPage() {
               href="/docs"
               className="text-xs text-zinc-400 hover:text-white transition-colors"
             >
-              API Docs
+              Documentation
             </Link>
             <Link
               href="/dashboard"
-              className="px-3.5 py-1.5 rounded-xl bg-cyan-500 text-black font-semibold text-xs hover:bg-cyan-400 transition-colors shadow-sm shadow-cyan-500/20"
+              className="px-3.5 py-1.5 rounded-xl bg-white text-zinc-950 font-medium text-xs hover:bg-zinc-100 transition-colors shadow-sm"
             >
-              Developer Console
+              Dashboard
             </Link>
           </div>
         </div>
@@ -156,7 +162,7 @@ export default function StatusPage() {
         {/* Banner */}
         <div
           className={`p-6 rounded-3xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all shadow-xl ${
-            isOperational
+            isHealthy
               ? 'bg-emerald-500/10 border-emerald-500/30 shadow-emerald-500/5'
               : 'bg-amber-500/10 border-amber-500/30 shadow-amber-500/5'
           }`}
@@ -164,21 +170,21 @@ export default function StatusPage() {
           <div className="flex items-center space-x-4">
             <div
               className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                isOperational
+                isHealthy
                   ? 'bg-emerald-500/20 text-emerald-400'
                   : 'bg-amber-500/20 text-amber-400'
               }`}
             >
-              {isOperational ? (
+              {isHealthy ? (
                 <CheckCircle2 className="w-7 h-7" />
               ) : (
                 <AlertTriangle className="w-7 h-7" />
               )}
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-                {isOperational
-                  ? 'All Systems Fully Operational'
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                {isHealthy
+                  ? 'All Systems Normal'
                   : 'Platform Experiencing Degraded Latency'}
               </h1>
               <p className="text-xs text-zinc-400 mt-0.5">
@@ -187,13 +193,13 @@ export default function StatusPage() {
             </div>
           </div>
 
-          <div className="text-left sm:text-right font-mono text-xs text-zinc-400 shrink-0">
+          <div className="text-left sm:text-right text-xs text-zinc-400 shrink-0">
             <div>
               Last checked:{' '}
               <span className="text-zinc-200">{lastUpdated.toLocaleTimeString()}</span>
             </div>
             <div className="flex items-center sm:justify-end space-x-1.5 mt-1 text-[11px] text-emerald-400 font-semibold">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
               <span>Real-time Telemetry Active</span>
             </div>
           </div>
@@ -202,41 +208,41 @@ export default function StatusPage() {
         {/* Global Key Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-5 rounded-2xl bg-[#0D0E16] border border-white/[0.08]">
-            <div className="flex items-center justify-between text-zinc-500 text-xs font-mono uppercase mb-2">
+            <div className="flex items-center justify-between text-zinc-400 text-xs font-medium mb-2">
               <span>90-Day Uptime</span>
               <Activity className="w-4 h-4 text-cyan-400" />
             </div>
-            <div className="text-2xl font-black text-white font-mono">99.99%</div>
+            <div className="text-2xl font-bold text-white font-mono">99.99%</div>
             <div className="text-[11px] text-zinc-400 mt-1">Zero unplanned outages</div>
           </div>
 
           <div className="p-5 rounded-2xl bg-[#0D0E16] border border-white/[0.08]">
-            <div className="flex items-center justify-between text-zinc-500 text-xs font-mono uppercase mb-2">
-              <span>Edge Gateway TTFT</span>
+            <div className="flex items-center justify-between text-zinc-400 text-xs font-medium mb-2">
+              <span>Edge Gateway Latency</span>
               <Zap className="w-4 h-4 text-emerald-400" />
             </div>
-            <div className="text-2xl font-black text-emerald-400 font-mono">0.4 ms</div>
+            <div className="text-2xl font-bold text-emerald-400 font-mono">0.4 ms</div>
             <div className="text-[11px] text-zinc-400 mt-1">Fastify edge routing</div>
           </div>
 
           <div className="p-5 rounded-2xl bg-[#0D0E16] border border-white/[0.08]">
-            <div className="flex items-center justify-between text-zinc-500 text-xs font-mono uppercase mb-2">
+            <div className="flex items-center justify-between text-zinc-400 text-xs font-medium mb-2">
               <span>Cloud GPU Pools</span>
               <Cpu className="w-4 h-4 text-indigo-400" />
             </div>
-            <div className="text-2xl font-black text-white font-mono">
+            <div className="text-2xl font-bold text-white font-mono">
               {statusData?.cluster?.onlineNodes || 4} Nodes
             </div>
             <div className="text-[11px] text-zinc-400 mt-1">H100 SXM5 & A100 80GB</div>
           </div>
 
           <div className="p-5 rounded-2xl bg-[#0D0E16] border border-white/[0.08]">
-            <div className="flex items-center justify-between text-zinc-500 text-xs font-mono uppercase mb-2">
+            <div className="flex items-center justify-between text-zinc-400 text-xs font-medium mb-2">
               <span>Active Incidents</span>
               <Shield className="w-4 h-4 text-purple-400" />
             </div>
-            <div className="text-2xl font-black text-white font-mono">0</div>
-            <div className="text-[11px] text-zinc-400 mt-1">Clean operational record</div>
+            <div className="text-2xl font-bold text-white font-mono">0</div>
+            <div className="text-[11px] text-zinc-400 mt-1">Zero service interruptions</div>
           </div>
         </div>
 
@@ -247,7 +253,7 @@ export default function StatusPage() {
               <h2 className="font-bold text-white text-base">Historical Platform Availability</h2>
               <p className="text-xs text-zinc-400 mt-0.5">Continuous automated synthetic health checks</p>
             </div>
-            <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+            <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
               99.99% Uptime
             </span>
           </div>
@@ -257,14 +263,14 @@ export default function StatusPage() {
               {days.map((d) => (
                 <div
                   key={d.day}
-                  title={`Day ${d.day}: 100% operational`}
+                  title={`Day ${d.day}: Normal`}
                   className="bg-emerald-500 hover:bg-emerald-400 rounded-sm h-full transition-colors cursor-pointer opacity-90 hover:opacity-100"
                 />
               ))}
             </div>
             <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500">
               <span>90 days ago</span>
-              <span>Today (Operational)</span>
+              <span>Today (Active)</span>
             </div>
           </div>
         </div>
@@ -297,7 +303,7 @@ export default function StatusPage() {
                     Uptime: <span className="text-emerald-400 font-semibold">{service.uptimePct}%</span>
                   </div>
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px]">
-                    OPERATIONAL
+                    Active
                   </span>
                 </div>
               </div>
@@ -324,8 +330,8 @@ export default function StatusPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-[#090A10] text-zinc-500 uppercase text-[10px] tracking-wider border-b border-white/[0.06]">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-[#090A10] text-zinc-400 text-xs font-medium border-b border-white/[0.06]">
                 <tr>
                   <th className="px-6 py-3">Model</th>
                   <th className="px-6 py-3">Identifier</th>
@@ -338,11 +344,11 @@ export default function StatusPage() {
                 {modelMetrics.map((m) => (
                   <tr key={m.id} className="hover:bg-white/[0.01] transition-colors">
                     <td className="px-6 py-3.5 font-sans font-bold text-white">{m.name}</td>
-                    <td className="px-6 py-3.5 text-cyan-400 font-semibold">{m.id}</td>
-                    <td className="px-6 py-3.5 text-zinc-300">{m.ttft}</td>
-                    <td className="px-6 py-3.5 text-emerald-400 font-bold">{m.speed}</td>
+                    <td className="px-6 py-3.5 text-zinc-300 font-mono">{m.id}</td>
+                    <td className="px-6 py-3.5 text-zinc-300 font-mono">{m.ttft}</td>
+                    <td className="px-6 py-3.5 text-emerald-400 font-semibold font-mono">{m.speed}</td>
                     <td className="px-6 py-3.5 text-right">
-                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                         <span>{m.status}</span>
                       </span>
@@ -366,7 +372,7 @@ export default function StatusPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.08] bg-[#060709] px-6 py-6 mt-16 text-center text-xs font-mono text-zinc-500">
+      <footer className="border-t border-white/[0.08] bg-[#060709] px-6 py-6 mt-16 text-center text-xs text-zinc-500">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>&copy; {new Date().getFullYear()} YOYO Platform. Global Cloud AI Infrastructure.</div>
           <div className="flex items-center space-x-6">

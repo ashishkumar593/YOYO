@@ -61,15 +61,17 @@ export class ApiKeysService {
 
     // Cache key hash in Redis for fast sub-millisecond lookups
     if (this.redis && this.redis.status === 'ready') {
-      const cacheData = JSON.stringify({
-        keyId: apiKey.id,
-        userId,
-        allowedModels: apiKey.allowedModels,
-        rateLimitRpm: apiKey.rateLimitRpm,
-        rateLimitTpm: apiKey.rateLimitTpm,
-        isActive: true,
-      });
-      await this.redis.set(`key:${keyHash}`, cacheData, 'EX', 300);
+      try {
+        const cacheData = JSON.stringify({
+          keyId: apiKey.id,
+          userId,
+          allowedModels: apiKey.allowedModels,
+          rateLimitRpm: apiKey.rateLimitRpm,
+          rateLimitTpm: apiKey.rateLimitTpm,
+          isActive: true,
+        });
+        await this.redis.set(`key:${keyHash}`, cacheData, 'EX', 300);
+      } catch {}
     }
 
     return {
@@ -79,7 +81,7 @@ export class ApiKeysService {
   }
 
   async list(userId: string) {
-    return this.prisma.apiKey.findMany({
+    const keys = await this.prisma.apiKey.findMany({
       where: { userId, isActive: true },
       select: {
         id: true,
@@ -91,9 +93,19 @@ export class ApiKeysService {
         lastUsedAt: true,
         expiresAt: true,
         createdAt: true,
+        _count: {
+          select: {
+            apiRequests: true,
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    return keys.map((k) => ({
+      ...k,
+      totalRequests: k._count?.apiRequests || 0,
+    }));
   }
 
   async revoke(userId: string, keyId: string) {
@@ -111,7 +123,9 @@ export class ApiKeysService {
 
     // Invalidate Redis cache immediately
     if (this.redis && this.redis.status === 'ready') {
-      await this.redis.del(`key:${key.keyHash}`);
+      try {
+        await this.redis.del(`key:${key.keyHash}`);
+      } catch {}
     }
 
     return { success: true, message: 'API key revoked successfully.' };
@@ -195,6 +209,35 @@ export class ApiKeysService {
       return { allowed: true, remaining: Math.max(0, limitRpm - count) };
     } catch {
       return { allowed: true, remaining: limitRpm };
+    }
+  }
+
+  async checkTokenRateLimit(
+    keyId: string,
+    limitTpm: number,
+    tokens: number
+  ): Promise<{ allowed: boolean; remaining: number }> {
+    if (!this.redis || this.redis.status !== 'ready' || !limitTpm) {
+      return { allowed: true, remaining: limitTpm };
+    }
+
+    const currentMinute = Math.floor(Date.now() / 60000);
+    const redisKey = `ratelimit:tpm:${keyId}:${currentMinute}`;
+
+    try {
+      const tokensToAdd = Math.max(1, tokens);
+      const newTotal = await this.redis.incrby(redisKey, tokensToAdd);
+      if (newTotal === tokensToAdd) {
+        await this.redis.expire(redisKey, 70);
+      }
+
+      if (newTotal > limitTpm) {
+        return { allowed: false, remaining: 0 };
+      }
+
+      return { allowed: true, remaining: Math.max(0, limitTpm - newTotal) };
+    } catch {
+      return { allowed: true, remaining: limitTpm };
     }
   }
 }

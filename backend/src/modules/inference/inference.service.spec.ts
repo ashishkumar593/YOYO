@@ -96,5 +96,24 @@ describe('InferenceService', () => {
     expect(result).toBeDefined();
     expect(result.choices[0].message.content).toContain('YOYO AI Mock Response');
   });
+
+  it('should rerank documents successfully in descending order of relevance', async () => {
+    const res = await service.rerank({
+      model: 'bge-reranker-large',
+      query: 'deep learning transformers',
+      documents: [
+        'A recipe for sourdough bread.',
+        'Attention is All You Need introduced the Transformer deep learning architecture.',
+        'The weather forecast for Seattle tomorrow is cloudy.',
+      ],
+      top_n: 2,
+      return_documents: true,
+    });
+
+    expect(res).toBeDefined();
+    expect(res.results.length).toBe(2);
+    expect(res.results[0].relevance_score).toBeGreaterThanOrEqual(res.results[1].relevance_score);
+    expect(res.results[0].document?.text).toContain('Transformer');
+  });
 });
 

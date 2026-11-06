@@ -199,6 +199,12 @@ export class TelemetryService {
           latencyMs: 5.6,
           uptimePct: 100.0,
         },
+        {
+          name: 'Semantic Rerank Subsystem (/v1/rerank)',
+          status: 'OPERATIONAL',
+          latencyMs: 3.8,
+          uptimePct: 100.0,
+        },
       ],
       recentIncidents: [],
     };

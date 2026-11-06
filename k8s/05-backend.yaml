@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: yoyo-backend-svc
+  namespace: yoyo-system
+  labels:
+    app: yoyo-backend
+spec:
+  ports:
+    - port: 4000
+      targetPort: 4000
+      name: http
+  selector:
+    app: yoyo-backend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yoyo-backend
+  namespace: yoyo-system
+  labels:
+    app: yoyo-backend
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: yoyo-backend
+  template:
+    metadata:
+      labels:
+        app: yoyo-backend
+    spec:
+      containers:
+        - name: gateway
+          image: ghcr.io/ashishkumar593/yoyo-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: yoyo-config
+            - secretRef:
+                name: yoyo-secrets
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 4000m
+              memory: 4Gi
+          readinessProbe:
+            httpGet:
+              path: /v1/health
+              port: 4000
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /v1/health
+              port: 4000
+            initialDelaySeconds: 25
+            periodSeconds: 15
+            timeoutSeconds: 5
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: yoyo-backend-hpa
+  namespace: yoyo-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: yoyo-backend
+  minReplicas: 3
+  maxReplicas: 25
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+

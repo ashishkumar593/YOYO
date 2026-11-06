@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { apiRequest } from '@/lib/api';
 import { useToast } from '@/components/ui/toast';
 import {
@@ -18,6 +19,10 @@ import {
   CheckSquare,
   Square,
   Globe,
+  Terminal,
+  Activity,
+  Calendar,
+  ExternalLink,
 } from 'lucide-react';
 
 export default function ApiKeysPage() {
@@ -28,10 +33,12 @@ export default function ApiKeysPage() {
   const [keyName, setKeyName] = useState('');
   const [rateLimitRpm, setRateLimitRpm] = useState(60);
   const [rateLimitTpm, setRateLimitTpm] = useState(60000);
+  const [expiresInDays, setExpiresInDays] = useState<number>(0); // 0 = never
   const [modelScopeMode, setModelScopeMode] = useState<'all' | 'restricted'>('all');
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [createdSecret, setCreatedSecret] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState(false);
+  const [copiedMaskedId, setCopiedMaskedId] = useState<string | null>(null);
   const [errorText, setErrorText] = useState('');
   const { success, error: toastError } = useToast();
 
@@ -73,6 +80,7 @@ export default function ApiKeysPage() {
 
     try {
       const allowedModels = modelScopeMode === 'all' ? ['*'] : selectedModels;
+      const expiresAt = expiresInDays > 0 ? new Date(Date.now() + expiresInDays * 86400000).toISOString() : null;
 
       const res = await apiRequest('/api/keys', {
         method: 'POST',
@@ -81,6 +89,7 @@ export default function ApiKeysPage() {
           rateLimitRpm,
           rateLimitTpm,
           allowedModels,
+          expiresAt,
         }),
       });
 
@@ -88,12 +97,20 @@ export default function ApiKeysPage() {
       setKeyName('');
       setModelScopeMode('all');
       setSelectedModels([]);
+      setExpiresInDays(0);
       success('API Key generated successfully.');
       await loadData();
     } catch (err: any) {
       setErrorText(err.message || 'Failed to create key.');
       toastError(err.message || 'Key generation failed.');
     }
+  };
+
+  const handleCopyMasked = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedMaskedId(id);
+    success('Masked key copied.');
+    setTimeout(() => setCopiedMaskedId(null), 2000);
   };
 
   const handleRevoke = async (keyId: string, name: string) => {
@@ -184,9 +201,10 @@ export default function ApiKeysPage() {
                   <th className="px-6 py-3.5">Secret Key (Masked)</th>
                   <th className="px-6 py-3.5">Model Scope</th>
                   <th className="px-6 py-3.5">Rate Limit</th>
+                  <th className="px-6 py-3.5">Invocations</th>
                   <th className="px-6 py-3.5">Last Invoked</th>
-                  <th className="px-6 py-3.5">Created Date</th>
-                  <th className="px-6 py-3.5 text-right">Revoke</th>
+                  <th className="px-6 py-3.5">Expires</th>
+                  <th className="px-6 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -196,11 +214,26 @@ export default function ApiKeysPage() {
 
                   return (
                     <tr key={k.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="px-6 py-4 font-semibold text-foreground">{k.name}</td>
+                      <td className="px-6 py-4">
+                        <div className="font-semibold text-foreground">{k.name}</div>
+                        <div className="text-[10px] text-muted-foreground font-mono">ID: {k.id.slice(0, 8)}...</div>
+                      </td>
                       <td className="px-6 py-4 font-mono text-muted-foreground">
-                        <span className="bg-muted px-2.5 py-1 rounded-lg border border-border font-medium">
-                          {k.maskedKey}
-                        </span>
+                        <div className="inline-flex items-center space-x-1.5 bg-muted/60 px-2.5 py-1 rounded-lg border border-border">
+                          <span className="font-medium text-foreground">{k.maskedKey}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyMasked(k.id, k.maskedKey)}
+                            title="Copy masked key identifier"
+                            className="text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors"
+                          >
+                            {copiedMaskedId === k.id ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         {isWildcard ? (
@@ -214,7 +247,7 @@ export default function ApiKeysPage() {
                             className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-mono bg-purple-500/10 text-purple-400 border border-purple-500/20 font-semibold"
                           >
                             <Lock className="w-3 h-3" />
-                            <span>{allowed.length} model{allowed.length > 1 ? 's' : ''} restricted</span>
+                            <span>{allowed.length} model{allowed.length > 1 ? 's' : ''}</span>
                           </span>
                         )}
                       </td>
@@ -222,20 +255,46 @@ export default function ApiKeysPage() {
                         <span className="text-foreground font-semibold">{k.rateLimitRpm}</span> RPM /{' '}
                         <span className="text-foreground font-semibold">{(k.rateLimitTpm / 1000).toFixed(0)}k</span> TPM
                       </td>
+                      <td className="px-6 py-4 font-mono">
+                        <div className="flex items-center space-x-1.5">
+                          <Activity className={`w-3.5 h-3.5 ${k.totalRequests > 0 ? 'text-primary' : 'text-muted-foreground/50'}`} />
+                          <span className="text-foreground font-semibold">
+                            {(k.totalRequests || 0).toLocaleString()}
+                          </span>
+                          <span className="text-muted-foreground text-[10px]">reqs</span>
+                        </div>
+                      </td>
                       <td className="px-6 py-4 text-muted-foreground font-mono">
                         {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString() : 'Never'}
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground font-mono">
-                        {new Date(k.createdAt).toLocaleDateString()}
+                      <td className="px-6 py-4 text-muted-foreground font-mono text-[11px]">
+                        {k.expiresAt ? (
+                          <span className="inline-flex items-center space-x-1 text-amber-400">
+                            <Calendar className="w-3 h-3" />
+                            <span>{new Date(k.expiresAt).toLocaleDateString()}</span>
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">Never</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => handleRevoke(k.id, k.name)}
-                          title="Revoke key"
-                          className="p-2 rounded-xl text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center justify-end space-x-1">
+                          <Link
+                            href={`/dashboard/logs?search=${encodeURIComponent(k.maskedKey)}`}
+                            title={`Inspect live logs for ${k.name}`}
+                            className="p-2 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all flex items-center space-x-1"
+                          >
+                            <Terminal className="w-3.5 h-3.5" />
+                            <span className="text-[11px] font-semibold hidden md:inline">Logs</span>
+                          </Link>
+                          <button
+                            onClick={() => handleRevoke(k.id, k.name)}
+                            title={`Revoke "${k.name}"`}
+                            className="p-2 rounded-xl text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -362,33 +421,111 @@ export default function ApiKeysPage() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                        RPM Limit
+                  {/* Rate Limits & Presets */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Rate Limit Tier Preset
                       </label>
-                      <input
-                        type="number"
-                        min="10"
-                        max="1000"
-                        value={rateLimitRpm}
-                        onChange={(e) => setRateLimitRpm(parseInt(e.target.value, 10))}
-                        className="w-full px-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-mono focus:border-primary focus:outline-none"
-                      />
+                      <span className="text-[10px] text-muted-foreground font-mono">
+                        {rateLimitRpm} RPM &bull; {(rateLimitTpm / 1000).toFixed(0)}k TPM
+                      </span>
                     </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-muted-foreground mb-1">
-                        TPM Limit
-                      </label>
-                      <input
-                        type="number"
-                        min="10000"
-                        max="10000000"
-                        step="10000"
-                        value={rateLimitTpm}
-                        onChange={(e) => setRateLimitTpm(parseInt(e.target.value, 10))}
-                        className="w-full px-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-mono focus:border-primary focus:outline-none"
-                      />
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => { setRateLimitRpm(60); setRateLimitTpm(60000); }}
+                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                          rateLimitRpm === 60 && rateLimitTpm === 60000
+                            ? 'border-primary bg-primary/10 text-primary font-bold'
+                            : 'border-border bg-muted/30 text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <div className="text-[11px] font-bold">Standard</div>
+                        <div className="text-[9px] text-muted-foreground font-mono">60 RPM / 60k TPM</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setRateLimitRpm(300); setRateLimitTpm(300000); }}
+                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                          rateLimitRpm === 300 && rateLimitTpm === 300000
+                            ? 'border-primary bg-primary/10 text-primary font-bold'
+                            : 'border-border bg-muted/30 text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <div className="text-[11px] font-bold">Concurrency</div>
+                        <div className="text-[9px] text-muted-foreground font-mono">300 RPM / 300k TPM</div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setRateLimitRpm(1000); setRateLimitTpm(2000000); }}
+                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                          rateLimitRpm === 1000 && rateLimitTpm === 2000000
+                            ? 'border-primary bg-primary/10 text-primary font-bold'
+                            : 'border-border bg-muted/30 text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <div className="text-[11px] font-bold">Enterprise</div>
+                        <div className="text-[9px] text-muted-foreground font-mono">1k RPM / 2M TPM</div>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                          Custom RPM
+                        </label>
+                        <input
+                          type="number"
+                          min="10"
+                          max="2000"
+                          value={rateLimitRpm}
+                          onChange={(e) => setRateLimitRpm(parseInt(e.target.value, 10) || 60)}
+                          className="w-full px-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                          Custom TPM
+                        </label>
+                        <input
+                          type="number"
+                          min="10000"
+                          max="20000000"
+                          step="10000"
+                          value={rateLimitTpm}
+                          onChange={(e) => setRateLimitTpm(parseInt(e.target.value, 10) || 60000)}
+                          className="w-full px-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expiration Settings */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Key Expiration
+                    </label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { label: 'Never', days: 0 },
+                        { label: '30 Days', days: 30 },
+                        { label: '90 Days', days: 90 },
+                        { label: '1 Year', days: 365 },
+                      ].map((exp) => (
+                        <button
+                          key={exp.days}
+                          type="button"
+                          onClick={() => setExpiresInDays(exp.days)}
+                          className={`py-2 px-1 rounded-xl border text-center text-xs transition-all ${
+                            expiresInDays === exp.days
+                              ? 'border-primary bg-primary/10 text-primary font-bold'
+                              : 'border-border bg-muted/30 text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          {exp.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
@@ -406,7 +543,7 @@ export default function ApiKeysPage() {
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto mb-3 shadow-inner">
                     <Check className="w-6 h-6" />
                   </div>
-                  <h3 className="font-extrabold text-lg">API Key Ready</h3>
+                  <h3 className="font-extrabold text-lg">API Key Created</h3>
                   <p className="text-xs text-muted-foreground mt-1">
                     Copy and store your secret key now. You will not be able to view it again.
                   </p>
@@ -421,8 +558,31 @@ export default function ApiKeysPage() {
                     className="p-2.5 rounded-lg bg-primary text-primary-foreground font-semibold shrink-0 hover:bg-primary/90 transition-all text-xs flex items-center space-x-1"
                   >
                     {copiedKey ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedKey ? 'Copied' : 'Copy'}</span>
+                    <span>{copiedKey ? 'Copied' : 'Copy Key'}</span>
                   </button>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+                    <span>Instant cURL Verification:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const snippet = `curl https://api.yoyo.ai/v1/chat/completions \\\n  -H "Authorization: Bearer ${createdSecret}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"model": "llama-3.3-70b", "messages": [{"role": "user", "content": "Hello YOYO"}], "max_tokens": 16}'`;
+                        navigator.clipboard.writeText(snippet);
+                        success('Verification cURL snippet copied!');
+                      }}
+                      className="text-primary hover:underline font-bold"
+                    >
+                      Copy Command
+                    </button>
+                  </div>
+                  <pre className="p-3 bg-muted/30 rounded-xl border border-border text-[10px] font-mono text-foreground/90 overflow-x-auto whitespace-pre-wrap break-all select-all">
+{`curl https://api.yoyo.ai/v1/chat/completions \\
+  -H "Authorization: Bearer ${createdSecret}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"model": "llama-3.3-70b", "messages": [{"role": "user", "content": "Hello YOYO"}], "max_tokens": 16}'`}
+                  </pre>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs flex items-start space-x-2">

@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: yoyo-postgres
+  namespace: yoyo-system
+  labels:
+    app: yoyo-postgres
+spec:
+  ports:
+    - port: 5432
+      name: postgres
+  clusterIP: None
+  selector:
+    app: yoyo-postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: yoyo-postgres
+  namespace: yoyo-system
+spec:
+  serviceName: yoyo-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yoyo-postgres
+  template:
+    metadata:
+      labels:
+        app: yoyo-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 4000m
+              memory: 8Gi
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_USER
+              value: yoyo_user
+            - name: POSTGRES_PASSWORD
+              value: yoyo_cluster_secure_pass
+            - name: POSTGRES_DB
+              value: yoyo_db
+          volumeMounts:
+            - name: pg-storage
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "yoyo_user", "-d", "yoyo_db"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "yoyo_user", "-d", "yoyo_db"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+  volumeClaimTemplates:
+    - metadata:
+        name: pg-storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 100Gi
+

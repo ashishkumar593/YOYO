@@ -262,8 +262,24 @@ export default function SuperAdminPage() {
                   <span className="text-xs font-mono text-muted-foreground">{worker.endpointUrl}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span
+                    className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold ${
+                      worker.status === 'ONLINE'
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        : worker.status === 'DRAINING'
+                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        worker.status === 'ONLINE'
+                          ? 'bg-emerald-500 animate-pulse'
+                          : worker.status === 'DRAINING'
+                          ? 'bg-amber-500'
+                          : 'bg-red-500'
+                      }`}
+                    />
                     <span>{worker.status}</span>
                   </span>
                   <button

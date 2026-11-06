@@ -22,6 +22,9 @@ export class AdminService implements OnModuleInit, OnModuleDestroy {
         this.logger.error(`Automated worker health check failed: ${err.message}`);
       });
     }, 60000);
+    if (this.healthCheckInterval.unref) {
+      this.healthCheckInterval.unref();
+    }
   }
 
   onModuleDestroy() {

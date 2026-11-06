@@ -1,5 +1,5 @@
 {
-  "name": "@yoyo/sdk",
+  "name": "@yoyo-ai/sdk",
   "version": "1.0.0",
   "description": "Official TypeScript/Node.js client SDK for the YOYO AI Model API Platform",
   "main": "dist/index.js",
@@ -7,6 +7,7 @@
   "scripts": {
     "build": "tsc",
     "test": "node test.js",
+    "test:live": "node test-live-sdk.js",
     "prepublishOnly": "tsc"
   },
   "keywords": [

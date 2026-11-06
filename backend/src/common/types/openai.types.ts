@@ -2,8 +2,10 @@ export type ChatRole = 'system' | 'user' | 'assistant' | 'tool';
 
 export interface ChatMessage {
   role: ChatRole;
-  content: string;
+  content?: string | null;
   name?: string;
+  tool_call_id?: string;
+  tool_calls?: any[];
 }
 
 export interface ChatCompletionRequest {
@@ -17,6 +19,9 @@ export interface ChatCompletionRequest {
   frequency_penalty?: number;
   presence_penalty?: number;
   seed?: number;
+  response_format?: { type: 'json_object' | 'text' } | any;
+  tools?: any[];
+  tool_choice?: any;
 }
 
 export interface ChatCompletionChoice {
@@ -29,6 +34,9 @@ export interface ChatCompletionUsage {
   prompt_tokens: number;
   completion_tokens: number;
   total_tokens: number;
+  prompt_tokens_details?: {
+    cached_tokens?: number;
+  };
 }
 
 export interface ChatCompletionResponse {
@@ -92,5 +100,28 @@ export interface ModelObject {
 export interface ModelListResponse {
   object: 'list';
   data: ModelObject[];
+}
+
+export interface RerankRequest {
+  model: string;
+  query: string;
+  documents: (string | { text: string })[];
+  top_n?: number;
+  return_documents?: boolean;
+}
+
+export interface RerankResultItem {
+  index: number;
+  relevance_score: number;
+  document?: { text: string };
+}
+
+export interface RerankResponse {
+  id: string;
+  results: RerankResultItem[];
+  meta: {
+    api_version: { version: string };
+    billed_units: { search_units: number };
+  };
 }
 

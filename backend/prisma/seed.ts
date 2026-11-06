@@ -239,6 +239,24 @@ async function main() {
       },
       workerId: worker2.id,
     },
+    {
+      apiIdentifier: 'bge-reranker-large',
+      name: 'BAAI BGE Reranker Large',
+      providerFamily: 'BAAI',
+      category: ModelCategory.EMBEDDING,
+      description: 'Cross-encoder reranking model for precision document re-scoring and RAG context filtering.',
+      license: 'MIT',
+      defaultContextWindow: 512,
+      pricing: { input: 0.05, output: 0.0 },
+      version: {
+        tag: 'latest',
+        parameterSize: BigInt(560000000),
+        quantizationLevel: 'FP16',
+        diskSizeBytes: BigInt(1120000000),
+        vramRequiredBytes: BigInt(2000000000),
+      },
+      workerId: worker1.id,
+    },
   ];
 
   for (const item of defaultModels) {

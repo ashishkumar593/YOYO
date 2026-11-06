@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: yoyo-config
+  namespace: yoyo-system
+data:
+  NODE_ENV: "production"
+  PORT: "4000"
+  FRONTEND_PORT: "3000"
+  NEXT_PUBLIC_API_URL: "https://api.yoyo.ai"
+  NEXT_PUBLIC_APP_URL: "https://yoyo.ai"
+  REDIS_URL: "redis://yoyo-redis.yoyo-system.svc.cluster.local:6379"
+  FEATURE_MOCK_INFERENCE: "false"
+  FEATURE_BILLING_ENABLED: "true"
+

@@ -205,7 +205,15 @@ export default function AnalyticsPage() {
                   <td className="px-6 py-3 text-primary font-bold">{r.totalTokens}</td>
                   <td className="px-6 py-3 text-muted-foreground">{r.latencyMs}ms</td>
                   <td className="px-6 py-3">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400">
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        r.statusCode >= 200 && r.statusCode < 300
+                          ? 'bg-emerald-500/10 text-emerald-400'
+                          : r.statusCode === 429
+                          ? 'bg-amber-500/10 text-amber-400'
+                          : 'bg-red-500/10 text-red-400'
+                      }`}
+                    >
                       {r.statusCode}
                     </span>
                   </td>

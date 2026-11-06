@@ -252,12 +252,12 @@ export default function ModelsPage() {
                   <div className="flex items-center space-x-2">
                     {model.isActive ? (
                       <div className="flex items-center space-x-1.5 text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>Ready // Online</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span>Active</span>
                       </div>
                     ) : (
                       <div className="flex items-center space-x-1.5 text-[10px] font-mono text-zinc-500 bg-zinc-500/10 px-2.5 py-0.5 rounded-full border border-zinc-500/20">
-                        <span>Offline // Inactive</span>
+                        <span>Inactive</span>
                       </div>
                     )}
 

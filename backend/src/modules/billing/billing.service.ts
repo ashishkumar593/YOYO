@@ -87,6 +87,13 @@ export class BillingService {
         freeQuotaEligible: true,
       },
       {
+        modelIdentifier: 'bge-reranker-large',
+        name: 'BAAI BGE Reranker Large',
+        inputCostPerMillion: 0.05,
+        outputCostPerMillion: 0.0,
+        freeQuotaEligible: true,
+      },
+      {
         modelIdentifier: 'llama3.3:70b',
         name: 'Meta Llama 3.3 70B Instruct',
         inputCostPerMillion: 0.80,

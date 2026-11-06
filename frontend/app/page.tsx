@@ -36,9 +36,9 @@ export default function LandingPage() {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [monthlyTokensMillions, setMonthlyTokensMillions] = useState<number>(50);
 
-  // Simulated live terminal stream
+  // Sample live stream response
   const sampleStreamResponse =
-    "YOYO Cloud Gateway online. Routing request to cluster-us-east-01 (NVIDIA H100 SXM5 / CUDA 13). Llama-3.3-70B resident in high-bandwidth memory. TTFT initialized in 18ms. Processing prompt: 'Analyze distributed memory coherence in cloud-hosted multi-GPU inference clusters.'\n\nOptimal throughput is achieved by decoupling the Fastify edge proxy from the inference workers using non-blocking SSE streaming and zero-copy JSON chunk serialization.";
+    "Speculative decoding accelerates transformer inference by pairing a small draft model with a larger foundation model.\n\n1. Draft Phase: A fast model (such as Llama 3.3 8B) generates K candidate tokens in speculative succession.\n2. Parallel Verification: The target model (Llama 3.3 70B) executes a single parallel validation pass across all draft tokens.\n3. Acceptance: Verified tokens are accepted in parallel, delivering 2.5x higher throughput with identical mathematical output.";
 
   const handleRunStream = () => {
     if (isStreaming) return;
@@ -181,50 +181,41 @@ for chunk in stream:
       <div className="fixed top-0 left-1/4 w-[600px] h-[350px] bg-cyan-600/10 rounded-full blur-[140px] pointer-events-none -z-10" />
       <div className="fixed top-1/3 right-1/4 w-[500px] h-[300px] bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none -z-10" />
 
-      {/* Top Global Cloud Telemetry Bar */}
-      <div className="w-full border-b border-white/[0.08] bg-[#0A0B10]/90 backdrop-blur-md px-4 lg:px-8 py-1.5 flex items-center justify-between text-[11px] font-mono text-zinc-400 z-50">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
-            GLOBAL CLOUD CLUSTER: ONLINE
-          </span>
-          <span className="text-zinc-600">|</span>
-          <span className="hidden sm:inline-block text-zinc-400">
-            REGIONS: <span className="text-zinc-200">US-EAST // EU-WEST // AP-SOUTH</span>
-          </span>
-          <span className="hidden md:inline-block text-zinc-600">|</span>
-          <span className="hidden md:inline-block text-zinc-400">
-            HARDWARE: <span className="text-cyan-400">NVIDIA H100 SXM5 & A100 80GB</span>
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-zinc-400">EDGE RTT: <span className="text-emerald-400 font-bold">0.42ms</span></span>
-          <span className="text-zinc-600 hidden sm:inline-block">|</span>
-          <span className="text-zinc-400 hidden sm:inline-block">GLOBAL SLA: <span className="text-zinc-200">99.99%</span></span>
-        </div>
+      {/* Top Announcement Bar */}
+      <div className="w-full border-b border-white/[0.06] bg-[#0A0B10]/90 backdrop-blur-md px-4 py-2 text-center text-xs text-zinc-400 z-50">
+        <span className="inline-flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          <span>Llama 3.3 70B & DeepSeek R1 are now available on dedicated cloud GPUs.</span>
+          <Link href="/register" className="text-cyan-400 hover:text-cyan-300 font-medium inline-flex items-center gap-0.5 ml-1">
+            Get Started <ArrowRight className="w-3 h-3" />
+          </Link>
+        </span>
       </div>
 
-      {/* Main Full-Width Header */}
+      {/* Main Header */}
       <header className="w-full border-b border-white/[0.08] bg-[#07080C]/80 backdrop-blur-xl sticky top-0 z-40 px-4 lg:px-8 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center">
             <YoyoLogo size={32} showText={true} />
           </Link>
-          <nav className="hidden lg:flex items-center gap-6 text-xs font-mono tracking-wider text-zinc-400 uppercase">
-            <a href="#models" className="hover:text-cyan-400 transition-colors">
-              // Models
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-zinc-400">
+            <a href="#models" className="hover:text-white transition-colors">
+              Models
             </a>
-            <a href="#architecture" className="hover:text-cyan-400 transition-colors">
-              // Cloud Infrastructure
+            <a href="#architecture" className="hover:text-white transition-colors">
+              Infrastructure
             </a>
-            <a href="#economics" className="hover:text-cyan-400 transition-colors">
-              // Economics
+            <a href="#economics" className="hover:text-white transition-colors">
+              Pricing
             </a>
-            <a href="#faq" className="hover:text-cyan-400 transition-colors">
-              // FAQ
+            <a href="#faq" className="hover:text-white transition-colors">
+              FAQ
             </a>
-            <Link href="/dashboard/playground" className="hover:text-cyan-400 transition-colors">
-              // Playground
+            <Link href="/dashboard/playground" className="hover:text-white transition-colors">
+              Playground
+            </Link>
+            <Link href="/docs" className="hover:text-white transition-colors">
+              Documentation
             </Link>
           </nav>
         </div>
@@ -232,16 +223,16 @@ for chunk in stream:
         <div className="flex items-center gap-3">
           <Link
             href="/login"
-            className="px-3.5 py-1.5 rounded border border-white/[0.12] hover:border-white/30 text-xs font-mono text-zinc-300 hover:text-white transition-all bg-white/[0.02]"
+            className="px-4 py-2 rounded-lg border border-white/[0.12] hover:border-white/30 text-xs font-medium text-zinc-300 hover:text-white transition-all bg-white/[0.02]"
           >
             Sign In
           </Link>
           <Link
             href="/register"
-            className="px-4 py-1.5 rounded bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-mono font-bold text-xs uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(6,182,212,0.35)] flex items-center gap-1.5"
+            className="px-4 py-2 rounded-lg bg-white text-zinc-950 hover:bg-zinc-200 font-semibold text-xs tracking-normal transition-all shadow-sm flex items-center gap-1.5"
           >
-            <span>Get Cloud API Key</span>
-            <ArrowRight className="w-3.5 h-3.5 text-black" />
+            <span>Get API Key</span>
+            <ArrowRight className="w-3.5 h-3.5 text-zinc-950" />
           </Link>
         </div>
       </header>
@@ -266,27 +257,27 @@ for chunk in stream:
               High-throughput OpenAI-compatible API gateway delivering hosted open-weights foundation models (<span className="text-zinc-200 font-semibold">Llama 3.3 70B</span>, <span className="text-zinc-200 font-semibold">DeepSeek R1</span>, <span className="text-zinc-200 font-semibold">Qwen 2.5 Coder</span>) across high-performance cloud GPU clusters. Sub-millisecond gateway routing, live streaming, and transparent token economics.
             </p>
 
-            {/* Hardware Metrics Strip */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
-              <div className="p-3 rounded border border-white/[0.08] bg-[#0C0D14]">
-                <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Gateway Latency</div>
-                <div className="text-xl sm:text-2xl font-mono font-bold text-cyan-400 mt-1">0.42ms</div>
-                <div className="text-[10px] text-zinc-500 font-mono mt-0.5">Fastify edge routing</div>
+            {/* Platform Metrics Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+              <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0C0D14]/80">
+                <div className="text-xs font-medium text-zinc-400">Gateway Latency</div>
+                <div className="text-xl sm:text-2xl font-bold font-mono text-cyan-400 mt-1">0.42ms</div>
+                <div className="text-[11px] text-zinc-500 mt-0.5">Fastify edge routing</div>
               </div>
-              <div className="p-3 rounded border border-white/[0.08] bg-[#0C0D14]">
-                <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Token Velocity</div>
-                <div className="text-xl sm:text-2xl font-mono font-bold text-emerald-400 mt-1">164 t/s</div>
-                <div className="text-[10px] text-zinc-500 font-mono mt-0.5">Cloud H100 SXM5</div>
+              <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0C0D14]/80">
+                <div className="text-xs font-medium text-zinc-400">Token Velocity</div>
+                <div className="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1">164 t/s</div>
+                <div className="text-[11px] text-zinc-500 mt-0.5">Cloud H100 SXM5</div>
               </div>
-              <div className="p-3 rounded border border-white/[0.08] bg-[#0C0D14]">
-                <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Data Retention</div>
-                <div className="text-xl sm:text-2xl font-mono font-bold text-purple-400 mt-1">Zero (ZDR)</div>
-                <div className="text-[10px] text-zinc-500 font-mono mt-0.5">Zero model training</div>
+              <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0C0D14]/80">
+                <div className="text-xs font-medium text-zinc-400">Data Retention</div>
+                <div className="text-xl sm:text-2xl font-bold text-white mt-1">Zero (ZDR)</div>
+                <div className="text-[11px] text-zinc-500 mt-0.5">Zero model training</div>
               </div>
-              <div className="p-3 rounded border border-white/[0.08] bg-[#0C0D14]">
-                <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">Developer Tier</div>
-                <div className="text-xl sm:text-2xl font-mono font-bold text-amber-400 mt-1">5M Free</div>
-                <div className="text-[10px] text-zinc-500 font-mono mt-0.5">Monthly starter quota</div>
+              <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0C0D14]/80">
+                <div className="text-xs font-medium text-zinc-400">Starter Tier</div>
+                <div className="text-xl sm:text-2xl font-bold text-white mt-1">5M Tokens</div>
+                <div className="text-[11px] text-zinc-500 mt-0.5">Monthly starter quota</div>
               </div>
             </div>
 
@@ -294,29 +285,29 @@ for chunk in stream:
             <div className="flex flex-wrap items-center gap-3 pt-3">
               <Link
                 href="/register"
-                className="px-6 py-3 rounded bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                className="px-6 py-3 rounded-xl bg-white text-zinc-950 hover:bg-zinc-200 font-semibold text-sm transition-all flex items-center gap-2 shadow-sm"
               >
-                <span>Get Cloud API Key</span>
-                <ArrowRight className="w-4 h-4 text-black" />
+                <span>Get API Key</span>
+                <ArrowRight className="w-4 h-4 text-zinc-950" />
               </Link>
               <Link
                 href="/dashboard/playground"
-                className="px-5 py-3 rounded border border-white/[0.14] hover:border-white/30 text-xs font-mono text-zinc-200 hover:text-white transition-all bg-white/[0.03] flex items-center gap-2"
+                className="px-5 py-3 rounded-xl border border-white/[0.14] hover:bg-white/[0.06] text-sm font-medium text-zinc-200 hover:text-white transition-all bg-white/[0.02] flex items-center gap-2"
               >
                 <Play className="w-3.5 h-3.5 text-cyan-400 fill-cyan-400" />
-                <span>Open Cloud Playground</span>
+                <span>Open Playground</span>
               </Link>
             </div>
 
             {/* Terminal One-Liner Quickstart */}
-            <div className="p-2.5 rounded bg-[#090A0E] border border-white/[0.08] flex items-center justify-between font-mono text-xs text-zinc-400 max-w-xl">
+            <div className="p-2.5 rounded-xl bg-[#090A0E] border border-white/[0.08] flex items-center justify-between font-mono text-xs text-zinc-400 max-w-xl">
               <div className="flex items-center gap-2 truncate">
                 <span className="text-cyan-400 select-none">$</span>
                 <span className="text-zinc-200 truncate">curl -s https://api.yoyo.ai/v1/models</span>
               </div>
               <button
                 onClick={() => copyToClipboard('curl -s https://api.yoyo.ai/v1/models')}
-                className="p-1.5 rounded hover:bg-white/[0.06] text-zinc-400 hover:text-white transition-colors flex-shrink-0"
+                className="p-1.5 rounded-lg hover:bg-white/[0.06] text-zinc-400 hover:text-white transition-colors flex-shrink-0"
                 title="Copy command"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -341,43 +332,43 @@ for chunk in stream:
                 </div>
 
                 {/* Tabs */}
-                <div className="flex items-center gap-1 bg-black/40 p-1 rounded border border-white/[0.06] text-[11px] font-mono overflow-x-auto">
+                <div className="flex items-center gap-1 bg-black/40 p-1 rounded-lg border border-white/[0.06] text-xs font-sans overflow-x-auto">
                   <button
                     onClick={() => setActiveTab('stream')}
-                    className={`px-2.5 py-1 rounded transition-colors whitespace-nowrap ${
-                      activeTab === 'stream' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-zinc-400 hover:text-white'
+                    className={`px-3 py-1 rounded-md transition-colors whitespace-nowrap text-xs ${
+                      activeTab === 'stream' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-white'
                     }`}
                   >
                     Live Demo
                   </button>
                   <button
                     onClick={() => setActiveTab('python')}
-                    className={`px-2 py-1 rounded transition-colors whitespace-nowrap ${
-                      activeTab === 'python' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-zinc-400 hover:text-white'
+                    className={`px-3 py-1 rounded-md transition-colors whitespace-nowrap text-xs ${
+                      activeTab === 'python' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-white'
                     }`}
                   >
                     Python SDK
                   </button>
                   <button
                     onClick={() => setActiveTab('ts')}
-                    className={`px-2 py-1 rounded transition-colors whitespace-nowrap ${
-                      activeTab === 'ts' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-zinc-400 hover:text-white'
+                    className={`px-3 py-1 rounded-md transition-colors whitespace-nowrap text-xs ${
+                      activeTab === 'ts' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-white'
                     }`}
                   >
-                    TypeScript SDK
+                    TypeScript
                   </button>
                   <button
                     onClick={() => setActiveTab('openai')}
-                    className={`px-2 py-1 rounded transition-colors whitespace-nowrap ${
-                      activeTab === 'openai' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-zinc-400 hover:text-white'
+                    className={`px-3 py-1 rounded-md transition-colors whitespace-nowrap text-xs ${
+                      activeTab === 'openai' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-white'
                     }`}
                   >
                     OpenAI SDK
                   </button>
                   <button
                     onClick={() => setActiveTab('curl')}
-                    className={`px-2 py-1 rounded transition-colors whitespace-nowrap ${
-                      activeTab === 'curl' ? 'bg-cyan-500/20 text-cyan-300 font-bold' : 'text-zinc-400 hover:text-white'
+                    className={`px-3 py-1 rounded-md transition-colors whitespace-nowrap text-xs ${
+                      activeTab === 'curl' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-white'
                     }`}
                   >
                     cURL
@@ -386,52 +377,52 @@ for chunk in stream:
               </div>
 
               {/* Console Body */}
-              <div className="p-4 sm:p-5 font-mono text-xs min-h-[360px] flex flex-col justify-between bg-[#08090E]">
+              <div className="p-4 sm:p-5 text-xs min-h-[360px] flex flex-col justify-between bg-[#08090E]">
                 {activeTab === 'stream' ? (
-                  <div className="flex flex-col h-full justify-between space-y-4">
-                    <div className="flex items-center justify-between border-b border-white/[0.06] pb-2 text-[11px] text-zinc-400">
+                  <div className="flex flex-col h-full justify-between space-y-4 font-sans">
+                    <div className="flex items-center justify-between border-b border-white/[0.06] pb-2 text-xs text-zinc-400">
                       <div className="flex items-center gap-2">
-                        <span className="text-zinc-500">TARGET MODEL:</span>
-                        <span className="text-cyan-300 font-bold">llama-3.3-70b</span>
+                        <span className="text-zinc-500 text-[11px]">Model:</span>
+                        <span className="text-cyan-300 font-bold font-mono">llama-3.3-70b</span>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 font-mono text-[11px]">
                         {ttft !== null && (
                           <span>
-                            TTFT: <span className="text-emerald-400 font-bold">{ttft}ms</span>
+                            TTFT: <span className="text-emerald-400 font-semibold">{ttft}ms</span>
                           </span>
                         )}
                         {tokenSpeed !== null && (
                           <span>
-                            SPEED: <span className="text-cyan-400 font-bold">{tokenSpeed} t/s</span>
+                            Speed: <span className="text-cyan-400 font-semibold">{tokenSpeed} t/s</span>
                           </span>
                         )}
                       </div>
                     </div>
 
                     {/* Stream Output Text Area */}
-                    <div className="flex-1 bg-[#05060A] p-3.5 rounded border border-white/[0.06] text-zinc-300 overflow-y-auto leading-relaxed h-[220px]">
+                    <div className="flex-1 bg-[#05060A] p-4 rounded-xl border border-white/[0.06] text-zinc-300 overflow-y-auto leading-relaxed h-[220px]">
                       {streamText ? (
                         <div>
-                          <span>{streamText}</span>
+                          <p className="whitespace-pre-line text-xs font-mono">{streamText}</p>
                           {isStreaming && <span className="inline-block w-2 h-4 bg-cyan-400 ml-1 animate-pulse" />}
                         </div>
                       ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-zinc-600 text-center space-y-2">
+                        <div className="h-full flex flex-col items-center justify-center text-zinc-500 text-center space-y-2">
                           <Terminal className="w-8 h-8 opacity-40 text-cyan-500" />
-                          <p>Click &apos;Trigger Cloud Inference&apos; below to simulate real-time SSE token delivery from cluster-us-east-01.</p>
+                          <p className="text-xs">Click &quot;Run Live Stream&quot; below to test real-time Server-Sent Events (SSE) token delivery.</p>
                         </div>
                       )}
                     </div>
 
                     {/* Stream Trigger Controls */}
                     <div className="flex items-center justify-between pt-2">
-                      <div className="text-[10px] text-zinc-500">
-                        PROTOCOL: <span className="text-zinc-300">Server-Sent Events (SSE) Streaming</span>
+                      <div className="text-xs text-zinc-500">
+                        Protocol: <span className="text-zinc-300 font-medium">Server-Sent Events (SSE)</span>
                       </div>
                       <button
                         onClick={handleRunStream}
                         disabled={isStreaming}
-                        className="px-4 py-2 rounded bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black font-mono font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-[0_0_12px_rgba(6,182,212,0.3)]"
+                        className="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-black font-semibold text-xs transition-all flex items-center gap-1.5 shadow-sm"
                       >
                         {isStreaming ? (
                           <>
@@ -441,20 +432,20 @@ for chunk in stream:
                         ) : (
                           <>
                             <Play className="w-3.5 h-3.5 fill-black text-black" />
-                            <span>Trigger Cloud Inference</span>
+                            <span>Run Live Stream</span>
                           </>
                         )}
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="relative">
+                  <div className="relative font-mono">
                     <pre className="text-zinc-300 leading-relaxed overflow-x-auto p-2">
                       <code>{codeSnippets[activeTab]}</code>
                     </pre>
                     <button
                       onClick={() => copyToClipboard(codeSnippets[activeTab])}
-                      className="absolute top-2 right-2 p-1.5 rounded bg-white/[0.08] hover:bg-white/[0.14] text-zinc-300 transition-colors"
+                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/[0.08] hover:bg-white/[0.14] text-zinc-300 transition-colors"
                       title="Copy code"
                     >
                       {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -464,9 +455,9 @@ for chunk in stream:
               </div>
 
               {/* Console Footer Meta */}
-              <div className="px-4 py-2 bg-[#0C0D16] border-t border-white/[0.06] flex items-center justify-between text-[10px] font-mono text-zinc-500">
-                <span>INFRASTRUCTURE: CLOUD DEDICATED GPU NODES</span>
-                <span>SECURITY: SHA-256 PREFIX INDEXED AUTH</span>
+              <div className="px-4 py-2.5 bg-[#0C0D16] border-t border-white/[0.06] flex items-center justify-between text-xs text-zinc-500 font-sans">
+                <span>NVIDIA H100 SXM5 & A100 80GB Cloud Pool</span>
+                <span>Zero Data Retention</span>
               </div>
             </div>
           </div>
@@ -476,10 +467,10 @@ for chunk in stream:
         {/* Framework & Tool Ecosystem Strip */}
         <section className="mt-16 py-8 border-y border-white/[0.08] bg-[#0A0B10]/60">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-4">
-            <span className="text-xs font-mono uppercase tracking-widest text-zinc-500 font-semibold shrink-0">
-              FIRST-CLASS ECOSYSTEM COMPATIBILITY:
+            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 shrink-0">
+              Compatible Frameworks:
             </span>
-            <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12 text-sm font-mono text-zinc-400 font-medium">
+            <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12 text-sm text-zinc-400 font-medium">
               <span className="hover:text-white transition-colors cursor-default">LangChain</span>
               <span className="hover:text-white transition-colors cursor-default">LlamaIndex</span>
               <span className="hover:text-white transition-colors cursor-default">Vercel AI SDK</span>
@@ -493,7 +484,7 @@ for chunk in stream:
         {/* Technical Architecture Topology Section */}
         <section id="architecture" className="mt-20 lg:mt-32 pt-6">
           <div className="flex flex-col space-y-3 mb-8">
-            <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">// CLOUD ARCHITECTURE</span>
+            <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Cloud Architecture</span>
             <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
               Decoupled Cloud Inference Pipeline
             </h2>
@@ -503,26 +494,26 @@ for chunk in stream:
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="p-5 rounded-lg border border-white/[0.08] bg-[#0A0B10] flex flex-col justify-between">
+            <div className="p-5 rounded-xl border border-white/[0.08] bg-[#0A0B10] flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-zinc-500 font-mono text-xs mb-3">
-                  <span>STAGE 01</span>
+                <div className="flex items-center justify-between text-zinc-500 text-xs mb-3 font-semibold">
+                  <span className="font-mono text-cyan-400">01</span>
                   <Terminal className="w-4 h-4 text-cyan-400" />
                 </div>
                 <h3 className="font-bold text-white text-base">Client Application</h3>
                 <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                  OpenAI Python/TS SDKs, LangChain, or direct HTTP calls send requests using standard <code className="text-zinc-200">sk_live_...</code> keys.
+                  OpenAI Python/TS SDKs, LangChain, or direct HTTP calls send requests using standard <code className="text-zinc-200 font-mono">sk_live_...</code> keys.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/[0.06] text-[10px] font-mono text-cyan-400">
+              <div className="mt-4 pt-3 border-t border-white/[0.06] text-xs font-medium text-cyan-400">
                 Zero SDK rewriting
               </div>
             </div>
 
-            <div className="p-5 rounded-lg border border-cyan-500/30 bg-[#0C0F1A] flex flex-col justify-between shadow-[0_0_20px_rgba(6,182,212,0.1)]">
+            <div className="p-5 rounded-xl border border-cyan-500/30 bg-[#0C0F1A] flex flex-col justify-between shadow-[0_0_20px_rgba(6,182,212,0.08)]">
               <div>
-                <div className="flex items-center justify-between text-cyan-400 font-mono text-xs mb-3">
-                  <span>STAGE 02</span>
+                <div className="flex items-center justify-between text-cyan-400 text-xs mb-3 font-semibold">
+                  <span className="font-mono text-cyan-400">02</span>
                   <Zap className="w-4 h-4 text-cyan-400" />
                 </div>
                 <h3 className="font-bold text-white text-base">Fastify Edge Gateway</h3>
@@ -530,15 +521,15 @@ for chunk in stream:
                   SHA-256 hashed key verification with Redis sliding-window rate limiters. Token usage is estimated pre-execution to prevent context overflows.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/[0.06] text-[10px] font-mono text-cyan-400">
+              <div className="mt-4 pt-3 border-t border-white/[0.06] text-xs font-medium text-cyan-400">
                 0.4ms average latency
               </div>
             </div>
 
-            <div className="p-5 rounded-lg border border-white/[0.08] bg-[#0A0B10] flex flex-col justify-between">
+            <div className="p-5 rounded-xl border border-white/[0.08] bg-[#0A0B10] flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-zinc-500 font-mono text-xs mb-3">
-                  <span>STAGE 03</span>
+                <div className="flex items-center justify-between text-zinc-500 text-xs mb-3 font-semibold">
+                  <span className="font-mono text-indigo-400">03</span>
                   <Layers className="w-4 h-4 text-indigo-400" />
                 </div>
                 <h3 className="font-bold text-white text-base">Dynamic Worker Router</h3>
@@ -546,15 +537,15 @@ for chunk in stream:
                   Health checks query active GPU nodes to identify warm models, routing requests to the worker with the lowest queue depth.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/[0.06] text-[10px] font-mono text-indigo-400">
+              <div className="mt-4 pt-3 border-t border-white/[0.06] text-xs font-medium text-indigo-400">
                 Least-connections load balancing
               </div>
             </div>
 
-            <div className="p-5 rounded-lg border border-white/[0.08] bg-[#0A0B10] flex flex-col justify-between">
+            <div className="p-5 rounded-xl border border-white/[0.08] bg-[#0A0B10] flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-zinc-500 font-mono text-xs mb-3">
-                  <span>STAGE 04</span>
+                <div className="flex items-center justify-between text-zinc-500 text-xs mb-3 font-semibold">
+                  <span className="font-mono text-emerald-400">04</span>
                   <Cpu className="w-4 h-4 text-emerald-400" />
                 </div>
                 <h3 className="font-bold text-white text-base">Cloud GPU Runtimes</h3>
@@ -562,7 +553,7 @@ for chunk in stream:
                   Persistent Docker volumes store model weights across cloud GPU instances. NVIDIA Container Toolkit passes hardware directly for maximum throughput.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-white/[0.06] text-[10px] font-mono text-emerald-400">
+              <div className="mt-4 pt-3 border-t border-white/[0.06] text-xs font-medium text-emerald-400">
                 H100 / A100 GPU Clusters
               </div>
             </div>
@@ -572,7 +563,7 @@ for chunk in stream:
         {/* Verified Model Sizing Matrix Table */}
         <section id="models" className="mt-20 lg:mt-32 border-t border-white/[0.08] pt-12">
           <div className="flex flex-col space-y-3 mb-8">
-            <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">// CLOUD MODEL CATALOG</span>
+            <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Model Catalog</span>
             <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
               Hosted Open-Weights Models & Specifications
             </h2>
@@ -605,7 +596,7 @@ for chunk in stream:
                   <td className="py-3.5 px-4">128k Tokens</td>
                   <td className="py-3.5 px-4 text-purple-400">Q4_K_M / FP16</td>
                   <td className="py-3.5 px-4 font-bold text-emerald-400">2x H100 80GB</td>
-                  <td className="py-3.5 px-4 text-emerald-400 font-bold">READY // ONLINE</td>
+                  <td className="py-3.5 px-4 text-emerald-400 font-bold">Active</td>
                 </tr>
                 <tr className="hover:bg-white/[0.02] transition-colors">
                   <td className="py-3.5 px-4 font-bold text-white">llama-3.3-8b</td>
@@ -614,7 +605,7 @@ for chunk in stream:
                   <td className="py-3.5 px-4">128k Tokens</td>
                   <td className="py-3.5 px-4 text-purple-400">FP16</td>
                   <td className="py-3.5 px-4 font-bold text-emerald-400">1x A100 80GB</td>
-                  <td className="py-3.5 px-4 text-emerald-400 font-bold">READY // ONLINE</td>
+                  <td className="py-3.5 px-4 text-emerald-400 font-bold">Active</td>
                 </tr>
                 <tr className="hover:bg-white/[0.02] transition-colors">
                   <td className="py-3.5 px-4 font-bold text-white">qwen-2.5-coder-32b</td>
@@ -623,7 +614,7 @@ for chunk in stream:
                   <td className="py-3.5 px-4">128k Tokens</td>
                   <td className="py-3.5 px-4 text-purple-400">FP16</td>
                   <td className="py-3.5 px-4 font-bold text-emerald-400">1x H100 80GB</td>
-                  <td className="py-3.5 px-4 text-emerald-400 font-bold">READY // ONLINE</td>
+                  <td className="py-3.5 px-4 text-emerald-400 font-bold">Active</td>
                 </tr>
                 <tr className="hover:bg-white/[0.02] transition-colors">
                   <td className="py-3.5 px-4 font-bold text-white">deepseek-r1-8b</td>
@@ -632,7 +623,7 @@ for chunk in stream:
                   <td className="py-3.5 px-4">64k Tokens</td>
                   <td className="py-3.5 px-4 text-purple-400">FP16</td>
                   <td className="py-3.5 px-4 font-bold text-emerald-400">1x A100 80GB</td>
-                  <td className="py-3.5 px-4 text-emerald-400 font-bold">READY // ONLINE</td>
+                  <td className="py-3.5 px-4 text-emerald-400 font-bold">Active</td>
                 </tr>
                 <tr className="hover:bg-white/[0.02] transition-colors">
                   <td className="py-3.5 px-4 font-bold text-white">nomic-embed-text</td>
@@ -641,7 +632,7 @@ for chunk in stream:
                   <td className="py-3.5 px-4">8k Tokens</td>
                   <td className="py-3.5 px-4 text-purple-400">FP16</td>
                   <td className="py-3.5 px-4 font-bold text-emerald-400">High-Memory Pool</td>
-                  <td className="py-3.5 px-4 text-emerald-400 font-bold">READY // ONLINE</td>
+                  <td className="py-3.5 px-4 text-emerald-400 font-bold">Active</td>
                 </tr>
               </tbody>
             </table>
@@ -651,21 +642,21 @@ for chunk in stream:
         {/* Economics & Cost Calculator Section */}
         <section id="economics" className="mt-20 lg:mt-32 border-t border-white/[0.08] pt-12">
           <div className="flex flex-col space-y-3 mb-8">
-            <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">// TOKEN ECONOMICS</span>
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
+            <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Token Economics</span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
               Open-Weights Cloud vs Closed API Tolls
             </h2>
-            <p className="text-sm text-zinc-400 max-w-2xl font-normal">
+            <p className="text-sm text-zinc-400 max-w-2xl font-normal leading-relaxed">
               Compare your monthly token costs between commercial closed APIs and running high-performance open-weights models on YOYO Cloud.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center rounded-xl border border-white/[0.12] bg-[#0A0B12] p-6 lg:p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center rounded-2xl border border-white/[0.08] bg-[#0A0B12] p-6 lg:p-8">
             <div className="lg:col-span-7 space-y-6">
               <div className="space-y-3">
-                <div className="flex items-center justify-between font-mono text-xs">
-                  <span className="text-zinc-400 uppercase">Monthly Consumption Target</span>
-                  <span className="text-cyan-400 font-bold text-sm">{monthlyTokensMillions} Million Tokens</span>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-zinc-300 font-medium">Target Monthly Consumption</span>
+                  <span className="text-cyan-400 font-semibold font-mono text-sm">{monthlyTokensMillions} Million Tokens</span>
                 </div>
                 <input
                   type="range"
@@ -676,75 +667,75 @@ for chunk in stream:
                   onChange={(e) => setMonthlyTokensMillions(Number(e.target.value))}
                   className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
                 />
-                <div className="flex justify-between text-[10px] font-mono text-zinc-600">
-                  <span>5M (Dev)</span>
+                <div className="flex justify-between text-[11px] text-zinc-500 font-medium">
+                  <span>5M (Development)</span>
                   <span>100M (Growth)</span>
                   <span>500M+ (Enterprise)</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="p-4 rounded border border-red-500/20 bg-red-500/[0.04]">
-                  <div className="text-[11px] font-mono text-red-400 uppercase font-semibold">Commercial Closed APIs</div>
+                <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/[0.03]">
+                  <div className="text-xs text-red-400 font-medium">Commercial Closed APIs</div>
                   <div className="text-2xl font-bold font-mono text-white mt-2">${proprietaryCost.toLocaleString()}</div>
-                  <div className="text-[10px] text-zinc-500 font-mono mt-1">Proprietary per-token pricing</div>
+                  <div className="text-[11px] text-zinc-500 mt-1">Proprietary per-token billing</div>
                 </div>
-                <div className="p-4 rounded border border-emerald-500/20 bg-emerald-500/[0.04]">
-                  <div className="text-[11px] font-mono text-emerald-400 uppercase font-semibold">YOYO Cloud Inference</div>
+                <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.03]">
+                  <div className="text-xs text-emerald-400 font-medium">YOYO Cloud Inference</div>
                   <div className="text-2xl font-bold font-mono text-white mt-2">${yoyoCloudCost.toLocaleString()}</div>
-                  <div className="text-[10px] text-zinc-500 font-mono mt-1">Open-weights cloud pricing</div>
+                  <div className="text-[11px] text-zinc-500 mt-1">Open-weights cloud pricing</div>
                 </div>
               </div>
             </div>
 
-            <div className="lg:col-span-5 p-6 rounded-lg border border-cyan-500/30 bg-[#080E1C] flex flex-col justify-between space-y-4">
+            <div className="lg:col-span-5 p-6 rounded-2xl border border-white/[0.08] bg-[#0d101c] flex flex-col justify-between space-y-5">
               <div>
-                <span className="text-[10px] font-mono text-cyan-300 uppercase tracking-widest font-bold">Estimated Monthly Savings</span>
-                <div className="text-3xl sm:text-4xl font-black font-mono text-cyan-400 mt-2">
-                  ${monthlySavings.toLocaleString()} / mo
+                <span className="text-xs font-semibold text-cyan-400">Estimated Monthly Savings</span>
+                <div className="text-3xl sm:text-4xl font-extrabold font-mono text-white mt-2">
+                  ${monthlySavings.toLocaleString()} <span className="text-sm font-normal text-zinc-400">/ mo</span>
                 </div>
-                <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                <p className="text-xs text-zinc-400 mt-2.5 leading-relaxed">
                   Reduce token expenditures by up to 80% while retaining full model weights independence, zero training on your data, and dedicated cloud GPU performance.
                 </p>
               </div>
 
               <Link
                 href="/register"
-                className="w-full py-2.5 rounded bg-cyan-400 hover:bg-cyan-300 text-black font-mono font-bold text-xs uppercase tracking-wider text-center transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.3)]"
+                className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 font-medium text-xs text-center transition-all flex items-center justify-center gap-2 shadow-sm"
               >
-                <span>Deploy with Cloud API Key</span>
-                <ArrowRight className="w-3.5 h-3.5 text-black" />
+                <span>Get API Keys & Start Building</span>
+                <ArrowRight className="w-3.5 h-3.5 text-zinc-950" />
               </Link>
             </div>
           </div>
         </section>
 
         {/* 1-Line Drop-in Migration Callout */}
-        <section id="spec" className="mt-20 lg:mt-32 rounded-xl border border-white/[0.12] bg-[#0A0B12] p-6 lg:p-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+        <section id="spec" className="mt-20 lg:mt-32 rounded-2xl border border-white/[0.08] bg-[#0A0B12] p-6 lg:p-10 flex flex-col lg:flex-row items-center justify-between gap-8">
           <div className="space-y-3 max-w-xl">
-            <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">// DROP-IN REPLACEMENT</span>
-            <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              Migrate in 60 Seconds. No Code Rewrite.
+            <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Drop-in Replacement</span>
+            <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Migrate in 60 Seconds. Zero Code Rewrite.
             </h3>
             <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
-              Simply change your <code className="text-cyan-400 bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">baseURL</code> to <code className="text-white bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">https://api.yoyo.ai/v1</code> and insert your YOYO secret API key. All OpenAI SDK parameters (temperature, max_tokens, stop sequences, streaming) work natively.
+              Simply set your <code className="text-cyan-400 bg-white/[0.06] px-1.5 py-0.5 rounded font-mono text-xs">baseURL</code> to <code className="text-zinc-200 bg-white/[0.06] px-1.5 py-0.5 rounded font-mono text-xs">https://api.yoyo.ai/v1</code> and supply your YOYO secret API key. All OpenAI SDK parameters (temperature, max_tokens, stop sequences, streaming) work natively.
             </p>
           </div>
 
-          <div className="w-full lg:w-auto font-mono text-xs bg-[#05060A] p-4 rounded-lg border border-white/[0.08] text-zinc-300">
-            <div className="text-zinc-500 mb-2">// TypeScript / JavaScript SDK Migration</div>
-            <div className="text-red-400 line-through opacity-70">- baseURL: &apos;https://api.openai.com/v1&apos;</div>
-            <div className="text-emerald-400 font-bold">+ baseURL: &apos;https://api.yoyo.ai/v1&apos;</div>
-            <div className="text-zinc-400 mt-2">// Authorization</div>
-            <div className="text-cyan-300 font-bold">+ apiKey: &apos;sk_live_your_yoyo_key&apos;</div>
+          <div className="w-full lg:w-auto font-mono text-xs bg-[#05060A] p-5 rounded-xl border border-white/[0.08] text-zinc-300">
+            <div className="text-zinc-500 mb-2 font-sans font-medium text-xs">TypeScript / JavaScript SDK Configuration</div>
+            <div className="text-red-400/80 line-through">- baseURL: &apos;https://api.openai.com/v1&apos;</div>
+            <div className="text-emerald-400 font-semibold">+ baseURL: &apos;https://api.yoyo.ai/v1&apos;</div>
+            <div className="text-zinc-500 mt-3 mb-1 font-sans font-medium text-xs">Authorization</div>
+            <div className="text-cyan-300 font-semibold">+ apiKey: &apos;sk_live_your_yoyo_key&apos;</div>
           </div>
         </section>
 
         {/* Developer FAQ Section */}
         <section id="faq" className="mt-20 lg:mt-32 border-t border-white/[0.08] pt-12">
           <div className="flex flex-col space-y-3 mb-8">
-            <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">// TECHNICAL FAQ</span>
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
+            <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Technical FAQ</span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
               Frequently Answered Questions
             </h2>
             <p className="text-sm text-zinc-400 max-w-2xl font-normal">
@@ -787,7 +778,7 @@ for chunk in stream:
       {/* Production Multi-Column Developer Footer */}
       <footer className="w-full border-t border-white/[0.08] bg-[#05060A] mt-24">
         {/* Upper Link Columns */}
-        <div className="max-w-[1700px] mx-auto px-4 lg:px-8 py-16 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 text-xs font-mono">
+        <div className="max-w-[1700px] mx-auto px-4 lg:px-8 py-16 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 text-xs">
           
           {/* Brand Col */}
           <div className="col-span-2 space-y-4">
@@ -797,16 +788,16 @@ for chunk in stream:
             <p className="text-zinc-500 text-xs font-sans max-w-sm leading-relaxed">
               Cloud AI model API platform. Host and serve open-weights LLMs across cloud GPU infrastructure with OpenAI drop-in endpoints, sub-millisecond Fastify edge routing, and multi-tenant key management.
             </p>
-            <div className="flex items-center gap-2 text-[11px] text-zinc-400 pt-2">
-              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>All Cloud Gateways Operational (0.42ms RTT)</span>
+            <div className="flex items-center gap-2 text-xs text-zinc-400 pt-1">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-400" />
+              <span>Global Cloud Inference Network</span>
             </div>
           </div>
 
           {/* Col 1: Platform */}
           <div className="space-y-3">
-            <div className="text-white font-bold tracking-wider uppercase text-[11px]">Platform</div>
-            <ul className="space-y-2 text-zinc-400">
+            <div className="text-zinc-200 font-semibold text-xs">Platform</div>
+            <ul className="space-y-2.5 text-zinc-400">
               <li>
                 <Link href="/dashboard/models" className="hover:text-cyan-400 transition-colors">
                   Cloud Model Catalog
@@ -837,8 +828,8 @@ for chunk in stream:
 
           {/* Col 2: Developers */}
           <div className="space-y-3">
-            <div className="text-white font-bold tracking-wider uppercase text-[11px]">Developers</div>
-            <ul className="space-y-2 text-zinc-400">
+            <div className="text-zinc-200 font-semibold text-xs">Developers</div>
+            <ul className="space-y-2.5 text-zinc-400">
               <li>
                 <a href="#spec" className="hover:text-cyan-400 transition-colors">
                   OpenAI API Spec
@@ -856,7 +847,7 @@ for chunk in stream:
               </li>
               <li>
                 <a href="#architecture" className="hover:text-cyan-400 transition-colors">
-                  Cloud Architecture Docs
+                  Cloud Architecture
                 </a>
               </li>
               <li>
@@ -869,8 +860,8 @@ for chunk in stream:
 
           {/* Col 3: Infrastructure */}
           <div className="space-y-3">
-            <div className="text-white font-bold tracking-wider uppercase text-[11px]">Cloud GPU Pools</div>
-            <ul className="space-y-2 text-zinc-400">
+            <div className="text-zinc-200 font-semibold text-xs">Infrastructure</div>
+            <ul className="space-y-2.5 text-zinc-400">
               <li className="text-zinc-500">Fastify Edge Gateway</li>
               <li className="text-zinc-500">NVIDIA H100 SXM5</li>
               <li className="text-zinc-500">NVIDIA A100 80GB</li>
@@ -883,7 +874,7 @@ for chunk in stream:
 
         {/* Lower Legal & Status Bar */}
         <div className="border-t border-white/[0.08] px-4 lg:px-8 py-6">
-          <div className="max-w-[1700px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] font-mono text-zinc-500">
+          <div className="max-w-[1700px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
             <div>
               &copy; {new Date().getFullYear()} YOYO AI Platform. Enterprise Cloud Inference.
             </div>
@@ -893,7 +884,7 @@ for chunk in stream:
               </Link>
               <span>&bull;</span>
               <Link href="/status" className="hover:text-cyan-400 transition-colors flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 <span>System Status</span>
               </Link>
               <span>&bull;</span>
@@ -902,7 +893,7 @@ for chunk in stream:
               </Link>
               <span>&bull;</span>
               <Link href="/privacy" className="hover:text-cyan-400 transition-colors">
-                Zero Data Retention Privacy
+                Privacy Policy
               </Link>
             </div>
           </div>

@@ -139,6 +139,64 @@
         "properties": {
           "amountUsd": { "type": "number", "minimum": 5, "maximum": 1000 }
         }
+      },
+      "RerankRequest": {
+        "type": "object",
+        "required": ["model", "query", "documents"],
+        "properties": {
+          "model": {
+            "type": "string",
+            "example": "bge-reranker-large"
+          },
+          "query": {
+            "type": "string",
+            "example": "What are the storage guarantees of Kubernetes StatefulSets?"
+          },
+          "documents": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                { "type": "string" },
+                {
+                  "type": "object",
+                  "required": ["text"],
+                  "properties": {
+                    "text": { "type": "string" }
+                  }
+                }
+              ]
+            }
+          },
+          "top_n": {
+            "type": "integer",
+            "example": 3
+          },
+          "return_documents": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "BatchCreateRequest": {
+        "type": "object",
+        "required": ["input_file_id"],
+        "properties": {
+          "input_file_id": {
+            "type": "string",
+            "example": "file-xyz123"
+          },
+          "endpoint": {
+            "type": "string",
+            "default": "/v1/chat/completions"
+          },
+          "completion_window": {
+            "type": "string",
+            "default": "24h"
+          },
+          "metadata": {
+            "type": "object"
+          }
+        }
       }
     }
   },
@@ -178,6 +236,122 @@
         "responses": {
           "200": { "description": "Array of 768-dimensional float embedding vectors" },
           "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/v1/rerank": {
+      "post": {
+        "summary": "Cross-encoder semantic document reranking for precision RAG",
+        "security": [{ "ApiKeyAuth": [] }, { "JwtAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RerankRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Ranked document list with relevance scores" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/v1/batches": {
+      "get": {
+        "summary": "List all asynchronous batch inference jobs",
+        "security": [{ "ApiKeyAuth": [] }, { "JwtAuth": [] }],
+        "responses": {
+          "200": { "description": "List of batch jobs" }
+        }
+      },
+      "post": {
+        "summary": "Create asynchronous batch inference job (50% pricing discount)",
+        "security": [{ "ApiKeyAuth": [] }, { "JwtAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BatchCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Batch job queued" }
+        }
+      }
+    },
+    "/v1/batches/{id}": {
+      "get": {
+        "summary": "Retrieve batch job status and request counts",
+        "security": [{ "ApiKeyAuth": [] }, { "JwtAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Batch job status and progress" }
+        }
+      }
+    },
+    "/v1/batches/{id}/cancel": {
+      "post": {
+        "summary": "Cancel an in-progress or queued batch job",
+        "security": [{ "ApiKeyAuth": [] }, { "JwtAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Batch job cancelled" }
+        }
+      }
+    },
+    "/v1/files": {
+      "get": {
+        "summary": "List uploaded files",
+        "security": [{ "ApiKeyAuth": [] }, { "JwtAuth": [] }],
+        "responses": {
+          "200": { "description": "List of files" }
+        }
+      },
+      "post": {
+        "summary": "Upload a JSONL file for batch processing",
+        "security": [{ "ApiKeyAuth": [] }, { "JwtAuth": [] }],
+        "responses": {
+          "200": { "description": "File uploaded" }
+        }
+      }
+    },
+    "/v1/files/{id}": {
+      "get": {
+        "summary": "Retrieve file metadata",
+        "security": [{ "ApiKeyAuth": [] }, { "JwtAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "File object metadata" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a file",
+        "security": [{ "ApiKeyAuth": [] }, { "JwtAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "File deletion status" }
+        }
+      }
+    },
+    "/v1/files/{id}/content": {
+      "get": {
+        "summary": "Retrieve raw content of a file",
+        "security": [{ "ApiKeyAuth": [] }, { "JwtAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "File content stream" }
         }
       }
     },

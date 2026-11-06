@@ -23,7 +23,7 @@ export default function TermsPage() {
 
       <main className="flex-1 max-w-4xl mx-auto px-6 py-12 space-y-8">
         <div>
-          <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">// LEGAL & GOVERNANCE</span>
+          <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">Legal & Governance</span>
           <h1 className="text-3xl font-black text-white mt-1">Terms of Service</h1>
           <p className="text-zinc-400 text-xs font-mono mt-1">Last updated: October 2026</p>
         </div>

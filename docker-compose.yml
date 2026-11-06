@@ -1,0 +1,167 @@
+name: yoyo-platform
+
+networks:
+  yoyo-net:
+    driver: bridge
+
+volumes:
+  pg_data:
+  redis_data:
+  ollama_data:
+  vllm_data:
+
+services:
+  # 1. PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: yoyo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: yoyo_user
+      POSTGRES_PASSWORD: yoyo_secure_pass
+      POSTGRES_DB: yoyo_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - yoyo-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yoyo_user -d yoyo_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. Redis Cache & Token Bucket Broker
+  redis:
+    image: redis:7.4-alpine
+    container_name: yoyo-redis
+    restart: unless-stopped
+    command: ["redis-server", "--stop-writes-on-bgsave-error", "no", "--save", ""]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - yoyo-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 3. YOYO Backend API Gateway
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: yoyo-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - DATABASE_URL=postgresql://yoyo_user:yoyo_secure_pass@postgres:5432/yoyo_db?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=super_secret_jwt_key_replace_in_production
+      - FEATURE_MOCK_INFERENCE=${FEATURE_MOCK_INFERENCE:-true}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-sk_test_mock}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_mock}
+      - OLLAMA_WORKER_0_URL=${OLLAMA_WORKER_0_URL:-http://ollama:11434}
+      - VLLM_WORKER_0_URL=${VLLM_WORKER_0_URL:-http://vllm:8000}
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:4000/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - yoyo-net
+
+  # 4. YOYO Next.js Platform Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:4000
+    container_name: yoyo-frontend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - NEXT_PUBLIC_API_URL=http://localhost:4000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - yoyo-net
+
+  # 5. Optional Local GPU Inference Node (run with: docker compose --profile gpu up)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: yoyo-ollama
+    restart: unless-stopped
+    profiles:
+      - gpu
+      - ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_FLASH_ATTENTION=1
+    networks:
+      - yoyo-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # 6. High-Throughput vLLM Inference Node (run with: docker compose --profile vllm up)
+  vllm:
+    image: vllm/vllm-openai:latest
+    container_name: yoyo-vllm
+    restart: unless-stopped
+    profiles:
+      - vllm
+      - gpu
+    ports:
+      - "8000:8000"
+    volumes:
+      - vllm_data:/root/.cache/huggingface
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
+    command: >
+      --model Qwen/Qwen2.5-7B-Instruct
+      --host 0.0.0.0
+      --port 8000
+      --max-model-len 4096
+      --gpu-memory-utilization 0.90
+    networks:
+      - yoyo-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

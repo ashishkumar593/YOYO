@@ -11,7 +11,11 @@ import {
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { InferenceService } from './inference.service';
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
-import { ChatCompletionRequest, EmbeddingRequest } from '../../common/types/openai.types';
+import {
+  ChatCompletionRequest,
+  EmbeddingRequest,
+  RerankRequest,
+} from '../../common/types/openai.types';
 
 @Controller('v1')
 @UseGuards(ApiKeyGuard)
@@ -41,6 +45,7 @@ export class InferenceController {
       res.raw.setHeader('Cache-Control', 'no-cache, no-transform');
       res.raw.setHeader('Connection', 'keep-alive');
       res.raw.setHeader('X-Accel-Buffering', 'no'); // Disable Nginx/proxy buffering
+      res.raw.setHeader('x-yoyo-zero-data-retention', 'true');
 
       try {
         const stream = this.inferenceService.chatCompletionStream(
@@ -68,6 +73,7 @@ export class InferenceController {
 
     // Standard non-streaming JSON response
     const result = await this.inferenceService.chatCompletion(body, user, apiKey);
+    res.header('x-yoyo-zero-data-retention', 'true');
     return res.status(HttpStatus.OK).send(result);
   }
 
@@ -75,11 +81,26 @@ export class InferenceController {
   @HttpCode(HttpStatus.OK)
   async embeddings(
     @Body() body: EmbeddingRequest,
-    @Req() req: FastifyRequest
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) res: FastifyReply
   ) {
+    res.header('x-yoyo-zero-data-retention', 'true');
     const user = (req as any).user;
     const apiKey = (req as any).apiKey;
     return this.inferenceService.embeddings(body, user, apiKey);
+  }
+
+  @Post('rerank')
+  @HttpCode(HttpStatus.OK)
+  async rerank(
+    @Body() body: RerankRequest,
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) res: FastifyReply
+  ) {
+    res.header('x-yoyo-zero-data-retention', 'true');
+    const user = (req as any).user;
+    const apiKey = (req as any).apiKey;
+    return this.inferenceService.rerank(body, user, apiKey);
   }
 }
 
