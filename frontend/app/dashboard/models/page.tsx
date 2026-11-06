@@ -141,7 +141,7 @@ export default function ModelsPage() {
     { label: 'General LLM', value: 'GENERAL' },
     { label: 'Code Specialists', value: 'CODING' },
     { label: 'Reasoning & Math', value: 'REASONING' },
-    { label: 'Embeddings', value: 'EMBEDDING' },
+    { label: 'Embeddings & Rerank', value: 'EMBEDDING' },
     { label: 'Vision Multimodal', value: 'VISION' },
   ];
 

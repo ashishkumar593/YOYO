@@ -23,6 +23,7 @@ import {
   User,
   Sliders,
   ChevronDown,
+  Shield,
 } from 'lucide-react';
 
 interface Message {
@@ -87,7 +88,7 @@ function PlaygroundInner() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputPrompt, setInputPrompt] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [streamMetrics, setStreamMetrics] = useState<{ ttftMs?: number; totalTokens?: number; tokensPerSec?: number }>({});
+  const [streamMetrics, setStreamMetrics] = useState<{ ttftMs?: number; totalTokens?: number; tokensPerSec?: number; zeroRetention?: boolean }>({});
   const [showCodeModal, setShowCodeModal] = useState<boolean>(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [codeTab, setCodeTab] = useState<'python' | 'typescript' | 'curl' | 'openai'>('python');
@@ -167,6 +168,10 @@ function PlaygroundInner() {
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(errorText || 'Inference stream error');
+      }
+
+      if (response.headers.get('x-yoyo-zero-data-retention') === 'true') {
+        setStreamMetrics((m) => ({ ...m, zeroRetention: true }));
       }
 
       if (!response.body) throw new Error('Readable stream not supported');
@@ -564,7 +569,7 @@ print()`;
           </div>
 
           {/* Telemetry Speedometer Bar */}
-          {(streamMetrics.ttftMs || streamMetrics.tokensPerSec || streamMetrics.totalTokens) && (
+          {(streamMetrics.ttftMs || streamMetrics.tokensPerSec || streamMetrics.totalTokens || streamMetrics.zeroRetention) && (
             <div className="px-6 py-2.5 border-t border-border/60 bg-muted/30 flex items-center space-x-6 text-[11px] font-mono text-muted-foreground">
               {streamMetrics.ttftMs && (
                 <span className="flex items-center space-x-1.5">
@@ -582,6 +587,12 @@ print()`;
                 <span className="flex items-center space-x-1.5">
                   <Cpu className="w-3.5 h-3.5 text-indigo-400" />
                   <span>Tokens: <strong className="text-foreground">{streamMetrics.totalTokens}</strong></span>
+                </span>
+              )}
+              {streamMetrics.zeroRetention && (
+                <span className="flex items-center space-x-1.5 text-cyan-400">
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>Zero Data Retention: <strong className="text-cyan-300">Audited</strong></span>
                 </span>
               )}
             </div>
