@@ -7,7 +7,11 @@ echo "=========================================================="
 
 # 1. Start Docker services (PostgreSQL & Redis)
 echo -e "\n[1/3] Starting PostgreSQL and Redis containers..."
-docker compose -f docker/compose/docker-compose.dev.yml up -d postgres redis
+if [ -f "docker-compose.yml" ]; then
+  docker compose up -d postgres redis
+else
+  docker compose -f docker/compose/docker-compose.dev.yml up -d postgres redis
+fi
 
 # 2. Wait for database
 echo -e "\n[2/3] Waiting for database to be ready..."

@@ -78,9 +78,12 @@ async function testEndToEndDeveloperFlow() {
       }),
     });
     if (!chatRes.ok) throw new Error(`Inference failed on ${model}: ${await chatRes.text()}`);
+    if (chatRes.headers.get('x-yoyo-zero-data-retention') !== 'true') {
+      throw new Error(`Compliance header x-yoyo-zero-data-retention missing on ${model}`);
+    }
     const chatData = await chatRes.json();
     const duration = Date.now() - start;
-    console.log(`[PASS] ${model} responded in ${duration}ms!`);
+    console.log(`[PASS] ${model} responded in ${duration}ms (Zero-retention verified)!`);
     console.log(`       Token usage: Prompt=${chatData.usage.prompt_tokens}, Completion=${chatData.usage.completion_tokens}, Total=${chatData.usage.total_tokens}`);
     console.log(`       Preview: "${chatData.choices[0].message.content.substring(0, 60)}..."`);
   }
@@ -99,8 +102,11 @@ async function testEndToEndDeveloperFlow() {
     }),
   });
   if (!embedRes.ok) throw new Error(`Embeddings failed: ${await embedRes.text()}`);
+  if (embedRes.headers.get('x-yoyo-zero-data-retention') !== 'true') {
+    throw new Error('Compliance header x-yoyo-zero-data-retention missing on /v1/embeddings');
+  }
   const embedData = await embedRes.json();
-  console.log(`[PASS] Embeddings returned ${embedData.data[0].embedding.length} dimensions vector!`);
+  console.log(`[PASS] Embeddings returned ${embedData.data[0].embedding.length} dimensions vector (Zero-retention verified)!`);
 
   const rerankRes = await fetch('http://localhost:4000/v1/rerank', {
     method: 'POST',
@@ -120,8 +126,11 @@ async function testEndToEndDeveloperFlow() {
     }),
   });
   if (!rerankRes.ok) throw new Error(`Rerank failed: ${await rerankRes.text()}`);
+  if (rerankRes.headers.get('x-yoyo-zero-data-retention') !== 'true') {
+    throw new Error('Compliance header x-yoyo-zero-data-retention missing on /v1/rerank');
+  }
   const rerankData = await rerankRes.json();
-  console.log(`[PASS] Rerank scored top result (Score: ${rerankData.results[0].relevance_score.toFixed(4)})`);
+  console.log(`[PASS] Rerank scored top result (Score: ${rerankData.results[0].relevance_score.toFixed(4)}) (Zero-retention verified)!`);
 
   // 6. Verify Telemetry & Request Audit Logs
   console.log('\n--> Step 6: Verifying Real-time Telemetry & Usage Logs...');

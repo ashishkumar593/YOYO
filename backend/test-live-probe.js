@@ -27,7 +27,7 @@ async function runProbe() {
   console.log('====================================================\n');
 
   // 1. Health Check
-  console.log('--> [1/10] Probing GET /health ...');
+  console.log('--> [1/11] Probing GET /health ...');
   const health = await request({
     host: 'localhost',
     port: 4000,
@@ -37,7 +37,7 @@ async function runProbe() {
   console.log(`[PASS] Health check returned HTTP ${health.status}:`, health.body);
 
   // 2. Admin Login
-  console.log('\n--> [2/10] Probing POST /api/auth/login (Super Admin) ...');
+  console.log('\n--> [2/11] Probing POST /api/auth/login (Super Admin) ...');
   const login = await request(
     {
       host: 'localhost',
@@ -77,7 +77,7 @@ async function runProbe() {
   } catch {}
 
   // 3. Create API Key
-  console.log('\n--> [3/10] Probing POST /api/keys (Create API Key) ...');
+  console.log('\n--> [3/11] Probing POST /api/keys (Create API Key) ...');
   const keyRes = await request(
     {
       host: 'localhost',
@@ -95,7 +95,7 @@ async function runProbe() {
   console.log(`[PASS] API Key generated: ${apiKey.substring(0, 15)}... (ID: ${keyRes.body.apiKey.id})`);
 
   // 4. List Models (OpenAI compatible)
-  console.log('\n--> [4/10] Probing GET /v1/models (OpenAI Wire Parity) ...');
+  console.log('\n--> [4/11] Probing GET /v1/models (OpenAI Wire Parity) ...');
   const models = await request({
     host: 'localhost',
     port: 4000,
@@ -107,7 +107,7 @@ async function runProbe() {
   console.log(`       Sample models:`, models.body.data.slice(0, 3).map((m) => m.id));
 
   // 5. Chat Completion Non-Streaming
-  console.log('\n--> [5/10] Probing POST /v1/chat/completions (llama-3.3-70b) ...');
+  console.log('\n--> [5/11] Probing POST /v1/chat/completions (llama-3.3-70b) ...');
   const chatRes = await request(
     {
       host: 'localhost',
@@ -130,9 +130,12 @@ async function runProbe() {
   console.log(`       Model: ${chatRes.body.model}`);
   console.log(`       Tokens: Prompt=${chatRes.body.usage.prompt_tokens}, Completion=${chatRes.body.usage.completion_tokens}`);
   console.log(`       Content: "${chatRes.body.choices[0].message.content.substring(0, 60)}..."`);
+  if (chatRes.headers['x-yoyo-zero-data-retention'] !== 'true') {
+    throw new Error('Compliance header x-yoyo-zero-data-retention missing on /v1/chat/completions');
+  }
 
   // 6. Embeddings API
-  console.log('\n--> [6/10] Probing POST /v1/embeddings (nomic-embed-text) ...');
+  console.log('\n--> [6/11] Probing POST /v1/embeddings (nomic-embed-text) ...');
   const embedRes = await request(
     {
       host: 'localhost',
@@ -150,9 +153,41 @@ async function runProbe() {
     }
   );
   console.log(`[PASS] Embeddings generated: vector dimensions = ${embedRes.body.data[0].embedding.length}`);
+  if (embedRes.headers['x-yoyo-zero-data-retention'] !== 'true') {
+    throw new Error('Compliance header x-yoyo-zero-data-retention missing on /v1/embeddings');
+  }
+
+  // 6b. Semantic Reranking API
+  console.log('\n--> [6b/11] Probing POST /v1/rerank (bge-reranker-large) ...');
+  const rerankRes = await request(
+    {
+      host: 'localhost',
+      port: 4000,
+      path: '/v1/rerank',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+    },
+    {
+      model: 'bge-reranker-large',
+      query: 'What is YOYO?',
+      documents: [
+        'YOYO is an enterprise cloud AI model API platform.',
+        'PostgreSQL is an open source relational database.',
+      ],
+      top_n: 1,
+      return_documents: true,
+    }
+  );
+  if (rerankRes.headers['x-yoyo-zero-data-retention'] !== 'true') {
+    throw new Error('Compliance header x-yoyo-zero-data-retention missing on /v1/rerank');
+  }
+  console.log(`[PASS] Reranker scored: score=${rerankRes.body.results[0].relevance_score.toFixed(4)}, doc="${rerankRes.body.results[0].document.text}"`);
 
   // 7. Files API - Upload JSONL
-  console.log('\n--> [7/10] Probing POST /v1/files (Upload batch input dataset) ...');
+  console.log('\n--> [7/11] Probing POST /v1/files (Upload batch input dataset) ...');
   const jsonlData = [
     JSON.stringify({
       custom_id: 'batch-test-1',
@@ -188,7 +223,7 @@ async function runProbe() {
   console.log(`[PASS] File uploaded: ID=${fileRes.body.id}, bytes=${fileRes.body.bytes}, lines=${fileRes.body.line_count}`);
 
   // 8. Batches API - Submit Batch
-  console.log('\n--> [8/10] Probing POST /v1/batches (Queue asynchronous batch job) ...');
+  console.log('\n--> [8/11] Probing POST /v1/batches (Queue asynchronous batch job) ...');
   const batchRes = await request(
     {
       host: 'localhost',
@@ -234,7 +269,7 @@ async function runProbe() {
   }
 
   // 9. Webhooks API - Register Endpoint
-  console.log('\n--> [9/10] Probing POST /api/webhooks (Register HMAC endpoint) ...');
+  console.log('\n--> [9/11] Probing POST /api/webhooks (Register HMAC endpoint) ...');
   const webhookRes = await request(
     {
       host: 'localhost',
@@ -256,7 +291,7 @@ async function runProbe() {
   console.log(`       Signing secret: ${webhookRes.body.secret.substring(0, 15)}...`);
 
   // 10. Webhooks API - Test Ping
-  console.log('\n--> [10/10] Probing POST /api/webhooks/:id/test (Trigger signed test ping) ...');
+  console.log('\n--> [10/11] Probing POST /api/webhooks/:id/test (Trigger signed test ping) ...');
   const pingRes = await request({
     host: 'localhost',
     port: 4000,
@@ -269,7 +304,7 @@ async function runProbe() {
   console.log(`[PASS] Webhook test ping dispatched! Response:`, pingRes.body);
 
   console.log('\n====================================================');
-  console.log('   ALL 10/10 MANUAL PROBE CHECKS PASSED WITH ZERO ERRORS');
+  console.log('   ALL 11/11 MANUAL PROBE CHECKS PASSED WITH ZERO ERRORS');
   console.log('====================================================\n');
 }
 

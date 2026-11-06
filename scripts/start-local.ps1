@@ -5,7 +5,11 @@ Write-Host "==========================================================" -Foregro
 
 # 1. Start Docker services (PostgreSQL & Redis)
 Write-Host "`n[1/3] Starting PostgreSQL and Redis containers..." -ForegroundColor Yellow
-docker compose -f docker/compose/docker-compose.dev.yml up -d postgres redis
+if (Test-Path "docker-compose.yml") {
+    docker compose up -d postgres redis
+} else {
+    docker compose -f docker/compose/docker-compose.dev.yml up -d postgres redis
+}
 
 # 2. Wait for database
 Write-Host "`n[2/3] Waiting for database to be ready..." -ForegroundColor Yellow
