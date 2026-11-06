@@ -138,7 +138,7 @@ for chunk in stream:
   const faqs = [
     {
       q: 'What models are hosted on YOYO Cloud?',
-      a: 'We host leading open-weights models including Llama 3.3 (8B and 70B), DeepSeek R1 (reasoning model), Qwen 2.5 Coder (code generation), and Nomic Embed Text. All models run on dedicated cloud GPU clusters (NVIDIA H100 and A100) optimized for high throughput.',
+      a: 'We host leading open-weights models including Llama 3.3 (8B and 70B), DeepSeek R1 (reasoning), Qwen 2.5 Coder (code generation), Nomic Embed Text (embeddings), and BGE Reranker Large (cross-encoder semantic reranking). All models run on dedicated cloud GPU clusters (NVIDIA H100 and A100) optimized for high throughput.',
     },
     {
       q: 'Do I need to manage GPUs or download model weights myself?',
@@ -150,7 +150,7 @@ for chunk in stream:
     },
     {
       q: 'How does YOYO protect data privacy and compliance?',
-      a: 'Unlike commercial closed APIs that may store or train on user interactions, YOYO enforces strict zero data retention (ZDR) for inference traffic. Your prompts and completion payloads are never logged or stored for model training.',
+      a: 'Unlike commercial closed APIs that may store or train on user interactions, YOYO enforces strict zero data retention (ZDR) for inference traffic. Every response includes the machine-verifiable x-yoyo-zero-data-retention: true audit header. Prompts and completions are processed in volatile GPU VRAM and never stored on disk or used for training.',
     },
     {
       q: 'How does API key security and rate limiting work?',
@@ -632,6 +632,15 @@ for chunk in stream:
                   <td className="py-3.5 px-4">8k Tokens</td>
                   <td className="py-3.5 px-4 text-purple-400">FP16</td>
                   <td className="py-3.5 px-4 font-bold text-emerald-400">High-Memory Pool</td>
+                  <td className="py-3.5 px-4 text-emerald-400 font-bold">Active</td>
+                </tr>
+                <tr className="hover:bg-white/[0.02] transition-colors">
+                  <td className="py-3.5 px-4 font-bold text-white">bge-reranker-large</td>
+                  <td className="py-3.5 px-4 text-zinc-400">Cross-Encoder Reranker</td>
+                  <td className="py-3.5 px-4">560 Million</td>
+                  <td className="py-3.5 px-4">512 Tokens</td>
+                  <td className="py-3.5 px-4 text-purple-400">FP16</td>
+                  <td className="py-3.5 px-4 font-bold text-emerald-400">High-Throughput Pool</td>
                   <td className="py-3.5 px-4 text-emerald-400 font-bold">Active</td>
                 </tr>
               </tbody>
