@@ -88,6 +88,75 @@ async function testEndToEndDeveloperFlow() {
     console.log(`       Preview: "${chatData.choices[0].message.content.substring(0, 60)}..."`);
   }
 
+  // 5c. Test Function / Tool Calling
+  console.log('\n--> Step 5c: Testing Function Calling & Tool Definitions...');
+  const toolRes = await fetch('http://localhost:4000/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${plaintextKey}`,
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b',
+      messages: [{ role: 'user', content: 'What is the weather in Tokyo?' }],
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'get_current_weather',
+            description: 'Get weather for a city',
+            parameters: {
+              type: 'object',
+              properties: { location: { type: 'string' } },
+              required: ['location'],
+            },
+          },
+        },
+      ],
+    }),
+  });
+  if (!toolRes.ok) throw new Error(`Tool calling failed: ${await toolRes.text()}`);
+  const toolData = await toolRes.json();
+  if (toolData.choices[0].finish_reason !== 'tool_calls' || !toolData.choices[0].message.tool_calls) {
+    throw new Error('Expected finish_reason to be tool_calls with tool_calls payload');
+  }
+  const toolCall = toolData.choices[0].message.tool_calls[0];
+  console.log(`[PASS] Tool call returned: ${toolCall.function.name}(${toolCall.function.arguments})`);
+
+  // 5d. Test Structured Outputs (JSON Schema Mode)
+  console.log('\n--> Step 5d: Testing Strict JSON Schema Structured Outputs...');
+  const schemaRes = await fetch('http://localhost:4000/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${plaintextKey}`,
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b',
+      messages: [{ role: 'user', content: 'Extract entity from text' }],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'EntityExtraction',
+          strict: true,
+          schema: {
+            type: 'object',
+            properties: {
+              entityName: { type: 'string' },
+              confidenceScore: { type: 'number' },
+            },
+            required: ['entityName', 'confidenceScore'],
+          },
+        },
+      },
+    }),
+  });
+  if (!schemaRes.ok) throw new Error(`Schema inference failed: ${await schemaRes.text()}`);
+  const schemaData = await schemaRes.json();
+  const rawContent = schemaData.choices[0].message.content;
+  const parsedJson = JSON.parse(rawContent);
+  console.log(`[PASS] Structured Output parsed successfully: ${JSON.stringify(parsedJson)}`);
+
   // 5b. Run Embeddings & Semantic Reranker
   console.log('\n--> Step 5b: Testing Vector Embeddings & Semantic Reranking...');
   const embedRes = await fetch('http://localhost:4000/v1/embeddings', {

@@ -22,6 +22,125 @@ export class MockProvider implements InferenceProviderInterface {
     request: ChatCompletionRequest
   ): Promise<ChatCompletionResponse> {
     const promptTokens = estimateMessagesTokens(request.messages);
+
+    // 1. Simulate tool calls when tools parameter is provided
+    if (request.tools && request.tools.length > 0 && request.tool_choice !== 'none') {
+      const selectedTool = request.tools[0]?.function?.name || 'execute_tool';
+      const toolCallId = `call_${Math.random().toString(36).substring(2, 10)}`;
+      const sampleArgs = JSON.stringify({
+        location: 'San Francisco, CA',
+        query: 'YOYO Cloud AI',
+        status: 'active',
+      });
+
+      return {
+        id: `chatcmpl-${Date.now()}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: request.model,
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: 'assistant',
+              content: null,
+              tool_calls: [
+                {
+                  id: toolCallId,
+                  type: 'function',
+                  function: {
+                    name: selectedTool,
+                    arguments: sampleArgs,
+                  },
+                },
+              ],
+            },
+            finish_reason: 'tool_calls',
+          },
+        ],
+        usage: {
+          prompt_tokens: promptTokens,
+          completion_tokens: 32,
+          total_tokens: promptTokens + 32,
+        },
+      };
+    }
+
+    // 2. Structured Outputs JSON Schema
+    if (request.response_format?.type === 'json_schema') {
+      const schemaName = request.response_format.json_schema?.name || 'StructuredOutput';
+      const mockStructured = JSON.stringify(
+        {
+          schema_name: schemaName,
+          status: 'success',
+          result: 'Validated structured JSON conforming to specified schema',
+          model: request.model,
+        },
+        null,
+        2
+      );
+      const completionTokens = estimateTokens(mockStructured);
+
+      return {
+        id: `chatcmpl-${Date.now()}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: request.model,
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: 'assistant',
+              content: mockStructured,
+            },
+            finish_reason: 'stop',
+          },
+        ],
+        usage: {
+          prompt_tokens: promptTokens,
+          completion_tokens: completionTokens,
+          total_tokens: promptTokens + completionTokens,
+        },
+      };
+    }
+
+    // 3. Standard JSON object mode
+    if (request.response_format?.type === 'json_object') {
+      const mockJson = JSON.stringify(
+        {
+          status: 'success',
+          model: request.model,
+          message: 'Nominal JSON object response',
+        },
+        null,
+        2
+      );
+      const completionTokens = estimateTokens(mockJson);
+
+      return {
+        id: `chatcmpl-${Date.now()}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: request.model,
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: 'assistant',
+              content: mockJson,
+            },
+            finish_reason: 'stop',
+          },
+        ],
+        usage: {
+          prompt_tokens: promptTokens,
+          completion_tokens: completionTokens,
+          total_tokens: promptTokens + completionTokens,
+        },
+      };
+    }
+
+    // 4. Standard text reply
     const mockReply = `[YOYO AI Mock Response from ${request.model}] I have successfully processed your request. Everything is functioning in nominal state.`;
     const completionTokens = estimateTokens(mockReply);
 

@@ -13,6 +13,7 @@ import {
   Calculator,
   TrendingDown,
   ShieldCheck,
+  Download,
 } from 'lucide-react';
 
 export default function BillingPage() {
@@ -71,6 +72,36 @@ export default function BillingPage() {
       alert(err.message || 'Top-up failed.');
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const exportTransactions = (format: 'csv' | 'json') => {
+    if (!transactions.length) return;
+    if (format === 'json') {
+      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(transactions, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', dataStr);
+      downloadAnchor.setAttribute('download', `yoyo-transactions-${new Date().toISOString().slice(0, 10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    } else {
+      const headers = ['ID', 'Type', 'Description', 'Amount USD', 'Date'];
+      const rows = transactions.map((t) => [
+        t.id,
+        t.type,
+        `"${(t.description || '').replace(/"/g, '""')}"`,
+        t.amountUsd,
+        new Date(t.createdAt).toISOString(),
+      ]);
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute('href', encodedUri);
+      downloadAnchor.setAttribute('download', `yoyo-transactions-${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
     }
   };
 
@@ -357,6 +388,26 @@ export default function BillingPage() {
       <div className="rounded-2xl bg-card border border-border overflow-hidden">
         <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <span className="font-semibold text-sm">Recent Transactions</span>
+          {transactions.length > 0 && (
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => exportTransactions('csv')}
+                className="px-2.5 py-1 text-xs font-mono font-medium rounded-lg border border-border bg-muted/30 hover:bg-muted text-muted-foreground hover:text-foreground transition-all flex items-center space-x-1.5"
+                title="Export transactions as CSV"
+              >
+                <Download className="w-3 h-3" />
+                <span>CSV</span>
+              </button>
+              <button
+                onClick={() => exportTransactions('json')}
+                className="px-2.5 py-1 text-xs font-mono font-medium rounded-lg border border-border bg-muted/30 hover:bg-muted text-muted-foreground hover:text-foreground transition-all flex items-center space-x-1.5"
+                title="Export transactions as JSON"
+              >
+                <Download className="w-3 h-3" />
+                <span>JSON</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {transactions.length === 0 ? (

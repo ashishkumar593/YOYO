@@ -1,11 +1,45 @@
 export type ChatRole = 'system' | 'user' | 'assistant' | 'tool';
 
+export interface ToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+export interface ToolDefinition {
+  type: 'function';
+  function: {
+    name: string;
+    description?: string;
+    parameters: Record<string, any>;
+    strict?: boolean;
+  };
+}
+
+export interface JsonSchemaResponseFormat {
+  type: 'json_schema';
+  json_schema: {
+    name: string;
+    description?: string;
+    schema: Record<string, any>;
+    strict?: boolean;
+  };
+}
+
+export type ResponseFormat =
+  | { type: 'text' }
+  | { type: 'json_object' }
+  | JsonSchemaResponseFormat;
+
 export interface ChatMessage {
   role: ChatRole;
   content?: string | null;
   name?: string;
   tool_call_id?: string;
-  tool_calls?: any[];
+  tool_calls?: ToolCall[];
 }
 
 export interface ChatCompletionRequest {
@@ -19,9 +53,9 @@ export interface ChatCompletionRequest {
   frequency_penalty?: number;
   presence_penalty?: number;
   seed?: number;
-  response_format?: { type: 'json_object' | 'text' } | any;
-  tools?: any[];
-  tool_choice?: any;
+  response_format?: ResponseFormat | any;
+  tools?: ToolDefinition[] | any[];
+  tool_choice?: 'auto' | 'none' | 'required' | { type: 'function'; function: { name: string } } | any;
 }
 
 export interface ChatCompletionChoice {
@@ -53,6 +87,7 @@ export interface ChatCompletionChunkChoice {
   delta: {
     role?: ChatRole;
     content?: string;
+    tool_calls?: any[];
   };
   finish_reason: 'stop' | 'length' | 'tool_calls' | 'content_filter' | null;
 }

@@ -57,6 +57,50 @@ async function testLiveTsSdk() {
   });
   console.log(`[OK] TS SDK client.chat.create(): Response from ${chat.model}`);
 
+  // 4c. Tool / Function Calling
+  const toolChat = await client.chat.create({
+    model: 'llama-3.3-70b',
+    messages: [{ role: 'user', content: 'What is the weather in Tokyo?' }],
+    tools: [
+      {
+        type: 'function',
+        function: {
+          name: 'get_current_weather',
+          description: 'Fetch weather',
+          parameters: {
+            type: 'object',
+            properties: { location: { type: 'string' } },
+            required: ['location'],
+          },
+        },
+      },
+    ],
+  });
+  if (toolChat.choices[0].finish_reason !== 'tool_calls') {
+    throw new Error('Expected tool_calls finish_reason in TS SDK');
+  }
+  console.log(`[OK] TS SDK tool calling: ${toolChat.choices[0].message.tool_calls[0].function.name}`);
+
+  // 4d. Strict Structured Outputs (JSON Schema Mode)
+  const schemaChat = await client.chat.create({
+    model: 'llama-3.3-70b',
+    messages: [{ role: 'user', content: 'Extract entity' }],
+    response_format: {
+      type: 'json_schema',
+      json_schema: {
+        name: 'EntityRecord',
+        strict: true,
+        schema: {
+          type: 'object',
+          properties: { entity: { type: 'string' } },
+          required: ['entity'],
+        },
+      },
+    },
+  });
+  const parsedSchema = JSON.parse(schemaChat.choices[0].message.content);
+  console.log(`[OK] TS SDK structured output parsed:`, parsedSchema);
+
   // 4b. Embeddings & Rerank
   const embed = await client.embeddings.create({
     model: 'nomic-embed-text',

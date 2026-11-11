@@ -5,6 +5,8 @@ import {
   ServiceUnavailableException,
   BadRequestException,
   Logger,
+  OnModuleInit,
+  OnModuleDestroy,
 } from '@nestjs/common';
 import { ModelsService } from '../models/models.service';
 import { OllamaProvider } from './providers/ollama.provider';
@@ -22,7 +24,7 @@ import {
 import { InferenceProviderInterface } from '../../common/types/provider.interface';
 import { PrismaService } from '../../database/prisma.service';
 import { estimateMessagesTokens } from '../../common/utils/token-estimator';
-import { EngineType } from '@prisma/client';
+import { EngineType, WorkerStatus } from '@prisma/client';
 import * as crypto from 'crypto';
 import Redis from 'ioredis';
 
@@ -34,9 +36,10 @@ export interface ExecutionCandidate {
 }
 
 @Injectable()
-export class InferenceService {
+export class InferenceService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(InferenceService.name);
   private redis: Redis | null = null;
+  private healthcheckTimer: NodeJS.Timeout | null = null;
 
   constructor(
     private modelsService: ModelsService,
@@ -52,6 +55,87 @@ export class InferenceService {
       });
       this.redis.connect().catch(() => {});
     } catch {}
+  }
+
+  async onModuleInit() {
+    // Only start periodic daemon in production or when FEATURE_WORKER_HEALTHCHECK is enabled, and not in unit tests
+    if (process.env.NODE_ENV !== 'test' && process.env.FEATURE_WORKER_HEALTHCHECK !== 'false') {
+      const intervalMs = parseInt(process.env.WORKER_HEALTH_INTERVAL_MS || '30000', 10);
+      this.checkAllWorkersHealth().catch(() => {});
+      this.healthcheckTimer = setInterval(() => {
+        this.checkAllWorkersHealth().catch(() => {});
+      }, intervalMs);
+      this.healthcheckTimer.unref?.();
+      this.logger.log(`Worker Auto-Health Daemon initialized (polling every ${intervalMs / 1000}s)`);
+    }
+  }
+
+  onModuleDestroy() {
+    if (this.healthcheckTimer) {
+      clearInterval(this.healthcheckTimer);
+      this.healthcheckTimer = null;
+    }
+    if (this.redis) {
+      try {
+        this.redis.disconnect();
+      } catch {}
+    }
+  }
+
+  async checkAllWorkersHealth(): Promise<{ online: number; offline: number }> {
+    try {
+      const workers = await this.prisma.modelWorker.findMany();
+      if (!workers || workers.length === 0) return { online: 0, offline: 0 };
+
+      let online = 0;
+      let offline = 0;
+
+      for (const worker of workers) {
+        let provider: InferenceProviderInterface;
+        if (worker.engineType === EngineType.VLLM || worker.engineType === EngineType.SGLANG) {
+          provider = this.vllmProvider;
+        } else {
+          provider = this.ollamaProvider;
+        }
+
+        try {
+          const health = await provider.checkHealth(worker.endpointUrl);
+          if (health.isHealthy) {
+            online++;
+            await this.prisma.modelWorker.update({
+              where: { id: worker.id },
+              data: {
+                status: WorkerStatus.ONLINE,
+                lastHeartbeatAt: new Date(),
+              },
+            });
+          } else {
+            offline++;
+            if (worker.status !== WorkerStatus.OFFLINE) {
+              this.logger.warn(`Worker node '${worker.workerName}' failed healthcheck. Marking OFFLINE.`);
+              await this.prisma.modelWorker.update({
+                where: { id: worker.id },
+                data: { status: WorkerStatus.OFFLINE },
+              });
+            }
+          }
+        } catch (err: any) {
+          offline++;
+          if (worker.status !== WorkerStatus.OFFLINE) {
+            this.logger.warn(`Worker node '${worker.workerName}' unreachable: ${err.message}. Marking OFFLINE.`);
+            await this.prisma.modelWorker.update({
+              where: { id: worker.id },
+              data: { status: WorkerStatus.OFFLINE },
+            });
+          }
+        }
+      }
+
+      return { online, offline };
+    } catch (err: any) {
+      this.logger.debug(`Worker health check cycle skipped: ${err.message}`);
+      return { online: 0, offline: 0 };
+    }
   }
 
   private computeCacheKey(request: ChatCompletionRequest): string | null {
@@ -201,6 +285,9 @@ export class InferenceService {
       )) {
         if (chunk.choices?.[0]?.delta?.content) {
           accumulatedContent += chunk.choices[0].delta.content;
+        }
+        if (chunk.choices?.[0]?.delta?.tool_calls) {
+          accumulatedContent += JSON.stringify(chunk.choices[0].delta.tool_calls);
         }
         if (chunk.usage) {
           promptTokens = chunk.usage.prompt_tokens;

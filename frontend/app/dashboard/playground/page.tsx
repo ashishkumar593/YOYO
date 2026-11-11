@@ -24,16 +24,96 @@ import {
   Sliders,
   ChevronDown,
   Shield,
+  Wrench,
+  Code2,
 } from 'lucide-react';
 
+interface ToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
 interface Message {
-  role: 'system' | 'user' | 'assistant';
+  role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
+  tool_calls?: ToolCall[];
+  tool_call_id?: string;
+  name?: string;
   tokens?: number;
   cost?: number;
   latencyMs?: number;
   speed?: number;
 }
+
+const TOOL_PRESETS = [
+  {
+    name: 'get_current_weather',
+    description: 'Get current temperature and weather conditions for a given location.',
+    parameters: {
+      type: 'object',
+      properties: {
+        location: { type: 'string', description: 'City and state, e.g. San Francisco, CA' },
+        unit: { type: 'string', enum: ['celsius', 'fahrenheit'], description: 'Temperature scale' },
+      },
+      required: ['location'],
+    },
+  },
+  {
+    name: 'execute_sql_query',
+    description: 'Run a read-only analytics SQL query against PostgreSQL.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'SQL SELECT query' },
+        max_rows: { type: 'number', description: 'Max records to fetch (max 100)' },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'fetch_stock_price',
+    description: 'Fetch real-time stock ticker quote.',
+    parameters: {
+      type: 'object',
+      properties: {
+        ticker: { type: 'string', description: 'Stock symbol, e.g. NVDA, AAPL' },
+      },
+      required: ['ticker'],
+    },
+  },
+];
+
+const JSON_SCHEMA_PRESETS: Record<string, { name: string; schema: Record<string, any> }> = {
+  EntityExtraction: {
+    name: 'EntityExtraction',
+    schema: {
+      type: 'object',
+      properties: {
+        entity_name: { type: 'string', description: 'Primary entity name' },
+        category: { type: 'string', enum: ['Company', 'Individual', 'Product', 'Protocol'] },
+        confidence: { type: 'number', description: 'Extraction confidence score between 0 and 1' },
+      },
+      required: ['entity_name', 'category', 'confidence'],
+    },
+  },
+  DatabaseMetricRecord: {
+    name: 'DatabaseMetricRecord',
+    schema: {
+      type: 'object',
+      properties: {
+        metric_name: { type: 'string' },
+        value: { type: 'number' },
+        unit: { type: 'string' },
+        healthy: { type: 'boolean' },
+      },
+      required: ['metric_name', 'value', 'unit', 'healthy'],
+    },
+  },
+};
 
 const PROMPT_PRESETS = [
   {
@@ -84,6 +164,10 @@ function PlaygroundInner() {
   const [systemPromptPreset, setSystemPromptPreset] = useState<string>('General Assistant');
   const [systemPrompt, setSystemPrompt] = useState<string>(SYSTEM_PRESETS['General Assistant']);
   const [jsonMode, setJsonMode] = useState<boolean>(false);
+  const [jsonSchemaMode, setJsonSchemaMode] = useState<boolean>(false);
+  const [selectedSchemaPreset, setSelectedSchemaPreset] = useState<string>('EntityExtraction');
+  const [toolsEnabled, setToolsEnabled] = useState<boolean>(false);
+  const [activeToolIndex, setActiveToolIndex] = useState<number>(0);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputPrompt, setInputPrompt] = useState<string>('');
@@ -155,12 +239,42 @@ function PlaygroundInner() {
         },
         body: JSON.stringify({
           model: selectedModel,
-          messages: updatedMessages,
+          messages: updatedMessages.map((m) => ({
+            role: m.role,
+            content: m.content || null,
+            ...(m.tool_calls ? { tool_calls: m.tool_calls } : {}),
+            ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
+            ...(m.name ? { name: m.name } : {}),
+          })),
           temperature,
           top_p: topP,
           max_tokens: maxTokens,
           stream: true,
-          ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
+          ...(jsonSchemaMode
+            ? {
+                response_format: {
+                  type: 'json_schema',
+                  json_schema: {
+                    name: JSON_SCHEMA_PRESETS[selectedSchemaPreset]?.name || 'StructuredOutput',
+                    schema: JSON_SCHEMA_PRESETS[selectedSchemaPreset]?.schema || {},
+                    strict: true,
+                  },
+                },
+              }
+            : jsonMode
+            ? { response_format: { type: 'json_object' } }
+            : {}),
+          ...(toolsEnabled
+            ? {
+                tools: [
+                  {
+                    type: 'function',
+                    function: TOOL_PRESETS[activeToolIndex],
+                  },
+                ],
+                tool_choice: 'auto',
+              }
+            : {}),
         }),
         signal: abortController.signal,
       });
@@ -198,6 +312,39 @@ function PlaygroundInner() {
           try {
             const parsed = JSON.parse(dataStr);
             const delta = parsed.choices?.[0]?.delta?.content;
+            const deltaToolCalls = parsed.choices?.[0]?.delta?.tool_calls || parsed.choices?.[0]?.message?.tool_calls;
+
+            if (deltaToolCalls && deltaToolCalls.length > 0) {
+              setMessages((prev) => {
+                const next = [...prev];
+                const last = next[next.length - 1];
+                const existingTools: ToolCall[] = last.tool_calls ? [...last.tool_calls] : [];
+                for (const tc of deltaToolCalls) {
+                  const existing = existingTools.find(
+                    (t, idx) => t.id === tc.id || (tc.index !== undefined && idx === tc.index)
+                  );
+                  if (existing) {
+                    if (tc.function?.arguments) existing.function.arguments += tc.function.arguments;
+                  } else {
+                    existingTools.push({
+                      id: tc.id || `call_${Date.now()}`,
+                      type: 'function',
+                      function: {
+                        name: tc.function?.name || '',
+                        arguments: tc.function?.arguments || '',
+                      },
+                    });
+                  }
+                }
+                next[next.length - 1] = {
+                  ...last,
+                  role: 'assistant',
+                  tool_calls: existingTools,
+                };
+                return next;
+              });
+            }
+
             if (delta) {
               tokenCount++;
               if (firstTokenTime === 0) {
@@ -209,6 +356,7 @@ function PlaygroundInner() {
               setMessages((prev) => {
                 const next = [...prev];
                 next[next.length - 1] = {
+                  ...next[next.length - 1],
                   role: 'assistant',
                   content: accumulatedReply,
                 };
@@ -290,6 +438,40 @@ function PlaygroundInner() {
     info('Playground reset.');
   };
 
+  const handleSimulateToolReturn = (toolCall: ToolCall) => {
+    let mockResult: any = { status: 'success' };
+    if (toolCall.function.name === 'get_current_weather') {
+      mockResult = {
+        location: 'San Francisco, CA',
+        temperature: 18,
+        unit: 'celsius',
+        condition: 'Sunny with coastal marine layer',
+      };
+    } else if (toolCall.function.name === 'execute_sql_query') {
+      mockResult = {
+        rows: [
+          { cluster_id: 'yoyo-h100-node-1', active_streams: 14, gpu_temp_c: 58, vram_free_gb: 64.2 },
+          { cluster_id: 'yoyo-h100-node-2', active_streams: 9, gpu_temp_c: 54, vram_free_gb: 71.0 },
+        ],
+        row_count: 2,
+      };
+    } else if (toolCall.function.name === 'fetch_stock_price') {
+      mockResult = { ticker: 'NVDA', price: 142.5, change_percent: '+3.4%', volume: '48.2M' };
+    }
+
+    const toolMsg: Message = {
+      role: 'tool',
+      tool_call_id: toolCall.id,
+      name: toolCall.function.name,
+      content: JSON.stringify(mockResult, null, 2),
+    };
+
+    setMessages((prev) => [...prev, toolMsg]);
+    setTimeout(() => {
+      handleSend('Tool execution result received. Provide a synthesized final response.');
+    }, 100);
+  };
+
   const copyMessage = (content: string, index: number) => {
     navigator.clipboard.writeText(content);
     setCopiedIndex(index);
@@ -301,9 +483,30 @@ function PlaygroundInner() {
     const formattedMessages = [
       ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
       ...(messages.length > 0
-        ? messages.map((m) => ({ role: m.role, content: m.content }))
+        ? messages.map((m) => ({
+            role: m.role,
+            content: m.content || null,
+            ...(m.tool_calls ? { tool_calls: m.tool_calls } : {}),
+            ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
+            ...(m.name ? { name: m.name } : {}),
+          }))
         : [{ role: 'user', content: 'Explain zero-downtime deployment in 2 sentences.' }]),
     ];
+
+    const activeTool = TOOL_PRESETS[activeToolIndex];
+    const toolsSnippet = toolsEnabled ? [{ type: 'function', function: activeTool }] : undefined;
+    const responseFormatSnippet = jsonSchemaMode
+      ? {
+          type: 'json_schema',
+          json_schema: {
+            name: JSON_SCHEMA_PRESETS[selectedSchemaPreset]?.name || 'StructuredOutput',
+            schema: JSON_SCHEMA_PRESETS[selectedSchemaPreset]?.schema || {},
+            strict: true,
+          },
+        }
+      : jsonMode
+      ? { type: 'json_object' }
+      : undefined;
 
     if (codeTab === 'python') {
       return `from yoyo import Yoyo
@@ -315,7 +518,13 @@ response = client.chat.create(
     messages=${JSON.stringify(formattedMessages, null, 4)},
     temperature=${temperature},
     max_tokens=${maxTokens},
-    stream=True${jsonMode ? `,\n    response_format={"type": "json_object"}` : ''}
+    stream=True${
+      responseFormatSnippet
+        ? `,\n    response_format=${JSON.stringify(responseFormatSnippet, null, 4)}`
+        : ''
+    }${
+      toolsSnippet ? `,\n    tools=${JSON.stringify(toolsSnippet, null, 4)},\n    tool_choice="auto"` : ''
+    }
 )
 
 for chunk in response:
@@ -336,7 +545,15 @@ const stream = await client.chat.createStream({
   model: '${selectedModel}',
   messages: ${JSON.stringify(formattedMessages, null, 2)},
   temperature: ${temperature},
-  max_tokens: ${maxTokens},${jsonMode ? `\n  response_format: { type: 'json_object' },` : ''}
+  max_tokens: ${maxTokens},${
+        responseFormatSnippet
+          ? `\n  response_format: ${JSON.stringify(responseFormatSnippet, null, 2)},`
+          : ''
+      }${
+        toolsSnippet
+          ? `\n  tools: ${JSON.stringify(toolsSnippet, null, 2)},\n  tool_choice: 'auto',`
+          : ''
+      }
 });
 
 for await (const chunk of stream) {
@@ -355,7 +572,8 @@ for await (const chunk of stream) {
       temperature,
       max_tokens: maxTokens,
       stream: true,
-      ...(jsonMode ? { response_format: { type: 'json_object' } } : {}),
+      ...(responseFormatSnippet ? { response_format: responseFormatSnippet } : {}),
+      ...(toolsSnippet ? { tools: toolsSnippet, tool_choice: 'auto' } : {}),
     },
     null,
     2
@@ -373,14 +591,17 @@ client = OpenAI(
 stream = client.chat.completions.create(
     model="${selectedModel}",
     messages=${JSON.stringify(formattedMessages, null, 4)},
-    temperature=${temperature},
-    max_tokens=${maxTokens},
-    stream=True${jsonMode ? `,\n    response_format={"type": "json_object"}` : ''}
+    stream=True${
+      responseFormatSnippet
+        ? `,\n    response_format=${JSON.stringify(responseFormatSnippet, null, 4)}`
+        : ''
+    }${
+      toolsSnippet ? `,\n    tools=${JSON.stringify(toolsSnippet, null, 4)},\n    tool_choice="auto"` : ''
+    }
 )
 
 for chunk in stream:
-    print(chunk.choices[0].delta.content or "", end="")
-print()`;
+    print(chunk.choices[0].delta.content or "", end="", flush=True)`;
   };
 
   const handleCopyCode = () => {
@@ -510,20 +731,65 @@ print()`;
                         </button>
                       )}
                     </div>
-                    <div
-                      className={`rounded-2xl p-4 text-xs leading-relaxed whitespace-pre-wrap ${
-                        msg.role === 'user'
-                          ? 'bg-primary text-primary-foreground font-medium rounded-tr-none shadow-md shadow-primary/20'
-                          : 'bg-muted/50 text-foreground border border-border/80 rounded-tl-none font-mono shadow-sm'
-                      }`}
-                    >
-                      {msg.content || (isGenerating && i === messages.length - 1 ? (
-                        <span className="inline-flex items-center space-x-1.5 text-primary animate-pulse font-mono font-medium">
-                          <span className="w-2 h-2 rounded-full bg-primary" />
-                          <span>Generating stream...</span>
-                        </span>
-                      ) : null)}
-                    </div>
+                    {msg.role === 'tool' ? (
+                      <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 font-mono text-xs space-y-1.5 w-full">
+                        <div className="flex items-center space-x-2 text-[10px] font-bold uppercase text-amber-400">
+                          <Wrench className="w-3.5 h-3.5" />
+                          <span>Tool Output: {msg.name || 'function'}</span>
+                          <span className="text-muted-foreground text-[10px]">({msg.tool_call_id})</span>
+                        </div>
+                        <pre className="text-[11px] text-amber-200 overflow-x-auto whitespace-pre-wrap">
+                          {msg.content}
+                        </pre>
+                      </div>
+                    ) : (
+                      <div
+                        className={`rounded-2xl p-4 text-xs leading-relaxed whitespace-pre-wrap ${
+                          msg.role === 'user'
+                            ? 'bg-primary text-primary-foreground font-medium rounded-tr-none shadow-md shadow-primary/20'
+                            : 'bg-muted/50 text-foreground border border-border/80 rounded-tl-none font-mono shadow-sm'
+                        }`}
+                      >
+                        {msg.content || (isGenerating && i === messages.length - 1 ? (
+                          <span className="inline-flex items-center space-x-1.5 text-primary animate-pulse font-mono font-medium">
+                            <span className="w-2 h-2 rounded-full bg-primary" />
+                            <span>Generating stream...</span>
+                          </span>
+                        ) : null)}
+                      </div>
+                    )}
+
+                    {/* Tool Calls Block */}
+                    {msg.tool_calls && msg.tool_calls.length > 0 && (
+                      <div className="space-y-2 w-full mt-2">
+                        {msg.tool_calls.map((tc, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3.5 rounded-xl bg-muted/70 border border-primary/30 font-mono text-xs space-y-2 shadow-sm"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-2 text-primary font-bold">
+                                <Wrench className="w-3.5 h-3.5" />
+                                <span>Tool Call: {tc.function.name}</span>
+                              </div>
+                              <span className="text-[10px] text-muted-foreground">{tc.id}</span>
+                            </div>
+                            <pre className="text-[11px] text-foreground bg-card p-2.5 rounded-lg border border-border overflow-x-auto whitespace-pre-wrap">
+                              {tc.function.arguments}
+                            </pre>
+                            <button
+                              type="button"
+                              onClick={() => handleSimulateToolReturn(tc)}
+                              disabled={isGenerating}
+                              className="px-3 py-1.5 rounded-lg bg-primary/20 hover:bg-primary/30 text-primary text-[11px] font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
+                            >
+                              <Send className="w-3 h-3" />
+                              <span>Simulate Tool Return</span>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {msg.role === 'assistant' && msg.content && (msg.tokens || msg.cost !== undefined) && (
                       <div className="flex flex-wrap items-center gap-2 mt-1.5 px-1 text-[10px] font-mono text-muted-foreground">
@@ -703,7 +969,10 @@ print()`;
               </div>
               <button
                 type="button"
-                onClick={() => setJsonMode(!jsonMode)}
+                onClick={() => {
+                  setJsonMode(!jsonMode);
+                  if (!jsonMode) setJsonSchemaMode(false);
+                }}
                 className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                   jsonMode ? 'bg-cyan-500' : 'bg-muted-foreground/30'
                 }`}
@@ -717,6 +986,100 @@ print()`;
             </div>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               Enforces valid JSON object schema via <code className="text-foreground font-mono">response_format</code>.
+            </p>
+          </div>
+
+          {/* Structured Outputs JSON Schema Toggle */}
+          <div className="p-3.5 rounded-xl bg-muted/30 border border-border space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-semibold text-foreground">JSON Schema Mode</span>
+                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                  STRICT
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setJsonSchemaMode(!jsonSchemaMode);
+                  if (!jsonSchemaMode) setJsonMode(false);
+                }}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  jsonSchemaMode ? 'bg-purple-500' : 'bg-muted-foreground/30'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    jsonSchemaMode ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+            {jsonSchemaMode && (
+              <div className="space-y-1.5 pt-1">
+                <label className="text-[10px] font-semibold text-muted-foreground">Select Schema Preset</label>
+                <select
+                  value={selectedSchemaPreset}
+                  onChange={(e) => setSelectedSchemaPreset(e.target.value)}
+                  className="w-full p-1.5 rounded-lg bg-card border border-border text-xs text-foreground font-mono focus:outline-none"
+                >
+                  {Object.keys(JSON_SCHEMA_PRESETS).map((key) => (
+                    <option key={key} value={key}>
+                      {key}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Guarantees mathematical schema conformance via OpenAI-compatible <code className="text-foreground font-mono">json_schema</code>.
+            </p>
+          </div>
+
+          {/* Function Calling & Tools Toggle */}
+          <div className="p-3.5 rounded-xl bg-muted/30 border border-border space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-semibold text-foreground">Function Calling</span>
+                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  TOOLS
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setToolsEnabled(!toolsEnabled)}
+                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  toolsEnabled ? 'bg-emerald-500' : 'bg-muted-foreground/30'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                    toolsEnabled ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+            {toolsEnabled && (
+              <div className="space-y-1.5 pt-1">
+                <label className="text-[10px] font-semibold text-muted-foreground">Active Function Tool</label>
+                <select
+                  value={activeToolIndex}
+                  onChange={(e) => setActiveToolIndex(parseInt(e.target.value, 10))}
+                  className="w-full p-1.5 rounded-lg bg-card border border-border text-xs text-foreground font-mono focus:outline-none"
+                >
+                  {TOOL_PRESETS.map((tool, idx) => (
+                    <option key={tool.name} value={idx}>
+                      {tool.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-zinc-400 leading-normal">
+                  {TOOL_PRESETS[activeToolIndex].description}
+                </p>
+              </div>
+            )}
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Passes executable tool signatures in <code className="text-foreground font-mono">tools</code> and catches <code className="text-foreground font-mono">tool_calls</code>.
             </p>
           </div>
 

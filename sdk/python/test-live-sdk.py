@@ -67,6 +67,42 @@ chat = client.chat.create(
 )
 print(f"[OK] Python SDK chat.create(): {chat['model']} response received.")
 
+# 1c. Tool / Function Calling
+tool_chat = client.chat.create(
+    model="llama-3.3-70b",
+    messages=[{"role": "user", "content": "What is the weather in Tokyo?"}],
+    tools=[{
+        "type": "function",
+        "function": {
+            "name": "get_current_weather",
+            "description": "Fetch weather",
+            "parameters": {"type": "object", "properties": {"location": {"type": "string"}}, "required": ["location"]}
+        }
+    }]
+)
+assert tool_chat["choices"][0]["finish_reason"] == "tool_calls", "Expected tool_calls finish reason"
+print(f"[OK] Python SDK tool calling: {tool_chat['choices'][0]['message']['tool_calls'][0]['function']['name']}")
+
+# 1d. Strict Structured Outputs (JSON Schema Mode)
+schema_chat = client.chat.create(
+    model="llama-3.3-70b",
+    messages=[{"role": "user", "content": "Extract entity"}],
+    response_format={
+        "type": "json_schema",
+        "json_schema": {
+            "name": "EntityRecord",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {"entity": {"type": "string"}},
+                "required": ["entity"]
+            }
+        }
+    }
+)
+schema_obj = json.loads(schema_chat["choices"][0]["message"]["content"])
+print(f"[OK] Python SDK structured output parsed: {schema_obj}")
+
 embed = client.embeddings.create(
     model="nomic-embed-text",
     input="Testing embeddings from Python SDK",

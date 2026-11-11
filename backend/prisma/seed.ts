@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv';
 import * as path from 'path';
+import * as crypto from 'crypto';
 
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
@@ -56,6 +57,32 @@ async function main() {
       },
     });
     console.log(`[SEED] Created default Super Admin account: ${admin.email}`);
+  }
+
+  const adminUser = existingAdmin || (await prisma.user.findUnique({ where: { email: adminEmail } }));
+  if (adminUser) {
+    const defaultDevKey = 'sk_live_yoyo_dev_master_key_2026';
+    const keyHash = crypto.createHash('sha256').update(defaultDevKey).digest('hex');
+    await prisma.apiKey.upsert({
+      where: { keyHash },
+      update: {
+        isActive: true,
+        rateLimitRpm: 1000,
+        rateLimitTpm: 1000000,
+      },
+      create: {
+        userId: adminUser.id,
+        name: 'Default Development Master Key',
+        keyPrefix: 'sk_live_yoyo_dev',
+        keyHash,
+        maskedKey: 'sk_live_yoyo_dev...2026',
+        allowedModels: ['*'],
+        rateLimitRpm: 1000,
+        rateLimitTpm: 1000000,
+        isActive: true,
+      },
+    });
+    console.log(`[SEED] Default Development Master API Key ready: ${defaultDevKey}`);
   }
 
   // 2. Create or update Default Cloud GPU Worker Nodes

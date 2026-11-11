@@ -32,14 +32,37 @@
     "schemas": {
       "ChatMessage": {
         "type": "object",
-        "required": ["role", "content"],
+        "required": ["role"],
         "properties": {
           "role": {
             "type": "string",
             "enum": ["system", "user", "assistant", "tool"]
           },
           "content": {
+            "type": ["string", "null"]
+          },
+          "name": {
             "type": "string"
+          },
+          "tool_call_id": {
+            "type": "string"
+          },
+          "tool_calls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string" },
+                "type": { "type": "string", "enum": ["function"] },
+                "function": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" },
+                    "arguments": { "type": "string" }
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -82,7 +105,54 @@
               { "type": "string" },
               { "type": "array", "items": { "type": "string" } }
             ]
-          }
+          },
+          "response_format": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["text", "json_object", "json_schema"] },
+              "json_schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "strict": { "type": "boolean", "default": true },
+                  "schema": { "type": "object" }
+                },
+                "required": ["name", "schema"]
+              }
+            }
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["type", "function"],
+              "properties": {
+                "type": { "type": "string", "enum": ["function"] },
+                "function": {
+                  "type": "object",
+                  "required": ["name"],
+                  "properties": {
+                    "name": { "type": "string" },
+                    "description": { "type": "string" },
+                    "parameters": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "tool_choice": {
+            "oneOf": [
+              { "type": "string", "enum": ["none", "auto", "required"] },
+              {
+                "type": "object",
+                "properties": {
+                  "type": { "type": "string", "enum": ["function"] },
+                  "function": { "type": "object", "properties": { "name": { "type": "string" } } }
+                }
+              }
+            ]
+          },
+          "seed": { "type": "integer" }
         }
       },
       "EmbeddingRequest": {

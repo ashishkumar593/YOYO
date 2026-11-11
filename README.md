@@ -176,7 +176,78 @@ for item in ranked["results"]:
 
 ---
 
-### 5. Direct cURL / OpenAI SDK Drop-in
+### 5. Function Calling & Tool Invocations
+
+```python
+from yoyo import Yoyo
+
+client = Yoyo(api_key="sk_live_your_api_key_here")
+
+response = client.chat.completions.create(
+    model="llama-3.3-70b",
+    messages=[{"role": "user", "content": "What is the weather in Tokyo?"}],
+    tools=[
+        {
+            "type": "function",
+            "function": {
+                "name": "get_current_weather",
+                "description": "Fetch current weather conditions",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {"type": "string", "description": "City name"}
+                    },
+                    "required": ["location"]
+                }
+            }
+        }
+    ]
+)
+
+choice = response["choices"][0]
+if choice["finish_reason"] == "tool_calls":
+    for tool_call in choice["message"]["tool_calls"]:
+        print(f"Tool: {tool_call['function']['name']}({tool_call['function']['arguments']})")
+```
+
+---
+
+### 6. Strict Structured Outputs (JSON Schema Mode)
+
+```python
+from yoyo import Yoyo
+
+client = Yoyo(api_key="sk_live_your_api_key_here")
+
+response = client.chat.completions.create(
+    model="llama-3.3-70b",
+    messages=[{"role": "user", "content": "Extract customer sentiment from: 'Love the ultra fast inference speeds!'"}],
+    response_format={
+        "type": "json_schema",
+        "json_schema": {
+            "name": "SentimentAnalysis",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "sentiment": {"type": "string", "enum": ["positive", "neutral", "negative"]},
+                    "confidence": {"type": "number"},
+                    "highlight": {"type": "string"}
+                },
+                "required": ["sentiment", "confidence", "highlight"]
+            }
+        }
+    }
+)
+
+import json
+structured_data = json.loads(response["choices"][0]["message"]["content"])
+print(structured_data)
+```
+
+---
+
+### 7. Direct cURL / OpenAI SDK Drop-in
 
 ```bash
 curl https://api.yoyo.ai/v1/chat/completions \
@@ -210,13 +281,16 @@ pnpm db:seed
 
 ### 3. Production Docker Compose Profiles
 ```bash
-# Profile A: Standard local CPU / mock development stack (no GPU required)
+# Profile A: Standard local mock development stack (Postgres + Redis + Backend + Frontend)
 docker compose up -d
 
-# Profile B: Local GPU workstation with Ollama container passthrough
+# Profile B: Local CPU-only containerized Ollama instance (no GPU required)
+docker compose --profile cpu up -d
+
+# Profile C: Local GPU workstation with Ollama container passthrough (NVIDIA GPU)
 docker compose --profile ollama up -d
 
-# Profile C: High-throughput vLLM cluster with PagedAttention on NVIDIA GPUs
+# Profile D: High-throughput vLLM cluster with PagedAttention on NVIDIA GPUs
 docker compose --profile vllm up -d
 ```
 All profiles include PostgreSQL 16 and Redis 7 with automatic startup readiness probes (`service_healthy` gates). The gateway boots with automated database migrations and admin seeding.
@@ -251,18 +325,36 @@ All prompts and completions are computed purely in volatile GPU VRAM and never p
 
 ## Verification & Testing Suite
 
+### Unified One-Command Verification Runner
+Run all 6 verification stages across environment, compose profiles, backend Jest suites, frontend typechecks, and both SDKs with colored scorecard reporting:
+
+```powershell
+# Windows PowerShell:
+powershell -ExecutionPolicy Bypass -File scripts/run-all-checks.ps1
+```
+
 ```bash
-# 1. Backend unit tests (14 suites, 97 tests passing)
+# Linux / macOS / CI:
+bash scripts/run-all-checks.sh
+```
+
+### Individual Check Commands
+```bash
+# 1. Backend unit & provider tests (14 suites, 100/100 tests passing)
 cd backend && pnpm test
 
-# 2. Frontend typecheck & production build (22 routes prerendered)
-cd ../frontend && pnpm run typecheck && pnpm run build
+# 2. Frontend Next.js 15 typecheck (0 TypeScript errors)
+cd ../frontend && pnpm run typecheck
 
 # 3. Official Python SDK unit tests (7/7 tests passing in 0.002s)
 python sdk/python/test_yoyo.py
 
 # 4. Official TypeScript SDK compilation & in-memory suite
 cd sdk/typescript && pnpm run build && node test.js
+
+# 5. Live End-to-End Client Flow & Probe
+cd backend && node test-e2e-client-flow.js
+cd backend && node test-live-probe.js
 ```
 
 ---

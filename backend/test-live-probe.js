@@ -134,6 +134,80 @@ async function runProbe() {
     throw new Error('Compliance header x-yoyo-zero-data-retention missing on /v1/chat/completions');
   }
 
+  // 5b. Tool Calling Probe
+  console.log('\n--> [5b/13] Probing POST /v1/chat/completions (Function Calling & Tool Definitions) ...');
+  const toolProbeRes = await request(
+    {
+      host: 'localhost',
+      port: 4000,
+      path: '/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+    },
+    {
+      model: 'llama-3.3-70b',
+      messages: [{ role: 'user', content: 'What is the current weather in Paris?' }],
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'get_current_weather',
+            description: 'Get weather for a city',
+            parameters: {
+              type: 'object',
+              properties: { location: { type: 'string' } },
+              required: ['location'],
+            },
+          },
+        },
+      ],
+    }
+  );
+  if (toolProbeRes.body.choices[0].finish_reason !== 'tool_calls') {
+    throw new Error(`Expected finish_reason to be tool_calls, got: ${toolProbeRes.body.choices[0].finish_reason}`);
+  }
+  const probeToolCall = toolProbeRes.body.choices[0].message.tool_calls[0];
+  console.log(`[PASS] Function call returned: ${probeToolCall.function.name}(${probeToolCall.function.arguments})`);
+
+  // 5c. Structured Outputs Probe
+  console.log('\n--> [5c/13] Probing POST /v1/chat/completions (Strict JSON Schema Mode) ...');
+  const schemaProbeRes = await request(
+    {
+      host: 'localhost',
+      port: 4000,
+      path: '/v1/chat/completions',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+    },
+    {
+      model: 'llama-3.3-70b',
+      messages: [{ role: 'user', content: 'Extract system record' }],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'SystemRecord',
+          strict: true,
+          schema: {
+            type: 'object',
+            properties: {
+              serviceName: { type: 'string' },
+              uptime: { type: 'number' },
+            },
+            required: ['serviceName', 'uptime'],
+          },
+        },
+      },
+    }
+  );
+  const parsedRecord = JSON.parse(schemaProbeRes.body.choices[0].message.content);
+  console.log(`[PASS] Structured Output JSON parsed:`, parsedRecord);
+
   // 6. Embeddings API
   console.log('\n--> [6/11] Probing POST /v1/embeddings (nomic-embed-text) ...');
   const embedRes = await request(
@@ -304,7 +378,7 @@ async function runProbe() {
   console.log(`[PASS] Webhook test ping dispatched! Response:`, pingRes.body);
 
   console.log('\n====================================================');
-  console.log('   ALL 11/11 MANUAL PROBE CHECKS PASSED WITH ZERO ERRORS');
+  console.log('   ALL 13/13 MANUAL PROBE CHECKS PASSED WITH ZERO ERRORS');
   console.log('====================================================\n');
 }
 

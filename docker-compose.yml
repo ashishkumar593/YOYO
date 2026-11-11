@@ -136,6 +136,23 @@ services:
               count: all
               capabilities: [gpu]
 
+  # 5b. Optional CPU Inference Node (for machines without NVIDIA GPU - run with: docker compose --profile cpu up)
+  ollama-cpu:
+    image: ollama/ollama:latest
+    container_name: yoyo-ollama-cpu
+    restart: unless-stopped
+    profiles:
+      - cpu
+      - ollama-cpu
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    networks:
+      - yoyo-net
+
   # 6. High-Throughput vLLM Inference Node (run with: docker compose --profile vllm up)
   vllm:
     image: vllm/vllm-openai:latest

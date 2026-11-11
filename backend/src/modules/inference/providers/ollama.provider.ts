@@ -24,14 +24,23 @@ export class OllamaProvider implements InferenceProviderInterface {
   ): Promise<ChatCompletionResponse> {
     const url = `${workerEndpoint.replace(/\/$/, '')}/api/chat`;
 
+    let format: any = undefined;
+    if (request.response_format?.type === 'json_object') {
+      format = 'json';
+    } else if (request.response_format?.type === 'json_schema') {
+      format = request.response_format.json_schema?.schema || 'json';
+    }
+
     // Map OpenAI request to Ollama format
-    const ollamaPayload = {
+    const ollamaPayload: any = {
       model: request.model,
       messages: request.messages.map((m) => ({
         role: m.role,
         content: m.content,
       })),
       stream: false,
+      format,
+      tools: request.tools,
       options: {
         temperature: request.temperature ?? 0.7,
         top_p: request.top_p ?? 0.9,
@@ -55,6 +64,21 @@ export class OllamaProvider implements InferenceProviderInterface {
     const promptTokens = data.prompt_eval_count || estimateMessagesTokens(request.messages);
     const completionTokens = data.eval_count || estimateTokens(data.message?.content || '');
 
+    const hasToolCalls = Array.isArray(data.message?.tool_calls) && data.message.tool_calls.length > 0;
+    const toolCalls = hasToolCalls
+      ? data.message.tool_calls.map((tc: any, idx: number) => ({
+          id: tc.id || `call_${Date.now()}_${idx}`,
+          type: 'function',
+          function: {
+            name: tc.function?.name,
+            arguments:
+              typeof tc.function?.arguments === 'string'
+                ? tc.function.arguments
+                : JSON.stringify(tc.function?.arguments || {}),
+          },
+        }))
+      : undefined;
+
     return {
       id: `chatcmpl-${Date.now()}`,
       object: 'chat.completion',
@@ -65,9 +89,10 @@ export class OllamaProvider implements InferenceProviderInterface {
           index: 0,
           message: {
             role: 'assistant',
-            content: data.message?.content || '',
+            content: data.message?.content ?? null,
+            tool_calls: toolCalls,
           },
-          finish_reason: 'stop',
+          finish_reason: hasToolCalls ? 'tool_calls' : 'stop',
         },
       ],
       usage: {
@@ -86,13 +111,22 @@ export class OllamaProvider implements InferenceProviderInterface {
     const url = `${workerEndpoint.replace(/\/$/, '')}/api/chat`;
     const id = `chatcmpl-${Date.now()}`;
 
-    const ollamaPayload = {
+    let format: any = undefined;
+    if (request.response_format?.type === 'json_object') {
+      format = 'json';
+    } else if (request.response_format?.type === 'json_schema') {
+      format = request.response_format.json_schema?.schema || 'json';
+    }
+
+    const ollamaPayload: any = {
       model: request.model,
       messages: request.messages.map((m) => ({
         role: m.role,
         content: m.content,
       })),
       stream: true,
+      format,
+      tools: request.tools,
       options: {
         temperature: request.temperature ?? 0.7,
         top_p: request.top_p ?? 0.9,
@@ -121,6 +155,7 @@ export class OllamaProvider implements InferenceProviderInterface {
     const decoder = new TextDecoder();
     let buffer = '';
     let isFirstChunk = true;
+    let hasToolCalls = false;
     let finalPromptTokens = 0;
     let finalCompletionTokens = 0;
 
@@ -160,6 +195,38 @@ export class OllamaProvider implements InferenceProviderInterface {
               isFirstChunk = false;
             }
 
+            if (parsed.message?.tool_calls?.length) {
+              hasToolCalls = true;
+              yield {
+                id,
+                object: 'chat.completion.chunk',
+                created: Math.floor(Date.now() / 1000),
+                model: request.model,
+                choices: [
+                  {
+                    index: 0,
+                    delta: {
+                      role: isFirstChunk ? 'assistant' : undefined,
+                      tool_calls: parsed.message.tool_calls.map((tc: any, idx: number) => ({
+                        index: idx,
+                        id: tc.id || `call_${Date.now()}_${idx}`,
+                        type: 'function',
+                        function: {
+                          name: tc.function?.name,
+                          arguments:
+                            typeof tc.function?.arguments === 'string'
+                              ? tc.function.arguments
+                              : JSON.stringify(tc.function?.arguments || {}),
+                        },
+                      })),
+                    },
+                    finish_reason: null,
+                  },
+                ],
+              };
+              isFirstChunk = false;
+            }
+
             if (parsed.done) {
               finalPromptTokens = parsed.prompt_eval_count || 0;
               finalCompletionTokens = parsed.eval_count || 0;
@@ -181,7 +248,7 @@ export class OllamaProvider implements InferenceProviderInterface {
         {
           index: 0,
           delta: {},
-          finish_reason: 'stop',
+          finish_reason: hasToolCalls ? 'tool_calls' : 'stop',
         },
       ],
       usage: {

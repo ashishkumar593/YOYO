@@ -1243,7 +1243,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                         <td className="py-3 px-4 text-cyan-400 font-bold">response_format</td>
                         <td className="py-3 px-4 text-purple-400">object</td>
                         <td className="py-3 px-4 text-zinc-500">Optional</td>
-                        <td className="py-3 px-4 text-zinc-400">Enforces structured outputs. Pass <code className="text-zinc-200">{`{ "type": "json_object" }`}</code> to guarantee valid JSON syntax.</td>
+                        <td className="py-3 px-4 text-zinc-400">Enforces structured outputs. Pass <code className="text-zinc-200">{`{ "type": "json_object" }`}</code> to guarantee valid JSON syntax, or <code className="text-zinc-200">{`{ "type": "json_schema", "json_schema": { "name": "...", "strict": true, "schema": {...} } }`}</code> for strict JSON Schema conformance.</td>
                       </tr>
                       <tr>
                         <td className="py-3 px-4 text-cyan-400 font-bold">tools</td>

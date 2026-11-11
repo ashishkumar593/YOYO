@@ -32,6 +32,20 @@ export interface ChatMessage {
   tool_calls?: ToolCall[];
 }
 
+export interface JsonSchemaFormat {
+  type: 'json_schema';
+  json_schema: {
+    name: string;
+    strict?: boolean;
+    schema: Record<string, any>;
+  };
+}
+
+export type ResponseFormat =
+  | { type: 'text' }
+  | { type: 'json_object' }
+  | JsonSchemaFormat;
+
 export interface ChatCompletionParams {
   model: string;
   messages: ChatMessage[];
@@ -40,7 +54,7 @@ export interface ChatCompletionParams {
   max_tokens?: number;
   stream?: boolean;
   stop?: string | string[];
-  response_format?: { type: 'json_object' | 'text' };
+  response_format?: ResponseFormat;
   tools?: ToolDefinition[];
   tool_choice?: 'none' | 'auto' | 'required' | { type: 'function'; function: { name: string } };
   presence_penalty?: number;
