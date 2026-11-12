@@ -1,11 +1,24 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Res } from '@nestjs/common';
+import { FastifyReply } from 'fastify';
 import { TelemetryService } from './telemetry.service';
+import { MetricsService } from './metrics.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller()
 export class TelemetryController {
-  constructor(private telemetryService: TelemetryService) {}
+  constructor(
+    private telemetryService: TelemetryService,
+    private metricsService: MetricsService
+  ) {}
+
+  // Native Prometheus Scraping Endpoint (/metrics)
+  @Get('metrics')
+  async getMetrics(@Res() res: FastifyReply) {
+    const data = await this.metricsService.getPrometheusMetrics();
+    res.header('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+    return res.send(data);
+  }
 
   // Public Platform Status API
   @Get('api/telemetry/status')

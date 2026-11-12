@@ -5,6 +5,7 @@ import {
   ServiceUnavailableException,
   BadRequestException,
   Logger,
+  Optional,
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
@@ -12,6 +13,8 @@ import { ModelsService } from '../models/models.service';
 import { OllamaProvider } from './providers/ollama.provider';
 import { VllmProvider } from './providers/vllm.provider';
 import { MockProvider } from './providers/mock.provider';
+import { CircuitBreakerRegistry } from './resilience/circuit-breaker';
+import { MetricsService } from '../telemetry/metrics.service';
 import {
   ChatCompletionRequest,
   ChatCompletionResponse,
@@ -46,7 +49,8 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     private ollamaProvider: OllamaProvider,
     private vllmProvider: VllmProvider,
     private mockProvider: MockProvider,
-    private prisma: PrismaService
+    private prisma: PrismaService,
+    @Optional() private metricsService?: MetricsService
   ) {
     try {
       this.redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
@@ -138,6 +142,18 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  public getFallbackChain(model: { apiIdentifier: string; fallbackModelIds?: any }): string[] {
+    if (model.fallbackModelIds && Array.isArray(model.fallbackModelIds) && model.fallbackModelIds.length > 0) {
+      return model.fallbackModelIds as string[];
+    }
+    const id = model.apiIdentifier;
+    if (id === 'llama-3.3-70b') return ['llama3.3:8b', 'llama-3.3-8b'];
+    if (id === 'deepseek-r1-70b' || id === 'deepseek-r1:70b') return ['llama-3.3-70b', 'llama3.3:8b'];
+    if (id === 'qwen-2.5-coder-32b' || id === 'qwen2.5-coder:32b') return ['llama3.3:8b'];
+    if (id === 'mistral-large-2411' || id === 'mistral:latest') return ['llama3.3:8b'];
+    return [];
+  }
+
   private computeCacheKey(request: ChatCompletionRequest): string | null {
     // Only cache deterministic outputs (temperature <= 0.5)
     if (request.temperature !== undefined && request.temperature > 0.5) {
@@ -204,15 +220,26 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
 
     let lastError: any = null;
 
+    // Filter available candidates using circuit breaker
+    const breakerRegistry = CircuitBreakerRegistry.getInstance();
+    const availableCandidates = candidates.filter((c) =>
+      breakerRegistry.getBreaker(c.workerName).isAvailable()
+    );
+    const executionQueue = availableCandidates.length > 0 ? availableCandidates : candidates;
+
     // Failover loop across available least-concurrency cloud workers
-    for (const candidate of candidates) {
+    for (const candidate of executionQueue) {
+      const breaker = breakerRegistry.getBreaker(candidate.workerName);
+
       if (candidate.deploymentId) {
         await this.modelsService.incrementConcurrency(candidate.deploymentId);
       }
 
       const startTime = Date.now();
       try {
-        const result = await candidate.provider.chatCompletion(candidate.endpoint, request);
+        const result = await breaker.execute(() =>
+          candidate.provider.chatCompletion(candidate.endpoint, request)
+        );
         const latencyMs = Date.now() - startTime;
 
         this.recordTelemetry({
@@ -245,6 +272,33 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
+    // Failover model chain: if all workers for the primary model failed, attempt fallback models
+    const fallbackChain = this.getFallbackChain(model);
+    for (const fallbackModel of fallbackChain) {
+      if (fallbackModel === request.model) continue;
+
+      try {
+        this.logger.warn(
+          `All primary workers for '${request.model}' exhausted. Attempting fallback model chain -> '${fallbackModel}'`
+        );
+        const fallbackResult = await this.chatCompletion(
+          { ...request, model: fallbackModel },
+          userContext,
+          apiKeyContext
+        );
+        (fallbackResult as any)._fallbackInfo = {
+          fallbackTriggered: true,
+          originalModel: request.model,
+          servedModel: fallbackModel,
+        };
+        return fallbackResult;
+      } catch (fallbackErr: any) {
+        this.logger.warn(
+          `Fallback to '${fallbackModel}' failed: ${fallbackErr.message}`
+        );
+      }
+    }
+
     throw new ServiceUnavailableException(
       `Inference failed across all available workers for model '${request.model}': ${lastError?.message || 'Workers unreachable'}`
     );
@@ -256,17 +310,45 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     userContext?: { id: string; role?: string },
     apiKeyContext?: { keyId: string; allowedModels?: string[] }
   ): AsyncIterable<ChatCompletionChunk> {
-    const { candidates, model } = await this.resolveCandidates(
-      request.model,
-      apiKeyContext?.allowedModels
-    );
+    let resolved;
+    try {
+      resolved = await this.resolveCandidates(
+        request.model,
+        apiKeyContext?.allowedModels
+      );
+    } catch (err) {
+      // If primary model cannot be resolved or has no workers, try fallback
+      const fallbackChain = this.getFallbackChain({ apiIdentifier: request.model });
+      for (const fallbackModel of fallbackChain) {
+        try {
+          this.logger.warn(
+            `Stream resolution failed for '${request.model}'. Falling back to '${fallbackModel}'`
+          );
+          yield* this.chatCompletionStream(
+            { ...request, model: fallbackModel },
+            abortSignal,
+            userContext,
+            apiKeyContext
+          );
+          return;
+        } catch {}
+      }
+      throw err;
+    }
 
-    const candidate = candidates[0];
+    const { candidates, model } = resolved;
+    const breakerRegistry = CircuitBreakerRegistry.getInstance();
+    const candidate =
+      candidates.find((c) => breakerRegistry.getBreaker(c.workerName).isAvailable()) ||
+      candidates[0];
+
     if (!candidate) {
       throw new ServiceUnavailableException(
         `No available cloud workers found for '${request.model}'.`
       );
     }
+
+    const breaker = breakerRegistry.getBreaker(candidate.workerName);
 
     if (candidate.deploymentId) {
       await this.modelsService.incrementConcurrency(candidate.deploymentId);
@@ -283,6 +365,7 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
         request,
         abortSignal
       )) {
+        breaker.recordSuccess();
         if (chunk.choices?.[0]?.delta?.content) {
           accumulatedContent += chunk.choices[0].delta.content;
         }
@@ -295,6 +378,9 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
         }
         yield chunk;
       }
+    } catch (err: any) {
+      breaker.recordFailure(err);
+      throw err;
     } finally {
       if (candidate.deploymentId) {
         await this.modelsService.decrementConcurrency(candidate.deploymentId);
@@ -334,14 +420,24 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
 
     let lastError: any = null;
 
-    for (const candidate of candidates) {
+    const breakerRegistry = CircuitBreakerRegistry.getInstance();
+    const availableCandidates = candidates.filter((c) =>
+      breakerRegistry.getBreaker(c.workerName).isAvailable()
+    );
+    const executionQueue = availableCandidates.length > 0 ? availableCandidates : candidates;
+
+    for (const candidate of executionQueue) {
+      const breaker = breakerRegistry.getBreaker(candidate.workerName);
+
       if (candidate.deploymentId) {
         await this.modelsService.incrementConcurrency(candidate.deploymentId);
       }
 
       const startTime = Date.now();
       try {
-        const result = await candidate.provider.embeddings(candidate.endpoint, request);
+        const result = await breaker.execute(() =>
+          candidate.provider.embeddings(candidate.endpoint, request)
+        );
         const latencyMs = Date.now() - startTime;
 
         this.recordTelemetry({
@@ -520,6 +616,15 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     latencyMs: number;
   }) {
     if (!data.userId) return;
+
+    this.metricsService?.recordRequest({
+      endpoint: data.endpoint,
+      statusCode: data.statusCode,
+      model: data.modelId,
+      latencyMs: data.latencyMs,
+      promptTokens: data.promptTokens,
+      completionTokens: data.completionTokens,
+    });
 
     try {
       await this.prisma.apiRequest.create({

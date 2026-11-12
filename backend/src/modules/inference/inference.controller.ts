@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Post,
   Body,
   UseGuards,
@@ -11,6 +12,7 @@ import {
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { InferenceService } from './inference.service';
 import { ApiKeyGuard } from '../../common/guards/api-key.guard';
+import { CircuitBreakerRegistry } from './resilience/circuit-breaker';
 import {
   ChatCompletionRequest,
   EmbeddingRequest,
@@ -74,7 +76,19 @@ export class InferenceController {
     // Standard non-streaming JSON response
     const result = await this.inferenceService.chatCompletion(body, user, apiKey);
     res.header('x-yoyo-zero-data-retention', 'true');
+    if ((result as any)._fallbackInfo) {
+      res.header('x-yoyo-fallback-triggered', 'true');
+      res.header('x-yoyo-original-model', (result as any)._fallbackInfo.originalModel);
+      res.header('x-yoyo-served-model', (result as any)._fallbackInfo.servedModel);
+      delete (result as any)._fallbackInfo;
+    }
     return res.status(HttpStatus.OK).send(result);
+  }
+
+  @Get('circuit-breakers')
+  @HttpCode(HttpStatus.OK)
+  async getCircuitBreakers() {
+    return CircuitBreakerRegistry.getInstance().getAllStatus();
   }
 
   @Post('embeddings')

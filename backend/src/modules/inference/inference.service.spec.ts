@@ -215,5 +215,97 @@ describe('InferenceService', () => {
       })
     );
   });
+
+  it('should automatically route to fallback model when primary model workers fail', async () => {
+    delete process.env.FEATURE_MOCK_INFERENCE;
+
+    // Primary model: llama-3.3-70b
+    // Fallback model: llama3.3:8b
+    prismaService.model.findUnique.mockImplementation(({ where }: any) => {
+      if (where.apiIdentifier === 'llama-3.3-70b') {
+        return Promise.resolve({
+          id: 'm_70b',
+          apiIdentifier: 'llama-3.3-70b',
+          isActive: true,
+          defaultContextWindow: 131072,
+          fallbackModelIds: ['llama3.3:8b'],
+        });
+      }
+      if (where.apiIdentifier === 'llama3.3:8b') {
+        return Promise.resolve({
+          id: 'm_8b',
+          apiIdentifier: 'llama3.3:8b',
+          isActive: true,
+          defaultContextWindow: 8192,
+        });
+      }
+      return Promise.resolve(null);
+    });
+
+    const failingWorker = {
+      id: 'deploy_fail',
+      worker: {
+        workerName: 'gpu-node-failing',
+        endpointUrl: 'http://localhost:9999',
+        engineType: 'OLLAMA',
+      },
+    };
+
+    const healthyWorker = {
+      id: 'deploy_healthy',
+      worker: {
+        workerName: 'gpu-node-healthy',
+        endpointUrl: 'http://localhost:11434',
+        engineType: 'OLLAMA',
+      },
+    };
+
+    modelsService.findActiveWorkersForModel.mockImplementation((modelName: string) => {
+      if (modelName === 'llama-3.3-70b') {
+        return Promise.resolve([failingWorker]);
+      }
+      if (modelName === 'llama3.3:8b') {
+        return Promise.resolve([healthyWorker]);
+      }
+      return Promise.resolve([]);
+    });
+
+    const ollama = (service as any).ollamaProvider;
+    jest.spyOn(ollama, 'chatCompletion').mockImplementation((endpoint: string, req: any) => {
+      if (endpoint === 'http://localhost:9999') {
+        return Promise.reject(new Error('CUDA Out of Memory (OOM) 503'));
+      }
+      return Promise.resolve({
+        id: 'chatcmpl-fallback',
+        object: 'chat.completion',
+        created: Date.now(),
+        model: req.model,
+        choices: [
+          {
+            index: 0,
+            message: { role: 'assistant', content: 'Fallback response from 8B model' },
+            finish_reason: 'stop',
+          },
+        ],
+        usage: { prompt_tokens: 10, completion_tokens: 10, total_tokens: 20 },
+      });
+    });
+
+    const result = await service.chatCompletion(
+      {
+        model: 'llama-3.3-70b',
+        messages: [{ role: 'user', content: 'Complex analysis' }],
+      },
+      { id: 'user_1' },
+      { keyId: 'key_1', allowedModels: ['*'] }
+    );
+
+    expect(result).toBeDefined();
+    expect(result.choices[0].message.content).toBe('Fallback response from 8B model');
+    expect((result as any)._fallbackInfo).toBeDefined();
+    expect((result as any)._fallbackInfo.fallbackTriggered).toBe(true);
+    expect((result as any)._fallbackInfo.originalModel).toBe('llama-3.3-70b');
+    expect((result as any)._fallbackInfo.servedModel).toBe('llama3.3:8b');
+  });
 });
 

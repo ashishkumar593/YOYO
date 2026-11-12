@@ -14,6 +14,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserStatus, EngineType } from '@prisma/client';
+import { CircuitBreakerRegistry } from '../inference/resilience/circuit-breaker';
 
 @Controller('api/admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -61,6 +62,17 @@ export class AdminController {
   @Post('workers/:id/verify')
   async verifyWorker(@Param('id') workerId: string) {
     return this.adminService.verifyWorkerHealth(workerId);
+  }
+
+  @Get('circuit-breakers')
+  async getCircuitBreakers() {
+    return CircuitBreakerRegistry.getInstance().getAllStatus();
+  }
+
+  @Post('circuit-breakers/reset')
+  async resetCircuitBreakers() {
+    CircuitBreakerRegistry.getInstance().resetAll();
+    return { success: true, message: 'All circuit breakers reset to CLOSED' };
   }
 
   @Get('users')
