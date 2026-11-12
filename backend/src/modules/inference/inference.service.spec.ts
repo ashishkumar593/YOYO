@@ -27,6 +27,15 @@ describe('InferenceService', () => {
       userQuota: {
         updateMany: jest.fn().mockResolvedValue({ count: 1 }),
       },
+      creditBalance: {
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      modelPricing: {
+        findFirst: jest.fn().mockResolvedValue({
+          inputCostPerMillion: 0.20,
+          outputCostPerMillion: 0.40,
+        }),
+      },
     };
 
     modelsService = {
@@ -306,6 +315,70 @@ describe('InferenceService', () => {
     expect((result as any)._fallbackInfo.fallbackTriggered).toBe(true);
     expect((result as any)._fallbackInfo.originalModel).toBe('llama-3.3-70b');
     expect((result as any)._fallbackInfo.servedModel).toBe('llama3.3:8b');
+  });
+
+  it('should apply 50% discount for cached prompt tokens during telemetry recording', async () => {
+    prismaService.model.findUnique.mockResolvedValue({
+      id: 'model_uuid_1',
+      apiIdentifier: 'llama3.3:8b',
+      defaultContextWindow: 8192,
+      isActive: true,
+    });
+
+    modelsService.findActiveWorkersForModel.mockResolvedValue([
+      {
+        id: 'dep_1',
+        worker: {
+          workerName: 'test-vllm-node',
+          endpointUrl: 'http://localhost:8000',
+          engineType: 'VLLM',
+        },
+      },
+    ]);
+
+    const vllm = (service as any).vllmProvider;
+    jest.spyOn(vllm, 'chatCompletion').mockResolvedValue({
+      id: 'chatcmpl-cached-test',
+      object: 'chat.completion',
+      created: Date.now(),
+      model: 'llama3.3:8b',
+      choices: [{ index: 0, message: { role: 'assistant', content: 'Cached result' }, finish_reason: 'stop' }],
+      usage: {
+        prompt_tokens: 1000,
+        completion_tokens: 500,
+        total_tokens: 1500,
+        prompt_tokens_details: {
+          cached_tokens: 600, // 600 cached tokens (50% off)
+        },
+      },
+    });
+
+    const res = await service.chatCompletion(
+      { model: 'llama3.3:8b', messages: [{ role: 'user', content: 'test prompt' }] },
+      { id: 'user_cached_1' },
+      { keyId: 'key_1', allowedModels: ['*'] }
+    );
+
+    expect(res).toBeDefined();
+    expect(res.choices[0].message.content).toBe('Cached result');
+
+    // Allow asynchronous telemetry promise queue to settle
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    // Expected pricing:
+    // Uncached: 400 * 0.20 / 1M = 0.000080
+    // Cached (50% off): 600 * 0.10 / 1M = 0.000060
+    // Completion: 500 * 0.40 / 1M = 0.000200
+    // Total cost = 0.000340
+    expect(prismaService.apiRequest.create).toHaveBeenCalled();
+    const createCallArg = prismaService.apiRequest.create.mock.calls[0][0];
+    expect(createCallArg.data.usageRecord.create.computeCostUsd).toBe(0.00034);
+    expect(prismaService.creditBalance.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: 'user_cached_1' },
+        data: { balanceUsd: { decrement: 0.00034 } },
+      })
+    );
   });
 });
 

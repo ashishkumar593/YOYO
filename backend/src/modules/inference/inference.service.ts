@@ -202,11 +202,13 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
             userId: userContext?.id,
             apiKeyId: apiKeyContext?.keyId,
             modelId: model.id,
+            modelIdentifier: model.apiIdentifier,
             endpoint: '/v1/chat/completions',
             statusCode: 200,
             promptTokens: cachedResult.usage.prompt_tokens,
             completionTokens: cachedResult.usage.completion_tokens,
             totalTokens: cachedResult.usage.total_tokens,
+            cachedTokens: cachedResult.usage.prompt_tokens, // full prompt hit
             latencyMs: 2, // Sub-4ms cached response
           }).catch(() => {});
 
@@ -241,16 +243,19 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
           candidate.provider.chatCompletion(candidate.endpoint, request)
         );
         const latencyMs = Date.now() - startTime;
+        const cachedTokens = result.usage?.prompt_tokens_details?.cached_tokens || 0;
 
         this.recordTelemetry({
           userId: userContext?.id,
           apiKeyId: apiKeyContext?.keyId,
           modelId: model.id,
+          modelIdentifier: model.apiIdentifier,
           endpoint: '/v1/chat/completions',
           statusCode: 200,
           promptTokens: result.usage.prompt_tokens,
           completionTokens: result.usage.completion_tokens,
           totalTokens: result.usage.total_tokens,
+          cachedTokens,
           latencyMs,
         }).catch(() => {});
 
@@ -357,6 +362,7 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     const startTime = Date.now();
     let promptTokens = 0;
     let completionTokens = 0;
+    let cachedTokens = 0;
     let accumulatedContent = '';
 
     try {
@@ -375,6 +381,9 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
         if (chunk.usage) {
           promptTokens = chunk.usage.prompt_tokens;
           completionTokens = chunk.usage.completion_tokens;
+          if (chunk.usage.prompt_tokens_details?.cached_tokens) {
+            cachedTokens = chunk.usage.prompt_tokens_details.cached_tokens;
+          }
         }
         yield chunk;
       }
@@ -398,11 +407,13 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
         userId: userContext?.id,
         apiKeyId: apiKeyContext?.keyId,
         modelId: model.id,
+        modelIdentifier: model.apiIdentifier,
         endpoint: '/v1/chat/completions',
         statusCode: 200,
         promptTokens,
         completionTokens,
         totalTokens: promptTokens + completionTokens,
+        cachedTokens,
         latencyMs,
       }).catch(() => {});
     }
@@ -604,15 +615,45 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
+  private pricingCache = new Map<string, { input: number; output: number }>();
+
+  private async getModelPricing(modelIdentifierOrId?: string): Promise<{ input: number; output: number }> {
+    if (!modelIdentifierOrId) return { input: 0.2, output: 0.4 };
+    if (this.pricingCache.has(modelIdentifierOrId)) {
+      return this.pricingCache.get(modelIdentifierOrId)!;
+    }
+
+    try {
+      const pricing = await (this.prisma as any).modelPricing?.findFirst?.({
+        where: {
+          OR: [{ modelIdentifier: modelIdentifierOrId }, { id: modelIdentifierOrId }],
+        },
+      });
+
+      if (pricing) {
+        const rates = {
+          input: Number(pricing.inputCostPerMillion),
+          output: Number(pricing.outputCostPerMillion),
+        };
+        this.pricingCache.set(modelIdentifierOrId, rates);
+        return rates;
+      }
+    } catch {}
+
+    return { input: 0.2, output: 0.4 };
+  }
+
   private async recordTelemetry(data: {
     userId?: string;
     apiKeyId?: string;
     modelId?: string;
+    modelIdentifier?: string;
     endpoint: string;
     statusCode: number;
     promptTokens: number;
     completionTokens: number;
     totalTokens: number;
+    cachedTokens?: number;
     latencyMs: number;
   }) {
     if (!data.userId) return;
@@ -627,6 +668,16 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     });
 
     try {
+      const rates = await this.getModelPricing(data.modelIdentifier || data.modelId);
+      const cachedTokens = Math.max(0, Math.min(data.promptTokens, data.cachedTokens || 0));
+      const uncachedPromptTokens = Math.max(0, data.promptTokens - cachedTokens);
+
+      // Prompt caching arbitrage: 50% discount on cached tokens
+      const promptCost =
+        (uncachedPromptTokens * rates.input + cachedTokens * (rates.input * 0.5)) / 1_000_000;
+      const completionCost = (data.completionTokens * rates.output) / 1_000_000;
+      const computeCostUsd = parseFloat((promptCost + completionCost).toFixed(6));
+
       await this.prisma.apiRequest.create({
         data: {
           userId: data.userId,
@@ -646,6 +697,7 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
               promptTokens: data.promptTokens,
               completionTokens: data.completionTokens,
               totalTokens: data.totalTokens,
+              computeCostUsd,
               periodDate: new Date(),
             },
           },
@@ -660,6 +712,16 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
           currentMonthRequestsUsed: { increment: 1 },
         },
       });
+
+      // Deduct compute cost from user credit balance if positive
+      if (computeCostUsd > 0 && (this.prisma as any).creditBalance?.updateMany) {
+        await (this.prisma as any).creditBalance.updateMany({
+          where: { userId: data.userId },
+          data: {
+            balanceUsd: { decrement: computeCostUsd },
+          },
+        });
+      }
     } catch (err: any) {
       this.logger.error(`Failed to record telemetry: ${err.message}`);
     }

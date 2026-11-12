@@ -44,6 +44,7 @@ interface Message {
   tool_call_id?: string;
   name?: string;
   tokens?: number;
+  cachedTokens?: number;
   cost?: number;
   latencyMs?: number;
   speed?: number;
@@ -172,7 +173,13 @@ function PlaygroundInner() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputPrompt, setInputPrompt] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [streamMetrics, setStreamMetrics] = useState<{ ttftMs?: number; totalTokens?: number; tokensPerSec?: number; zeroRetention?: boolean }>({});
+  const [streamMetrics, setStreamMetrics] = useState<{
+    ttftMs?: number;
+    totalTokens?: number;
+    cachedTokens?: number;
+    tokensPerSec?: number;
+    zeroRetention?: boolean;
+  }>({});
   const [showCodeModal, setShowCodeModal] = useState<boolean>(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [codeTab, setCodeTab] = useState<'python' | 'typescript' | 'curl' | 'openai'>('python');
@@ -365,7 +372,12 @@ function PlaygroundInner() {
             }
 
             if (parsed.usage) {
-              setStreamMetrics((m) => ({ ...m, totalTokens: parsed.usage.total_tokens }));
+              const cached = parsed.usage.prompt_tokens_details?.cached_tokens;
+              setStreamMetrics((m) => ({
+                ...m,
+                totalTokens: parsed.usage.total_tokens,
+                ...(cached !== undefined ? { cachedTokens: cached } : {}),
+              }));
             }
           } catch {}
         }
@@ -398,6 +410,7 @@ function PlaygroundInner() {
           next[next.length - 1] = {
             ...next[next.length - 1],
             tokens: finalTokens,
+            cachedTokens: streamMetrics.cachedTokens,
             cost: estCost,
             latencyMs: totalElapsedMs,
             speed,
@@ -799,6 +812,15 @@ for chunk in stream:
                             <span>{msg.tokens} tokens</span>
                           </span>
                         )}
+                        {msg.cachedTokens !== undefined && msg.cachedTokens > 0 && (
+                          <>
+                            <span className="text-zinc-600">•</span>
+                            <span className="inline-flex items-center space-x-1 text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                              <Sparkles className="w-3 h-3 text-emerald-400" />
+                              <span>{msg.cachedTokens} cached (50% off)</span>
+                            </span>
+                          </>
+                        )}
                         {msg.cost !== undefined && (
                           <>
                             <span className="text-zinc-600">•</span>
@@ -835,7 +857,7 @@ for chunk in stream:
           </div>
 
           {/* Telemetry Speedometer Bar */}
-          {(streamMetrics.ttftMs || streamMetrics.tokensPerSec || streamMetrics.totalTokens || streamMetrics.zeroRetention) && (
+          {(streamMetrics.ttftMs || streamMetrics.tokensPerSec || streamMetrics.totalTokens || streamMetrics.cachedTokens || streamMetrics.zeroRetention) && (
             <div className="px-6 py-2.5 border-t border-border/60 bg-muted/30 flex items-center space-x-6 text-[11px] font-mono text-muted-foreground">
               {streamMetrics.ttftMs && (
                 <span className="flex items-center space-x-1.5">
@@ -853,6 +875,12 @@ for chunk in stream:
                 <span className="flex items-center space-x-1.5">
                   <Cpu className="w-3.5 h-3.5 text-indigo-400" />
                   <span>Tokens: <strong className="text-foreground">{streamMetrics.totalTokens}</strong></span>
+                </span>
+              )}
+              {streamMetrics.cachedTokens !== undefined && streamMetrics.cachedTokens > 0 && (
+                <span className="flex items-center space-x-1.5 text-emerald-400">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Prefix Cache: <strong className="text-emerald-300">{streamMetrics.cachedTokens} tokens (50% Off)</strong></span>
                 </span>
               )}
               {streamMetrics.zeroRetention && (

@@ -31,6 +31,7 @@ export default function BillingPage() {
   const [calcRequests, setCalcRequests] = useState(5000);
   const [calcPromptTokens, setCalcPromptTokens] = useState(1200);
   const [calcOutputTokens, setCalcOutputTokens] = useState(350);
+  const [calcCacheHitRate, setCalcCacheHitRate] = useState(40);
 
   const loadBilling = async () => {
     try {
@@ -120,9 +121,19 @@ export default function BillingPage() {
   const billablePrompt = monthlyPromptTokens * billableRatio;
   const billableOutput = monthlyOutputTokens * billableRatio;
 
-  const estimatedYoyoCost =
-    (billablePrompt / 1_000_000) * Number(selectedPriceObj.inputCostPerMillion) +
-    (billableOutput / 1_000_000) * Number(selectedPriceObj.outputCostPerMillion);
+  // Prompt caching arbitrage (50% discount on cached input tokens)
+  const inputRate = Number(selectedPriceObj.inputCostPerMillion);
+  const outputRate = Number(selectedPriceObj.outputCostPerMillion);
+  const cachedPromptTokens = billablePrompt * (calcCacheHitRate / 100);
+  const uncachedPromptTokens = billablePrompt - cachedPromptTokens;
+
+  const effectivePromptCost =
+    (uncachedPromptTokens / 1_000_000) * inputRate +
+    (cachedPromptTokens / 1_000_000) * (inputRate * 0.5);
+  const effectiveOutputCost = (billableOutput / 1_000_000) * outputRate;
+
+  const estimatedYoyoCost = effectivePromptCost + effectiveOutputCost;
+  const promptCacheSavings = (cachedPromptTokens / 1_000_000) * (inputRate * 0.5);
 
   const estimatedProprietaryCost =
     (monthlyPromptTokens / 1_000_000) * 2.5 + (monthlyOutputTokens / 1_000_000) * 10.0;
@@ -227,7 +238,7 @@ export default function BillingPage() {
         </div>
 
         {/* Calculator inputs grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
           {/* Model picker */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-muted-foreground">Select Foundation Model</label>
@@ -299,10 +310,30 @@ export default function BillingPage() {
               />
             </div>
           </div>
+
+          {/* Prefix Cache Hit Rate Slider */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <label className="font-semibold text-muted-foreground">Prefix Cache Hit Ratio</label>
+              <span className="font-mono text-emerald-400 font-bold">{calcCacheHitRate}% hit</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="5"
+              value={calcCacheHitRate}
+              onChange={(e) => setCalcCacheHitRate(parseInt(e.target.value, 10))}
+              className="w-full accent-emerald-400 cursor-pointer"
+            />
+            <p className="text-[10px] text-muted-foreground leading-tight mt-1">
+              vLLM KV cache prefix sharing cuts input token cost by <strong className="text-emerald-400">50%</strong>.
+            </p>
+          </div>
         </div>
 
         {/* Calculations Results Bar */}
-        <div className="p-5 rounded-2xl bg-muted/30 border border-border grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-mono">
+        <div className="p-5 rounded-2xl bg-muted/30 border border-border grid grid-cols-1 md:grid-cols-5 gap-4 text-xs font-mono">
           <div>
             <span className="text-[10px] text-muted-foreground uppercase font-bold block">Monthly Traffic</span>
             <span className="text-base font-extrabold text-foreground">
@@ -317,6 +348,16 @@ export default function BillingPage() {
             <span className="text-[10px] text-muted-foreground uppercase font-bold block">Free Tier Deduction</span>
             <span className="text-base font-extrabold text-emerald-400">-5,000,000 tokens</span>
             <span className="text-[10px] text-muted-foreground block">Included free every month</span>
+          </div>
+
+          <div>
+            <span className="text-[10px] text-muted-foreground uppercase font-bold block">Prefix Cache Savings</span>
+            <span className="text-base font-extrabold text-cyan-400">
+              ${promptCacheSavings.toFixed(2)}
+            </span>
+            <span className="text-[10px] text-muted-foreground block">
+              {calcCacheHitRate}% hit rate (50% off)
+            </span>
           </div>
 
           <div>
@@ -355,8 +396,9 @@ export default function BillingPage() {
               <tr>
                 <th className="px-6 py-3">Model</th>
                 <th className="px-6 py-3">API Identifier</th>
-                <th className="px-6 py-3">Input Cost / 1M Tokens</th>
-                <th className="px-6 py-3">Output Cost / 1M Tokens</th>
+                <th className="px-6 py-3">Input Cost / 1M</th>
+                <th className="px-6 py-3">Cached Input (50% Off)</th>
+                <th className="px-6 py-3">Output Cost / 1M</th>
                 <th className="px-6 py-3 text-right">Free Tier Eligible</th>
               </tr>
             </thead>
@@ -367,6 +409,9 @@ export default function BillingPage() {
                   <td className="px-6 py-4 text-muted-foreground">{p.modelIdentifier}</td>
                   <td className="px-6 py-4 text-foreground font-semibold">
                     ${p.inputCostPerMillion.toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4 text-emerald-400 font-semibold">
+                    ${(p.inputCostPerMillion * 0.5).toFixed(2)}
                   </td>
                   <td className="px-6 py-4 text-foreground font-semibold">
                     ${p.outputCostPerMillion.toFixed(2)}

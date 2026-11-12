@@ -173,6 +173,7 @@ services:
       --port 8000
       --max-model-len 4096
       --gpu-memory-utilization 0.90
+      --enable-prefix-caching
     networks:
       - yoyo-net
     deploy:

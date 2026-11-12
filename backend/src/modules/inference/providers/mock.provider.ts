@@ -33,6 +33,8 @@ export class MockProvider implements InferenceProviderInterface {
         status: 'active',
       });
 
+      const cachedTokens = promptTokens >= 10 ? Math.floor(promptTokens * 0.5) : 0;
+
       return {
         id: `chatcmpl-${Date.now()}`,
         object: 'chat.completion',
@@ -62,6 +64,9 @@ export class MockProvider implements InferenceProviderInterface {
           prompt_tokens: promptTokens,
           completion_tokens: 32,
           total_tokens: promptTokens + 32,
+          prompt_tokens_details: {
+            cached_tokens: cachedTokens,
+          },
         },
       };
     }
@@ -100,6 +105,9 @@ export class MockProvider implements InferenceProviderInterface {
           prompt_tokens: promptTokens,
           completion_tokens: completionTokens,
           total_tokens: promptTokens + completionTokens,
+          prompt_tokens_details: {
+            cached_tokens: Math.floor(promptTokens * 0.5),
+          },
         },
       };
     }
@@ -136,6 +144,9 @@ export class MockProvider implements InferenceProviderInterface {
           prompt_tokens: promptTokens,
           completion_tokens: completionTokens,
           total_tokens: promptTokens + completionTokens,
+          prompt_tokens_details: {
+            cached_tokens: Math.floor(promptTokens * 0.5),
+          },
         },
       };
     }
@@ -163,6 +174,9 @@ export class MockProvider implements InferenceProviderInterface {
         prompt_tokens: promptTokens,
         completion_tokens: completionTokens,
         total_tokens: promptTokens + completionTokens,
+        prompt_tokens_details: {
+          cached_tokens: Math.floor(promptTokens * 0.5),
+        },
       },
     };
   }
