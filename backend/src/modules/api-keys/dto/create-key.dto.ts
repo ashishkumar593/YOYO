@@ -11,6 +11,15 @@ export class CreateApiKeyDto {
   allowedModels?: string[];
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  allowedIps?: string[];
+
+  @IsOptional()
+  @Min(0)
+  budgetLimitUsd?: number;
+
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(10000)

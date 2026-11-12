@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ApiKeysService } from './api-keys.service';
+import { ApiKeysService, isIpAllowed } from './api-keys.service';
 import { PrismaService } from '../../database/prisma.service';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { hashApiKey } from '../../common/utils/api-key.util';
@@ -25,6 +25,11 @@ describe('ApiKeysService', () => {
         findMany: jest.fn().mockResolvedValue([]),
         findUnique: jest.fn(),
         update: jest.fn().mockResolvedValue({ id: 'key_123', isActive: false }),
+      },
+      usageRecord: {
+        aggregate: jest.fn().mockResolvedValue({
+          _sum: { computeCostUsd: 12.5 },
+        }),
       },
     };
 
@@ -157,6 +162,53 @@ describe('ApiKeysService', () => {
       const res = await service.checkTokenRateLimit('key_1', 60000, 150);
       expect(res.allowed).toBe(true);
       expect(res.remaining).toBe(60000);
+    });
+  });
+
+  describe('checkBudget', () => {
+    it('should allow request when current monthly spend is under budget limit', async () => {
+      prismaService.usageRecord.aggregate.mockResolvedValue({
+        _sum: { computeCostUsd: 15.0 },
+      });
+
+      const res = await service.checkBudget('key_1', 50.0);
+      expect(res.allowed).toBe(true);
+      expect(res.currentSpend).toBe(15.0);
+    });
+
+    it('should reject request when current monthly spend exceeds budget limit', async () => {
+      prismaService.usageRecord.aggregate.mockResolvedValue({
+        _sum: { computeCostUsd: 55.0 },
+      });
+
+      const res = await service.checkBudget('key_1', 50.0);
+      expect(res.allowed).toBe(false);
+      expect(res.currentSpend).toBe(55.0);
+    });
+
+    it('should always allow when budget limit is null or 0 (unlimited)', async () => {
+      const res = await service.checkBudget('key_1', null as any);
+      expect(res.allowed).toBe(true);
+      expect(res.currentSpend).toBe(0);
+    });
+  });
+
+  describe('isIpAllowed', () => {
+    it('should allow all IPs when allowedIps is empty or contains wildcard *', () => {
+      expect(isIpAllowed('192.168.1.1', ['*'])).toBe(true);
+      expect(isIpAllowed('10.0.0.1', [])).toBe(true);
+      expect(isIpAllowed('127.0.0.1', undefined)).toBe(true);
+    });
+
+    it('should match exact IP addresses and normalize IPv6 prefixes', () => {
+      expect(isIpAllowed('192.168.1.50', ['192.168.1.50', '10.0.0.1'])).toBe(true);
+      expect(isIpAllowed('::ffff:192.168.1.50', ['192.168.1.50'])).toBe(true);
+      expect(isIpAllowed('192.168.1.99', ['192.168.1.50'])).toBe(false);
+    });
+
+    it('should match subnet prefix wildcards', () => {
+      expect(isIpAllowed('10.0.4.12', ['10.0.*'])).toBe(true);
+      expect(isIpAllowed('192.168.2.1', ['10.0.*'])).toBe(false);
     });
   });
 });

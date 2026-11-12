@@ -112,10 +112,12 @@ model ApiKey {
   userId        String    @map("user_id") @db.Uuid
   name          String    @db.VarChar(100)
   keyPrefix     String    @map("key_prefix") @db.VarChar(16)
-  keyHash       String    @unique @map("key_hash") @db.VarChar(64)
-  maskedKey     String    @map("masked_key") @db.VarChar(32)
-  allowedModels Json      @default("[\"*\"]") @map("allowed_models")
-  rateLimitRpm  Int       @default(60) @map("rate_limit_rpm")
+  keyHash        String    @unique @map("key_hash") @db.VarChar(64)
+  maskedKey      String    @map("masked_key") @db.VarChar(32)
+  allowedModels  Json      @default("[\"*\"]") @map("allowed_models")
+  allowedIps     Json?     @default("[\"*\"]") @map("allowed_ips")
+  budgetLimitUsd Decimal?  @map("budget_limit_usd") @db.Decimal(10, 4)
+  rateLimitRpm   Int       @default(60) @map("rate_limit_rpm")
   rateLimitTpm  Int       @default(60000) @map("rate_limit_tpm")
   expiresAt     DateTime? @map("expires_at") @db.Timestamptz
   lastUsedAt    DateTime? @map("last_used_at") @db.Timestamptz

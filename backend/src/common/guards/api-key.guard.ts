@@ -7,7 +7,7 @@ import {
   HttpStatus,
   Optional,
 } from '@nestjs/common';
-import { ApiKeysService } from '../../modules/api-keys/api-keys.service';
+import { ApiKeysService, isIpAllowed } from '../../modules/api-keys/api-keys.service';
 import { JwtService } from '@nestjs/jwt';
 import { estimateMessagesTokens, estimateTokens } from '../utils/token-estimator';
 
@@ -35,6 +35,46 @@ export class ApiKeyGuard implements CanActivate {
       const keyData = await this.apiKeysService.validateKey(rawKey);
       if (!keyData) {
         throw new UnauthorizedException('API key is invalid, revoked, or expired.');
+      }
+
+      // Enforce IP / CIDR allowlisting
+      const clientIp =
+        (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+        request.ip ||
+        request.raw?.socket?.remoteAddress ||
+        '127.0.0.1';
+
+      if (keyData.allowedIps && !isIpAllowed(clientIp, keyData.allowedIps)) {
+        throw new HttpException(
+          {
+            error: {
+              message: `Access denied: Client IP ${clientIp} is not authorized for this API key.`,
+              type: 'ip_forbidden',
+              code: 403,
+            },
+          },
+          HttpStatus.FORBIDDEN
+        );
+      }
+
+      // Enforce Monthly Budget Cap
+      if (keyData.budgetLimitUsd && keyData.budgetLimitUsd > 0) {
+        const budgetCheck = await this.apiKeysService.checkBudget(
+          keyData.keyId,
+          keyData.budgetLimitUsd
+        );
+        if (!budgetCheck.allowed) {
+          throw new HttpException(
+            {
+              error: {
+                message: `Monthly budget cap exceeded: This API key has reached its limit of $${keyData.budgetLimitUsd.toFixed(2)} (Current spend: $${budgetCheck.currentSpend.toFixed(2)}).`,
+                type: 'budget_exceeded',
+                code: 429,
+              },
+            },
+            HttpStatus.TOO_MANY_REQUESTS
+          );
+        }
       }
 
       // Enforce sliding-window RPM rate limits

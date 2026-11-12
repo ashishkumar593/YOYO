@@ -33,6 +33,8 @@ export default function ApiKeysPage() {
   const [keyName, setKeyName] = useState('');
   const [rateLimitRpm, setRateLimitRpm] = useState(60);
   const [rateLimitTpm, setRateLimitTpm] = useState(60000);
+  const [budgetLimitUsd, setBudgetLimitUsd] = useState('');
+  const [allowedIps, setAllowedIps] = useState('*');
   const [expiresInDays, setExpiresInDays] = useState<number>(0); // 0 = never
   const [modelScopeMode, setModelScopeMode] = useState<'all' | 'restricted'>('all');
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
@@ -80,6 +82,8 @@ export default function ApiKeysPage() {
 
     try {
       const allowedModels = modelScopeMode === 'all' ? ['*'] : selectedModels;
+      const allowedIpsList = allowedIps.trim() ? allowedIps.split(',').map((s) => s.trim()).filter(Boolean) : ['*'];
+      const budgetNum = budgetLimitUsd.trim() ? parseFloat(budgetLimitUsd) : undefined;
       const expiresAt = expiresInDays > 0 ? new Date(Date.now() + expiresInDays * 86400000).toISOString() : null;
 
       const res = await apiRequest('/api/keys', {
@@ -89,6 +93,8 @@ export default function ApiKeysPage() {
           rateLimitRpm,
           rateLimitTpm,
           allowedModels,
+          allowedIps: allowedIpsList,
+          budgetLimitUsd: budgetNum,
           expiresAt,
         }),
       });
@@ -97,6 +103,8 @@ export default function ApiKeysPage() {
       setKeyName('');
       setModelScopeMode('all');
       setSelectedModels([]);
+      setBudgetLimitUsd('');
+      setAllowedIps('*');
       setExpiresInDays(0);
       success('API Key generated successfully.');
       await loadData();
@@ -200,6 +208,7 @@ export default function ApiKeysPage() {
                   <th className="px-6 py-3.5">Name</th>
                   <th className="px-6 py-3.5">Secret Key (Masked)</th>
                   <th className="px-6 py-3.5">Model Scope</th>
+                  <th className="px-6 py-3.5">Budget & IP Policy</th>
                   <th className="px-6 py-3.5">Rate Limit</th>
                   <th className="px-6 py-3.5">Invocations</th>
                   <th className="px-6 py-3.5">Last Invoked</th>
@@ -250,6 +259,19 @@ export default function ApiKeysPage() {
                             <span>{allowed.length} model{allowed.length > 1 ? 's' : ''}</span>
                           </span>
                         )}
+                      </td>
+                      <td className="px-6 py-4 font-mono text-xs">
+                        <div className="flex flex-col space-y-1">
+                          <span className={`text-[10px] font-semibold ${k.budgetLimitUsd ? 'text-amber-400' : 'text-muted-foreground'}`}>
+                            {k.budgetLimitUsd ? `$${k.budgetLimitUsd.toFixed(2)}/mo` : 'No Cap (Unlimited)'}
+                          </span>
+                          <span
+                            className="text-[9px] text-muted-foreground truncate max-w-[130px]"
+                            title={Array.isArray(k.allowedIps) ? k.allowedIps.join(', ') : '*'}
+                          >
+                            IP: {Array.isArray(k.allowedIps) ? (k.allowedIps.includes('*') ? 'All (*)' : k.allowedIps.join(', ')) : 'All (*)'}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 font-mono text-muted-foreground">
                         <span className="text-foreground font-semibold">{k.rateLimitRpm}</span> RPM /{' '}
@@ -526,6 +548,36 @@ export default function ApiKeysPage() {
                           {exp.label}
                         </button>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Budget Cap & IP Whitelist Policy */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                        Monthly Spend Cap ($ USD)
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        placeholder="Unlimited (No Cap)"
+                        value={budgetLimitUsd}
+                        onChange={(e) => setBudgetLimitUsd(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                        Allowed IP / CIDR List
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="* (All IPs)"
+                        value={allowedIps}
+                        onChange={(e) => setAllowedIps(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+                      />
                     </div>
                   </div>
 

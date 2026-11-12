@@ -9,6 +9,23 @@ import { CreateApiKeyDto } from './dto/create-key.dto';
 import { generateApiKey, hashApiKey } from '../../common/utils/api-key.util';
 import Redis from 'ioredis';
 
+export function isIpAllowed(clientIp: string, allowedIps?: string[]): boolean {
+  if (!allowedIps || allowedIps.length === 0 || allowedIps.includes('*')) {
+    return true;
+  }
+  const cleanIp = clientIp.replace(/^.*:/, '').trim();
+  for (const pattern of allowedIps) {
+    const cleanPattern = pattern.trim();
+    if (cleanPattern === '*' || cleanPattern === cleanIp || cleanPattern === clientIp) {
+      return true;
+    }
+    if (cleanPattern.endsWith('*') && cleanIp.startsWith(cleanPattern.slice(0, -1))) {
+      return true;
+    }
+  }
+  return false;
+}
+
 @Injectable()
 export class ApiKeysService {
   private redis: Redis | null = null;
@@ -43,6 +60,8 @@ export class ApiKeysService {
         keyHash,
         maskedKey,
         allowedModels: dto.allowedModels || ['*'],
+        allowedIps: dto.allowedIps || ['*'],
+        budgetLimitUsd: dto.budgetLimitUsd ? dto.budgetLimitUsd : null,
         rateLimitRpm: dto.rateLimitRpm || 60,
         rateLimitTpm: dto.rateLimitTpm || 60000,
         expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
@@ -52,6 +71,8 @@ export class ApiKeysService {
         name: true,
         maskedKey: true,
         allowedModels: true,
+        allowedIps: true,
+        budgetLimitUsd: true,
         rateLimitRpm: true,
         rateLimitTpm: true,
         expiresAt: true,
@@ -66,6 +87,8 @@ export class ApiKeysService {
           keyId: apiKey.id,
           userId,
           allowedModels: apiKey.allowedModels,
+          allowedIps: apiKey.allowedIps,
+          budgetLimitUsd: apiKey.budgetLimitUsd ? Number(apiKey.budgetLimitUsd) : null,
           rateLimitRpm: apiKey.rateLimitRpm,
           rateLimitTpm: apiKey.rateLimitTpm,
           isActive: true,
@@ -88,6 +111,8 @@ export class ApiKeysService {
         name: true,
         maskedKey: true,
         allowedModels: true,
+        allowedIps: true,
+        budgetLimitUsd: true,
         rateLimitRpm: true,
         rateLimitTpm: true,
         lastUsedAt: true,
@@ -104,6 +129,7 @@ export class ApiKeysService {
 
     return keys.map((k) => ({
       ...k,
+      budgetLimitUsd: k.budgetLimitUsd ? Number(k.budgetLimitUsd) : null,
       totalRequests: k._count?.apiRequests || 0,
     }));
   }
@@ -171,7 +197,9 @@ export class ApiKeysService {
       keyId: key.id,
       userId: key.user.id,
       userRole: key.user.role,
-      allowedModels: key.allowedModels as string[],
+      allowedModels: (key.allowedModels as string[]) || ['*'],
+      allowedIps: (key.allowedIps as string[]) || ['*'],
+      budgetLimitUsd: key.budgetLimitUsd ? Number(key.budgetLimitUsd) : null,
       rateLimitRpm: key.rateLimitRpm,
       rateLimitTpm: key.rateLimitTpm,
       isActive: true,
@@ -183,6 +211,32 @@ export class ApiKeysService {
     }
 
     return payload;
+  }
+
+  async checkBudget(
+    keyId: string,
+    budgetLimitUsd?: number | null
+  ): Promise<{ allowed: boolean; currentSpend: number }> {
+    if (!budgetLimitUsd || budgetLimitUsd <= 0) {
+      return { allowed: true, currentSpend: 0 };
+    }
+
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const spend = await this.prisma.usageRecord.aggregate({
+      where: {
+        apiKeyId: keyId,
+        createdAt: { gte: startOfMonth },
+      },
+      _sum: {
+        computeCostUsd: true,
+      },
+    });
+
+    const currentSpend = Number(spend._sum.computeCostUsd || 0);
+    return {
+      allowed: currentSpend < budgetLimitUsd,
+      currentSpend,
+    };
   }
 
   async checkRateLimit(
