@@ -73,6 +73,7 @@ model User {
   batchFiles          BatchFile[]
   batchJobs           BatchJob[]
   webhookEndpoints    WebhookEndpoint[]
+  memberships         OrganizationMember[]
 
   @@map("users")
 }
@@ -417,4 +418,53 @@ model WebhookDelivery {
 
   @@index([endpointId, createdAt(sort: Desc)])
   @@map("webhook_deliveries")
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  DEVELOPER
+  BILLING_VIEWER
+}
+
+model Organization {
+  id        String               @id @default(uuid()) @db.Uuid
+  name      String               @db.VarChar(100)
+  slug      String               @unique @db.VarChar(100)
+  createdAt DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime             @updatedAt @map("updated_at") @db.Timestamptz
+
+  members   OrganizationMember[]
+  projects  Project[]
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  role           OrgRole      @default(DEVELOPER)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("organization_members")
+}
+
+model Project {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  name           String       @db.VarChar(100)
+  slug           String       @db.VarChar(100)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, slug])
+  @@map("projects")
 }

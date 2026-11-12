@@ -17,6 +17,7 @@ import {
   BookOpen,
   Activity,
   LogOut,
+  Users,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
@@ -60,6 +61,7 @@ export function Sidebar() {
     {
       group: 'Enterprise & Setup',
       links: [
+        { label: 'Team & Workspaces', href: '/dashboard/team', icon: Users },
         { label: 'Billing & Ledger', href: '/dashboard/billing', icon: CreditCard },
         { label: 'System Status', href: '/status', icon: Activity, live: true },
         { label: 'API Documentation', href: '/docs', icon: BookOpen },
