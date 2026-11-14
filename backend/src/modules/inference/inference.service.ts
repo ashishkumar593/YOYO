@@ -488,14 +488,32 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
       throw new ForbiddenException(`Your API key is not permitted to access model '${modelName}'.`);
     }
 
-    // 2. Resolve model in DB
-    const model = await this.prisma.model.findUnique({
+    // 2. Resolve model in DB (base foundation model or custom LoRA adapter)
+    let model = await this.prisma.model.findUnique({
       where: { apiIdentifier: modelName },
     });
+
+    let activeAdapter: any = null;
+    if (!model) {
+      activeAdapter = await (this.prisma as any).modelAdapter?.findUnique?.({
+        where: { apiIdentifier: modelName },
+        include: { baseModel: true },
+      });
+      if (activeAdapter && activeAdapter.isActive && activeAdapter.baseModel) {
+        model = {
+          ...activeAdapter.baseModel,
+          apiIdentifier: modelName,
+          name: `${activeAdapter.baseModel.name} (${activeAdapter.name})`,
+          adapterPath: activeAdapter.adapterPath,
+        };
+      }
+    }
 
     if (!model || !model.isActive) {
       throw new NotFoundException(`Model '${modelName}' is not available or has been disabled.`);
     }
+
+    const baseLookupIdentifier = activeAdapter?.baseModel?.apiIdentifier || modelName;
 
     // 3. Fallback to mock provider if configured
     const useMock = process.env.FEATURE_MOCK_INFERENCE === 'true';
@@ -513,7 +531,7 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     }
 
     // 4. Query all active workers hosting this model, sorted by active concurrency (least-connections)
-    const deployments = await this.modelsService.findActiveWorkersForModel(modelName);
+    const deployments = await this.modelsService.findActiveWorkersForModel(baseLookupIdentifier);
 
     if (deployments.length === 0) {
       if (process.env.NODE_ENV !== 'production') {

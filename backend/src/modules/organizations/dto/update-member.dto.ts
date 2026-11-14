@@ -6,3 +6,4 @@ export class UpdateMemberDto {
   @IsNotEmpty()
   role: OrgRole;
 }
+

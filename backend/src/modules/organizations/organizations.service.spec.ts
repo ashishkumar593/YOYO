@@ -171,3 +171,4 @@ describe('OrganizationsService', () => {
     ).rejects.toThrow(ForbiddenException);
   });
 });
+

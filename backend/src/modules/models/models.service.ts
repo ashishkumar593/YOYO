@@ -36,14 +36,20 @@ export class ModelsService {
   constructor(private prisma: PrismaService) {}
 
   async listOpenAiModels(): Promise<ModelListResponse> {
-    const models = await this.prisma.model.findMany({
-      where: { isActive: true, isPublic: true },
-      select: {
-        apiIdentifier: true,
-        createdAt: true,
-        providerFamily: true,
-      },
-    });
+    const [models, adapters] = await Promise.all([
+      this.prisma.model.findMany({
+        where: { isActive: true, isPublic: true },
+        select: {
+          apiIdentifier: true,
+          createdAt: true,
+          providerFamily: true,
+        },
+      }),
+      ((this.prisma as any).modelAdapter?.findMany?.({
+        where: { isActive: true },
+        include: { baseModel: true },
+      }) as Promise<any[]>) || Promise.resolve([]),
+    ]);
 
     const data: ModelObject[] = models.map((m) => ({
       id: m.apiIdentifier,
@@ -54,6 +60,20 @@ export class ModelsService {
       root: m.apiIdentifier,
       parent: null,
     }));
+
+    if (adapters && Array.isArray(adapters)) {
+      for (const a of adapters) {
+        data.push({
+          id: a.apiIdentifier,
+          object: 'model',
+          created: Math.floor(new Date(a.createdAt).getTime() / 1000),
+          owned_by: 'custom-lora-adapter',
+          permission: [],
+          root: a.baseModel?.apiIdentifier || a.apiIdentifier,
+          parent: a.baseModel?.apiIdentifier || null,
+        });
+      }
+    }
 
     return {
       object: 'list',
@@ -67,6 +87,23 @@ export class ModelsService {
     });
 
     if (!model || !model.isActive) {
+      const adapter = await (this.prisma as any).modelAdapter?.findUnique?.({
+        where: { apiIdentifier: modelId },
+        include: { baseModel: true },
+      });
+
+      if (adapter && adapter.isActive) {
+        return {
+          id: adapter.apiIdentifier,
+          object: 'model',
+          created: Math.floor(new Date(adapter.createdAt).getTime() / 1000),
+          owned_by: 'custom-lora-adapter',
+          permission: [],
+          root: adapter.baseModel?.apiIdentifier || adapter.apiIdentifier,
+          parent: adapter.baseModel?.apiIdentifier || null,
+        };
+      }
+
       throw new NotFoundException(`Model '${modelId}' does not exist or is currently inactive.`);
     }
 

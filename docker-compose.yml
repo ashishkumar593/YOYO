@@ -183,3 +183,44 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+
+  # 7. Prometheus Telemetry Collector (run with: docker compose --profile monitoring up)
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: yoyo-prometheus
+    restart: unless-stopped
+    profiles:
+      - monitoring
+      - telemetry
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./docker/monitoring/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+    networks:
+      - yoyo-net
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # 8. Grafana Real-Time Operations Cockpit (run with: docker compose --profile monitoring up)
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: yoyo-grafana
+    restart: unless-stopped
+    profiles:
+      - monitoring
+      - telemetry
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./docker/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docker/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - yoyo-net
+    depends_on:
+      - prometheus

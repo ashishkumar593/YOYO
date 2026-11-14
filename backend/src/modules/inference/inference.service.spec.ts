@@ -36,6 +36,9 @@ describe('InferenceService', () => {
           outputCostPerMillion: 0.40,
         }),
       },
+      modelAdapter: {
+        findUnique: jest.fn(),
+      },
     };
 
     modelsService = {
@@ -379,6 +382,58 @@ describe('InferenceService', () => {
         data: { balanceUsd: { decrement: 0.00034 } },
       })
     );
+  });
+
+  it('should route custom LoRA adapter to base model GPU workers without failure', async () => {
+    // Model findUnique returns null for adapter identifier
+    prismaService.model.findUnique.mockResolvedValueOnce(null);
+
+    // modelAdapter findUnique returns active adapter linked to base llama3.3:8b
+    prismaService.modelAdapter.findUnique.mockResolvedValueOnce({
+      id: 'adapter_1',
+      apiIdentifier: 'llama3.3:8b:legal-v1',
+      name: 'Legal LoRA',
+      adapterPath: 'yoyo/legal-v1',
+      isActive: true,
+      baseModel: {
+        id: 'base_uuid_1',
+        apiIdentifier: 'llama3.3:8b',
+        name: 'Meta Llama 3.3 8B',
+        defaultContextWindow: 8192,
+        isActive: true,
+      },
+    });
+
+    modelsService.findActiveWorkersForModel.mockResolvedValueOnce([
+      {
+        id: 'dep_lora',
+        worker: {
+          workerName: 'gpu-lora-worker',
+          endpointUrl: 'http://localhost:8000',
+          engineType: 'VLLM',
+        },
+      },
+    ]);
+
+    const vllm = (service as any).vllmProvider;
+    jest.spyOn(vllm, 'chatCompletion').mockResolvedValueOnce({
+      id: 'chatcmpl-lora',
+      object: 'chat.completion',
+      created: Date.now(),
+      model: 'llama3.3:8b:legal-v1',
+      choices: [{ index: 0, message: { role: 'assistant', content: 'Legal advice completed' }, finish_reason: 'stop' }],
+      usage: { prompt_tokens: 20, completion_tokens: 20, total_tokens: 40 },
+    });
+
+    const res = await service.chatCompletion(
+      { model: 'llama3.3:8b:legal-v1', messages: [{ role: 'user', content: 'draft clause' }] },
+      { id: 'user_1' },
+      { keyId: 'key_1', allowedModels: ['*'] }
+    );
+
+    expect(res).toBeDefined();
+    expect(res.choices[0].message.content).toBe('Legal advice completed');
+    expect(modelsService.findActiveWorkersForModel).toHaveBeenCalledWith('llama3.3:8b');
   });
 });
 

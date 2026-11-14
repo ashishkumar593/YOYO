@@ -9,3 +9,4 @@ export class InviteMemberDto {
   @IsEnum(OrgRole)
   role: OrgRole;
 }
+

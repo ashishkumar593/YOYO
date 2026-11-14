@@ -1,6 +1,6 @@
 global:
-  scrape_interval: 15s
-  evaluation_interval: 15s
+  scrape_interval: 5s
+  evaluation_interval: 5s
 
 rule_files:
   - "alert.rules.yml"
@@ -9,17 +9,17 @@ scrape_configs:
   # YOYO Fastify Edge Gateway & Prometheus Telemetry
   - job_name: "yoyo-api-gateway"
     static_configs:
-      - targets: ["api:4000"]
+      - targets: ["backend:4000"]
     metrics_path: "/metrics"
 
   # High-Throughput vLLM Cloud GPU Inference Nodes (PagedAttention, TTFT, Cache Usage)
   - job_name: "vllm-cloud-gpu-workers"
     static_configs:
-      - targets: ["vllm-worker-gpu0:8000", "vllm-worker-gpu1:8000"]
+      - targets: ["vllm:8000"]
     metrics_path: "/metrics"
 
   # Cloud Ollama Multi-GPU Inference Workers
   - job_name: "ollama-cloud-gpu-workers"
     static_configs:
-      - targets: ["ollama-worker-gpu0:11434", "ollama-worker-gpu1:11434"]
+      - targets: ["ollama:11434"]
     metrics_path: "/api/version"

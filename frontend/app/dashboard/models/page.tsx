@@ -28,15 +28,26 @@ import {
 export default function ModelsPage() {
   const { user } = useAuth();
   const [models, setModels] = useState<any[]>([]);
+  const [adapters, setAdapters] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddAdapterModal, setShowAddAdapterModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([]);
   const [showCompareModal, setShowCompareModal] = useState<boolean>(false);
   const { success, error: toastError } = useToast();
+
+  // Form fields for LoRA Adapter
+  const [adapterForm, setAdapterForm] = useState({
+    name: '',
+    baseModelId: '',
+    apiIdentifier: '',
+    adapterPath: '',
+    description: '',
+  });
 
   // Form fields for Add Model
   const [formData, setFormData] = useState({
@@ -54,10 +65,14 @@ export default function ModelsPage() {
 
   const loadCatalog = async () => {
     try {
-      const data = await apiRequest('/api/models/catalog?all=true');
-      setModels(data || []);
+      const [modelsData, adaptersData] = await Promise.all([
+        apiRequest('/api/models/catalog?all=true').catch(() => []),
+        apiRequest('/api/adapters').catch(() => []),
+      ]);
+      setModels(modelsData || []);
+      setAdapters(adaptersData || []);
     } catch (err) {
-      console.error('Failed to load model catalog:', err);
+      console.error('Failed to load model catalog or adapters:', err);
     } finally {
       setLoading(false);
     }
@@ -136,6 +151,44 @@ export default function ModelsPage() {
     }
   };
 
+  const handleAddAdapter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adapterForm.baseModelId || !adapterForm.apiIdentifier || !adapterForm.adapterPath) return;
+
+    setSubmitting(true);
+    try {
+      await apiRequest('/api/adapters', {
+        method: 'POST',
+        body: JSON.stringify(adapterForm),
+      });
+      success(`LoRA Adapter "${adapterForm.name}" registered successfully.`);
+      setShowAddAdapterModal(false);
+      setAdapterForm({
+        name: '',
+        baseModelId: '',
+        apiIdentifier: '',
+        adapterPath: '',
+        description: '',
+      });
+      await loadCatalog();
+    } catch (err: any) {
+      toastError(err.message || 'Failed to register LoRA adapter.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteAdapter = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to unregister LoRA adapter "${name}"?`)) return;
+    try {
+      await apiRequest(`/api/adapters/${id}`, { method: 'DELETE' });
+      success(`LoRA Adapter "${name}" deleted.`);
+      await loadCatalog();
+    } catch (err: any) {
+      toastError(err.message || 'Failed to delete adapter.');
+    }
+  };
+
   const categories = [
     { label: 'All Models', value: 'ALL' },
     { label: 'General LLM', value: 'GENERAL' },
@@ -143,6 +196,7 @@ export default function ModelsPage() {
     { label: 'Reasoning & Math', value: 'REASONING' },
     { label: 'Embeddings & Rerank', value: 'EMBEDDING' },
     { label: 'Vision Multimodal', value: 'VISION' },
+    { label: `LoRA Adapters (${adapters.length})`, value: 'LORA' },
   ];
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
@@ -173,15 +227,25 @@ export default function ModelsPage() {
           </p>
         </div>
 
-        {isSuperAdmin && (
+        <div className="flex items-center space-x-3">
           <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2.5 rounded-2xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 text-xs flex items-center space-x-1.5 shadow-lg shadow-primary/20 transition-all transform hover:-translate-y-0.5"
+            onClick={() => setShowAddAdapterModal(true)}
+            className="px-4 py-2.5 rounded-2xl bg-card border border-border hover:border-primary/50 text-foreground font-semibold text-xs flex items-center space-x-1.5 shadow-sm transition-all"
           >
-            <Plus className="w-4 h-4" />
-            <span>Register Cloud Model</span>
+            <Sparkles className="w-4 h-4 text-emerald-400" />
+            <span>Register LoRA Adapter</span>
           </button>
-        )}
+
+          {isSuperAdmin && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2.5 rounded-2xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 text-xs flex items-center space-x-1.5 shadow-lg shadow-primary/20 transition-all transform hover:-translate-y-0.5"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Register Cloud Model</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -215,12 +279,107 @@ export default function ModelsPage() {
         </div>
       </div>
 
-      {/* Models Grid */}
+      {/* Models / Adapters Grid */}
       {loading ? (
         <div className="p-16 text-center text-xs text-muted-foreground flex flex-col items-center justify-center space-y-3">
           <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           <span>Syncing with model registry...</span>
         </div>
+      ) : selectedCategory === 'LORA' ? (
+        adapters.length === 0 ? (
+          <div className="p-16 text-center rounded-2xl bg-card border border-border text-muted-foreground space-y-3">
+            <Sparkles className="w-8 h-8 mx-auto mb-2 text-emerald-400 opacity-60" />
+            <p className="text-sm font-medium text-foreground">No LoRA Adapters Registered</p>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              Hot-load custom fine-tuned weights on top of base foundation models without restarting GPU worker nodes.
+            </p>
+            <button
+              onClick={() => setShowAddAdapterModal(true)}
+              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground font-semibold text-xs"
+            >
+              Register First LoRA Adapter
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {adapters.map((adapter) => (
+              <div
+                key={adapter.id}
+                className="p-6 rounded-3xl bg-card border border-border hover:border-emerald-500/40 transition-all flex flex-col justify-between shadow-sm relative group"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center space-x-1">
+                        <Sparkles className="w-3 h-3 text-emerald-400" />
+                        <span>LoRA Adapter</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded-full border border-border/60">
+                        Base: {adapter.baseModel?.name || adapter.baseModelId}
+                      </span>
+                    </div>
+
+                    <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                      {adapter.status}
+                    </span>
+                  </div>
+
+                  <h3 className="font-bold text-lg text-foreground">{adapter.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    {adapter.description || 'Custom fine-tuned low-rank adaptation weights.'}
+                  </p>
+
+                  <div className="mt-4 p-3 rounded-2xl bg-muted/30 border border-border/60 space-y-1.5 font-mono text-[11px]">
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>Adapter Path:</span>
+                      <span className="text-foreground truncate max-w-[240px]">{adapter.adapterPath}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>Base Identifier:</span>
+                      <span className="text-cyan-400">{adapter.baseModel?.apiIdentifier}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-border flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <code className="text-xs font-mono bg-muted/80 px-3 py-1.5 rounded-xl text-foreground font-semibold border border-border">
+                      {adapter.apiIdentifier}
+                    </code>
+                    <button
+                      onClick={() => handleCopy(adapter.apiIdentifier)}
+                      title="Copy adapter identifier"
+                      className="p-2 rounded-xl bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-all"
+                    >
+                      {copiedId === adapter.apiIdentifier ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleDeleteAdapter(adapter.id, adapter.name)}
+                      className="p-2 rounded-xl text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all"
+                      title="Unregister adapter"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                    <Link
+                      href={`/dashboard/playground?model=${encodeURIComponent(adapter.apiIdentifier)}`}
+                      className="px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 text-xs flex items-center space-x-1.5 transition-all shadow-md shadow-primary/20"
+                    >
+                      <Terminal className="w-3.5 h-3.5" />
+                      <span>Launch</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
       ) : filtered.length === 0 ? (
         <div className="p-16 text-center rounded-2xl bg-card border border-border text-muted-foreground">
           <Cpu className="w-8 h-8 mx-auto mb-2 opacity-40" />
@@ -685,6 +844,111 @@ export default function ModelsPage() {
                   </div>
                 ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Register LoRA Adapter */}
+      {showAddAdapterModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-card border border-border rounded-3xl shadow-2xl p-6 space-y-5 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center space-x-2">
+                <Sparkles className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-bold text-base text-foreground">Register LoRA Adapter</h3>
+              </div>
+              <button
+                onClick={() => setShowAddAdapterModal(false)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <form onSubmit={handleAddAdapter} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">Adapter Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Legal Clause Extraction Specialist"
+                  value={adapterForm.name}
+                  onChange={(e) => setAdapterForm({ ...adapterForm, name: e.target.value })}
+                  className="w-full bg-muted/40 border border-border rounded-xl px-3.5 py-2.5 text-xs text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">Target Base Model</label>
+                <select
+                  required
+                  value={adapterForm.baseModelId}
+                  onChange={(e) => setAdapterForm({ ...adapterForm, baseModelId: e.target.value })}
+                  className="w-full bg-muted/40 border border-border rounded-xl px-3.5 py-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary cursor-pointer"
+                >
+                  <option value="">Select base foundation model...</option>
+                  {models
+                    .filter((m) => m.isActive)
+                    .map((m) => (
+                      <option key={m.id} value={m.apiIdentifier}>
+                        {m.name} ({m.apiIdentifier})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">API Identifier</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. llama-3.3-70b:legal-v1"
+                  value={adapterForm.apiIdentifier}
+                  onChange={(e) => setAdapterForm({ ...adapterForm, apiIdentifier: e.target.value })}
+                  className="w-full bg-muted/40 border border-border rounded-xl px-3.5 py-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">Adapter Weights Path or HuggingFace ID</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. yoyo-lora/legal-clauses-adapter or /models/lora/legal"
+                  value={adapterForm.adapterPath}
+                  onChange={(e) => setAdapterForm({ ...adapterForm, adapterPath: e.target.value })}
+                  className="w-full bg-muted/40 border border-border rounded-xl px-3.5 py-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground">Description (Optional)</label>
+                <textarea
+                  rows={2}
+                  placeholder="Fine-tuned low-rank adaptation weights for commercial legal contracts..."
+                  value={adapterForm.description}
+                  onChange={(e) => setAdapterForm({ ...adapterForm, description: e.target.value })}
+                  className="w-full bg-muted/40 border border-border rounded-xl px-3.5 py-2 text-xs text-foreground focus:outline-none focus:border-primary resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddAdapterModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:bg-muted"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-xs hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {submitting ? 'Registering...' : 'Register Adapter'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

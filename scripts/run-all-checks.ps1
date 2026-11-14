@@ -46,17 +46,19 @@ Run-Step -Name "Node.js and pnpm runtime environment" -Command {
 }
 
 # 2. Docker Compose Profiles
-Run-Step -Name "Docker Compose Profiles (Default, Ollama, vLLM)" -Command {
+Run-Step -Name "Docker Compose Profiles (Default, Ollama, vLLM, Monitoring)" -Command {
     if (Get-Command docker-compose -ErrorAction SilentlyContinue) {
         docker-compose config > $null 2>&1
         docker-compose --profile ollama config > $null 2>&1
         docker-compose --profile vllm config > $null 2>&1
-        Write-Host "    All 3 profiles (Mock, Ollama GPU, vLLM High-Throughput) validated" -ForegroundColor DarkGray
+        docker-compose --profile monitoring config > $null 2>&1
+        Write-Host "    All 4 profiles (Mock, Ollama GPU, vLLM High-Throughput, Monitoring) validated" -ForegroundColor DarkGray
     } elseif (Get-Command docker -ErrorAction SilentlyContinue) {
         docker compose config > $null 2>&1
         docker compose --profile ollama config > $null 2>&1
         docker compose --profile vllm config > $null 2>&1
-        Write-Host "    All 3 profiles validated via docker compose" -ForegroundColor DarkGray
+        docker compose --profile monitoring config > $null 2>&1
+        Write-Host "    All 4 profiles validated via docker compose" -ForegroundColor DarkGray
     } else {
         Write-Host "    Docker CLI not found; compose syntax check skipped" -ForegroundColor DarkGray
     }

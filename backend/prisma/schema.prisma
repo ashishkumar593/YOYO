@@ -74,6 +74,7 @@ model User {
   batchJobs           BatchJob[]
   webhookEndpoints    WebhookEndpoint[]
   memberships         OrganizationMember[]
+  adapters            ModelAdapter[]
 
   @@map("users")
 }
@@ -151,6 +152,7 @@ model Model {
   deployments          ModelDeployment[]
   apiRequests          ApiRequest[]
   usageRecords         UsageRecord[]
+  adapters             ModelAdapter[]
 
   @@map("models")
 }
@@ -467,4 +469,32 @@ model Project {
 
   @@unique([organizationId, slug])
   @@map("projects")
+}
+
+enum AdapterStatus {
+  READY
+  LOADING
+  ERROR
+  DISABLED
+}
+
+model ModelAdapter {
+  id            String        @id @default(uuid()) @db.Uuid
+  baseModelId   String        @map("base_model_id") @db.Uuid
+  userId        String?       @map("user_id") @db.Uuid
+  name          String        @db.VarChar(100)
+  apiIdentifier String        @unique @map("api_identifier") @db.VarChar(120)
+  adapterPath   String        @map("adapter_path") @db.VarChar(255)
+  description   String?       @db.Text
+  status        AdapterStatus @default(READY)
+  isActive      Boolean       @default(true) @map("is_active")
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  baseModel     Model         @relation(fields: [baseModelId], references: [id], onDelete: Cascade)
+  user          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([baseModelId])
+  @@index([userId])
+  @@map("model_adapters")
 }
