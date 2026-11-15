@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # YOYO Cloud AI Platform — Live Gateway End-to-End Smoke Test Suite (PowerShell)
 # Verifies Auth, Multi-Tenancy, Spend Caps, Tool Calling, LoRA, Caching & Prometheus
 # ==============================================================================

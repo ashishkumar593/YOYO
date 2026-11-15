@@ -97,6 +97,16 @@ export class ApiKeysService {
       } catch {}
     }
 
+    (this.prisma as any).auditLog?.create?.({
+      data: {
+        userId,
+        action: 'API_KEY_CREATED',
+        resourceType: 'ApiKey',
+        resourceId: apiKey.id,
+        metadata: { name: dto.name, budgetLimitUsd: dto.budgetLimitUsd, projectId: dto.projectId },
+      },
+    }).catch(() => {});
+
     return {
       apiKey,
       plaintextKey, // Return plaintext ONCE to the user
@@ -153,6 +163,15 @@ export class ApiKeysService {
         await this.redis.del(`key:${key.keyHash}`);
       } catch {}
     }
+
+    (this.prisma as any).auditLog?.create?.({
+      data: {
+        userId,
+        action: 'API_KEY_REVOKED',
+        resourceType: 'ApiKey',
+        resourceId: keyId,
+      },
+    }).catch(() => {});
 
     return { success: true, message: 'API key revoked successfully.' };
   }

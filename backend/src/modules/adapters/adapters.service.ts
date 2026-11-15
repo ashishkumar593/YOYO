@@ -43,7 +43,7 @@ export class AdaptersService {
       );
     }
 
-    return this.prisma.modelAdapter.create({
+    const adapter = await this.prisma.modelAdapter.create({
       data: {
         userId,
         baseModelId: baseModel.id,
@@ -64,6 +64,18 @@ export class AdaptersService {
         },
       },
     });
+
+    (this.prisma as any).auditLog?.create?.({
+      data: {
+        userId,
+        action: 'ADAPTER_REGISTERED',
+        resourceType: 'ModelAdapter',
+        resourceId: adapter.id,
+        metadata: { name: dto.name, apiIdentifier: dto.apiIdentifier, baseModelId: dto.baseModelId },
+      },
+    }).catch(() => {});
+
+    return adapter;
   }
 
   async findAll() {
@@ -123,6 +135,16 @@ export class AdaptersService {
     await this.prisma.modelAdapter.delete({
       where: { id },
     });
+
+    (this.prisma as any).auditLog?.create?.({
+      data: {
+        userId,
+        action: 'ADAPTER_DELETED',
+        resourceType: 'ModelAdapter',
+        resourceId: id,
+        metadata: { name: adapter.name, apiIdentifier: adapter.apiIdentifier },
+      },
+    }).catch(() => {});
 
     return { success: true, message: `Adapter '${adapter.name}' successfully unregistered.` };
   }

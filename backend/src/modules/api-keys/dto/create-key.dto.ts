@@ -32,6 +32,10 @@ export class CreateApiKeyDto {
   rateLimitTpm?: number;
 
   @IsOptional()
+  @IsString()
+  projectId?: string;
+
+  @IsOptional()
   expiresAt?: string;
 }
 

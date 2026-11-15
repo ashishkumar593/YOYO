@@ -14,6 +14,7 @@ import { BatchesModule } from './modules/batches/batches.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { AdaptersModule } from './modules/adapters/adapters.module';
+import { AuditModule } from './modules/audit/audit.module';
 import { ComplianceInterceptor } from './common/interceptors/compliance.interceptor';
 
 @Module({
@@ -34,6 +35,7 @@ import { ComplianceInterceptor } from './common/interceptors/compliance.intercep
     WebhooksModule,
     OrganizationsModule,
     AdaptersModule,
+    AuditModule,
   ],
   controllers: [AppController],
   providers: [
