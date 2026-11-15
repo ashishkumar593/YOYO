@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # YOYO Cloud AI Platform — Paperclip AI Multi-Agent Team Orchestration Runner
 # Connects Paperclip (paperclipai) Autonomous Agents to YOYO Edge Gateway
 # ==============================================================================

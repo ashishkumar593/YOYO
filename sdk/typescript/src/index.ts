@@ -132,6 +132,41 @@ export interface RerankResult {
   };
 }
 
+export class YoyoError extends Error {
+  constructor(message: string, public readonly status?: number) {
+    super(message);
+    this.name = 'YoyoError';
+  }
+}
+
+export class YoyoAuthenticationError extends YoyoError {
+  constructor(message: string) {
+    super(message, 401);
+    this.name = 'YoyoAuthenticationError';
+  }
+}
+
+export class YoyoRateLimitError extends YoyoError {
+  constructor(message: string) {
+    super(message, 429);
+    this.name = 'YoyoRateLimitError';
+  }
+}
+
+export class YoyoNotFoundError extends YoyoError {
+  constructor(message: string) {
+    super(message, 404);
+    this.name = 'YoyoNotFoundError';
+  }
+}
+
+export function mapHttpError(status: number, body: string): YoyoError {
+  if (status === 401) return new YoyoAuthenticationError(`HTTP 401 Unauthorized: ${body}`);
+  if (status === 429) return new YoyoRateLimitError(`HTTP 429 Rate Limit Exceeded: ${body}`);
+  if (status === 404) return new YoyoNotFoundError(`HTTP 404 Not Found: ${body}`);
+  return new YoyoError(`HTTP ${status} API Error: ${body}`, status);
+}
+
 export class Yoyo {
   private apiKey: string;
   private baseUrl: string;

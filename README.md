@@ -35,19 +35,22 @@ flowchart TD
   - `/docs`: Complete interactive API documentation, Batch 50% discount guide, Webhooks HMAC spec, and code samples.
   - `/status`: Real-time system health, 90-day uptime calendar, latency tables, and synthetic monitoring.
   - `/dashboard`: Cockpit overview with token meters and active key monitors.
-  - `/dashboard/models`: Foundation model catalog with Super Admin registration modal and live dynamic pricing tags.
-  - `/dashboard/playground`: Full-featured SSE streaming playground with parameter tuning and cURL export.
+  - `/dashboard/models`: Foundation model catalog and dynamic LoRA adapter registry with live pricing tags.
+  - `/dashboard/playground`: Full-featured SSE streaming playground with parameter tuning, tool calling, JSON schema mode, and prefix cache savings badge.
+  - `/dashboard/arena`: Model comparison arena for concurrent head-to-head benchmarking, live TTFT/TPS/Cost deltas, and human-in-the-loop voting.
+  - `/dashboard/team`: Enterprise multi-tenancy, workspace switcher, project isolation, and RBAC (`OWNER`, `ADMIN`, `DEVELOPER`, `BILLING_VIEWER`).
+  - `/dashboard/security`: Immutable SOC2 / HIPAA-ready audit ledger with date filters, metadata inspector, and one-click CSV report export.
   - `/dashboard/batches`: 24-hour SLA asynchronous batch inference jobs with 50% pricing discount, JSONL uploads, and outputs inspector.
-  - `/dashboard/keys`: Zero-knowledge SHA-256 API key manager with granular per-key model scoping (`*` or explicit models).
+  - `/dashboard/keys`: Zero-knowledge SHA-256 API key manager with monthly spend budget caps, CIDR IP allowlists, and per-key model scoping.
   - `/dashboard/logs`: High-density live telemetry inspector with 5s auto-refresh polling, status/model filters, CSV/JSON export, and drawer replay.
   - `/dashboard/analytics`: Historical usage velocity charts and per-model token breakdown.
-  - `/dashboard/billing`: Credit balance top-ups, Stripe checkout integration, dynamic pricing schedule, and ledger.
+  - `/dashboard/billing`: Credit balance top-ups, Stripe checkout integration, prefix caching arbitrage savings calculator, and ledger.
   - `/dashboard/admin`: Cloud GPU worker node supervisor (RunPod, Lambda, AWS) and model worker dispatch.
   - `/dashboard/settings`: Profile management, Bcrypt 12 password updates, active sessions, and HMAC Webhook endpoints.
-- **[`backend/`](./backend)**: High-throughput NestJS 11 + Fastify 5 API gateway, Prisma ORM, Redis sliding-window rate limiters, multi-worker dispatching, and automated failover.
-- **[`sdk/python/`](./sdk/python)**: Official Python SDK (`yoyo-ai`) with standard OpenAI semantics, streaming generator, and zero external dependencies.
-- **[`sdk/typescript/`](./sdk/typescript)**: Official TypeScript/JavaScript SDK (`@yoyo-ai/sdk`) with dual ESM and CommonJS exports.
-- **[`docker/`](./docker)**: Production containerization configs, Traefik v3.1 reverse proxy with automated Let's Encrypt TLS termination, and Prometheus metrics.
+- **[`backend/`](./backend)**: High-throughput NestJS 11 + Fastify 5 API gateway, Prisma ORM, Redis sliding-window rate limiters, multi-worker dispatching, circuit breaker state machine (`CLOSED`/`OPEN`/`HALF_OPEN`), and native `/metrics` Prometheus exporter.
+- **[`sdk/python/`](./sdk/python)**: Official Python SDK (`yoyo-ai`) with standard OpenAI semantics, streaming generator, tool calling, JSON schema, and zero external dependencies.
+- **[`sdk/typescript/`](./sdk/typescript)**: Official TypeScript/JavaScript SDK (`@yoyo-ai/sdk`) with typed error hierarchy, dual ESM/CJS exports, and streaming iterators.
+- **[`docker/`](./docker)**: Production containerization configs, Traefik reverse proxy, and turnkey Prometheus + Grafana cockpit monitoring stack (`docker-compose --profile monitoring up`).
 
 ---
 
@@ -292,6 +295,9 @@ docker compose --profile ollama up -d
 
 # Profile D: High-throughput vLLM cluster with PagedAttention on NVIDIA GPUs
 docker compose --profile vllm up -d
+
+# Profile E: Turnkey Prometheus (port 9090) & Grafana (port 3001) Monitoring Stack
+docker-compose --profile monitoring up -d
 ```
 All profiles include PostgreSQL 16 and Redis 7 with automatic startup readiness probes (`service_healthy` gates). The gateway boots with automated database migrations and admin seeding.
 
@@ -314,7 +320,19 @@ Spins up:
 
 ---
 
-### 5. Zero Data Retention Compliance
+### 5. Multi-Agent Team Orchestration (Paperclip AI)
+Connect autonomous agents managed by `paperclipai` directly to YOYO's OpenAI-compatible edge gateway:
+```powershell
+# Run the turnkey Paperclip AI + YOYO configuration bridge
+powershell -ExecutionPolicy Bypass -File scripts/run-paperclip-yoyo.ps1
+
+# Or launch an isolated autonomous CEO agent test drive
+paperclipai test-drive --company-name "YOYO Autonomous Labs" --agent-name "YoyoCEO" --model "llama-3.3-70b" --api-key "sk_live_yoyo_dev_master_key_2026"
+```
+
+---
+
+### 6. Zero Data Retention Compliance
 Every response and SSE stream emitted by YOYO API gateways includes the audit compliance header:
 ```http
 x-yoyo-zero-data-retention: true
@@ -326,7 +344,7 @@ All prompts and completions are computed purely in volatile GPU VRAM and never p
 ## Verification & Testing Suite
 
 ### Unified One-Command Verification Runner
-Run all 6 verification stages across environment, compose profiles, backend Jest suites, frontend typechecks, and both SDKs with colored scorecard reporting:
+Run all 6 verification stages across environment, compose profiles, backend Jest suites (19 suites, 139 tests), frontend typechecks, and both SDKs with colored scorecard reporting:
 
 ```powershell
 # Windows PowerShell:
@@ -338,19 +356,26 @@ powershell -ExecutionPolicy Bypass -File scripts/run-all-checks.ps1
 bash scripts/run-all-checks.sh
 ```
 
+### Live Gateway 12-Step Smoke Suite
+Validate end-to-end authentication, multi-tenancy, spend caps, tool calling, LoRA routing, prompt caching, and Prometheus `/metrics` against a running cluster:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/test-e2e-gateway.ps1
+```
+
 ### Individual Check Commands
 ```bash
-# 1. Backend unit & provider tests (14 suites, 100/100 tests passing)
+# 1. Backend unit & provider tests (19 suites, 139/139 tests passing)
 cd backend && pnpm test
 
 # 2. Frontend Next.js 15 typecheck (0 TypeScript errors)
 cd ../frontend && pnpm run typecheck
 
-# 3. Official Python SDK unit tests (7/7 tests passing in 0.002s)
+# 3. Official Python SDK unit tests & showcase
 python sdk/python/test_yoyo.py
+python sdk/python/example.py
 
-# 4. Official TypeScript SDK compilation & in-memory suite
-cd sdk/typescript && pnpm run build && node test.js
+# 4. Official TypeScript SDK compilation & showcase
+cd sdk/typescript && pnpm run build && node test.js && node example.js
 
 # 5. Live End-to-End Client Flow & Probe
 cd backend && node test-e2e-client-flow.js

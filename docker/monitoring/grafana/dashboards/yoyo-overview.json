@@ -11,7 +11,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 100,
-      "title": "Cloud API Gateway Telemetry",
+      "title": "Cloud API Gateway Telemetry & Circuit Breakers",
       "type": "row"
     },
     {
@@ -29,7 +29,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total[1m])) by (status)",
+          "expr": "sum(rate(yoyo_http_requests_total[1m])) by (status) or sum(rate(http_requests_total[1m])) by (status)",
           "legendFormat": "HTTP {{status}}"
         }
       ]
@@ -39,18 +39,17 @@
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
-          "custom": { "axisCenteredZero": false, "axisLabel": "Latency", "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2 },
-          "unit": "s"
+          "custom": { "axisCenteredZero": false, "axisLabel": "ms", "drawStyle": "line", "lineInterpolation": "smooth", "lineWidth": 2 },
+          "unit": "ms"
         }
       },
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 1 },
       "id": 2,
-      "title": "Inference Latency Percentiles (p50, p95, p99)",
+      "title": "Time-to-First-Token (TTFT) & Latency",
       "type": "timeseries",
       "targets": [
-        { "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))", "legendFormat": "p50 (Median)" },
-        { "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))", "legendFormat": "p95" },
-        { "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))", "legendFormat": "p99" }
+        { "expr": "yoyo_time_to_first_token_ms_avg", "legendFormat": "TTFT Avg (ms)" },
+        { "expr": "yoyo_request_duration_ms_avg", "legendFormat": "Duration Avg (ms)" }
       ]
     },
     {
@@ -71,12 +70,12 @@
       },
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 1 },
       "id": 3,
-      "title": "Gateway Error Rate (%)",
+      "title": "Circuit Breakers & Health",
       "type": "stat",
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))",
-          "legendFormat": "5xx Error Rate"
+          "expr": "sum(yoyo_circuit_breaker_state == 0) / count(yoyo_circuit_breaker_state)",
+          "legendFormat": "Healthy Breakers Ratio"
         }
       ]
     },
@@ -84,7 +83,7 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
       "id": 101,
-      "title": "Cloud GPU Cluster & vLLM PagedAttention",
+      "title": "Cloud GPU Cluster & Token Generation Velocity",
       "type": "row"
     },
     {
@@ -102,7 +101,7 @@
       "type": "timeseries",
       "targets": [
         {
-          "expr": "sum(rate(vllm:generation_tokens_total[1m])) by (model)",
+          "expr": "sum(rate(yoyo_tokens_total[1m])) by (model) or sum(rate(vllm:generation_tokens_total[1m])) by (model)",
           "legendFormat": "{{model}}"
         }
       ]
@@ -125,7 +124,7 @@
       },
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 10 },
       "id": 5,
-      "title": "vLLM GPU KV Cache Utilization",
+      "title": "vLLM Prefix & KV Cache Utilization",
       "type": "gauge",
       "targets": [
         {
@@ -161,12 +160,11 @@
   ],
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["yoyo", "inference", "cloud-gpu", "vllm"],
+  "tags": ["yoyo", "inference", "cloud-gpu", "vllm", "prometheus"],
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m"] },
   "timezone": "browser",
   "title": "YOYO Cloud AI Platform — Production Telemetry",
   "uid": "yoyo-prod-telemetry",
-  "version": 1
+  "version": 2
 }
-
