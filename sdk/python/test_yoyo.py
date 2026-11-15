@@ -29,6 +29,11 @@ class TestYoyoSDK(unittest.TestCase):
         self.assertTrue(callable(client.files.list))
         self.assertTrue(callable(client.batches.create))
         self.assertTrue(callable(client.batches.list))
+        self.assertTrue(callable(client.fine_tuning.jobs.create))
+        self.assertTrue(callable(client.fine_tuning.jobs.list))
+        self.assertTrue(callable(client.fine_tuning.jobs.retrieve))
+        self.assertTrue(callable(client.fine_tuning.jobs.cancel))
+        self.assertTrue(callable(client.fine_tuning.jobs.list_events))
 
     def test_missing_api_key_raises(self):
         import os

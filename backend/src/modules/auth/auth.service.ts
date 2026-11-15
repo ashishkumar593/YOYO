@@ -10,7 +10,7 @@ import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../database/prisma.service';
 import { RegisterDto, LoginDto } from './dto/auth.dto';
-import { UserRole, UserStatus } from '@prisma/client';
+import { UserRole, UserStatus, OrgRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -254,6 +254,139 @@ export class AuthService {
     return {
       success: true,
       message: 'If an account exists with this email, password reset instructions have been dispatched.',
+    };
+  }
+
+  async initiateSso(domainOrSlug: string) {
+    if (!domainOrSlug) {
+      throw new BadRequestException('Organization domain or slug is required for SSO initiation.');
+    }
+
+    const cleanInput = domainOrSlug.toLowerCase().trim();
+    const org = await this.prisma.organization.findFirst({
+      where: {
+        OR: [{ ssoDomain: cleanInput }, { slug: cleanInput }],
+      },
+    });
+
+    if (!org || !org.ssoEnabled) {
+      throw new BadRequestException('Enterprise SSO is not configured or enabled for this organization.');
+    }
+
+    return {
+      ssoEnabled: true,
+      provider: org.ssoProvider || 'SAML',
+      organizationId: org.id,
+      organizationName: org.name,
+      organizationSlug: org.slug,
+      redirectUrl: org.ssoMetadataUrl || `https://auth.yoyo.ai/sso/idp/${org.slug}`,
+      entityId: org.ssoEntityId || `https://api.yoyo.ai/v1/auth/sso/saml/${org.slug}`,
+      relayState: `yoyo_sso_${Date.now()}_${org.slug}`,
+    };
+  }
+
+  async handleSsoCallback(
+    dto: { email: string; organizationSlug: string; fullName?: string; ssoToken?: string },
+    userAgent?: string,
+    ipAddress?: string
+  ) {
+    if (!dto.email || !dto.organizationSlug) {
+      throw new BadRequestException('email and organizationSlug are required.');
+    }
+
+    const cleanEmail = dto.email.toLowerCase().trim();
+    const org = await this.prisma.organization.findUnique({
+      where: { slug: dto.organizationSlug.toLowerCase().trim() },
+    });
+
+    if (!org || !org.ssoEnabled) {
+      throw new BadRequestException('Enterprise SSO is not enabled for this organization.');
+    }
+
+    // Check if user exists or JIT provision
+    let targetUser: any = await this.prisma.user.findUnique({
+      where: { email: cleanEmail },
+      include: { profile: true },
+    });
+
+    if (!targetUser) {
+      const dummyHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+      targetUser = await this.prisma.user.create({
+        data: {
+          email: cleanEmail,
+          passwordHash: dummyHash,
+          emailVerified: true,
+          role: UserRole.USER,
+          status: UserStatus.ACTIVE,
+          profile: {
+            create: {
+              fullName: dto.fullName || cleanEmail.split('@')[0],
+              companyName: org.name,
+            },
+          },
+          quota: {
+            create: {
+              monthlyTokenLimit: BigInt(5000000),
+              monthlyRequestLimit: 10000,
+              resetsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            },
+          },
+        },
+        include: { profile: true },
+      });
+    }
+
+    if (!targetUser) {
+      throw new UnauthorizedException('Failed to provision SSO user.');
+    }
+
+    // Ensure organization membership
+    const existingMember = await this.prisma.organizationMember.findUnique({
+      where: {
+        organizationId_userId: {
+          organizationId: org.id,
+          userId: targetUser.id,
+        },
+      },
+    });
+
+    if (!existingMember) {
+      await this.prisma.organizationMember.create({
+        data: {
+          organizationId: org.id,
+          userId: targetUser.id,
+          role: OrgRole.DEVELOPER,
+        },
+      });
+    }
+
+    const tokens = await this.generateTokens(targetUser.id, targetUser.email, targetUser.role);
+
+    // Record session
+    const refreshHash = crypto.createHash('sha256').update(tokens.refreshToken).digest('hex');
+    await this.prisma.session.create({
+      data: {
+        userId: targetUser.id,
+        refreshTokenHash: refreshHash,
+        userAgent: userAgent || 'SSO Identity Provider',
+        ipAddress: ipAddress || 'Unknown',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    return {
+      user: {
+        id: targetUser.id,
+        email: targetUser.email,
+        role: targetUser.role,
+        fullName: targetUser.profile?.fullName,
+      },
+      organization: {
+        id: org.id,
+        name: org.name,
+        slug: org.slug,
+      },
+      ...tokens,
     };
   }
 

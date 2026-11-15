@@ -389,6 +389,111 @@ class Batches:
             raise YoyoError(f"Network error: {str(e)}")
 
 
+class FineTuningJobs:
+    def __init__(self, client: "Yoyo"):
+        self.client = client
+
+    def create(
+        self,
+        model: str,
+        training_file: str,
+        validation_file: Optional[str] = None,
+        hyperparameters: Optional[Dict[str, Any]] = None,
+        suffix: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        url = f"{self.client.base_url}/fine_tuning/jobs"
+        payload = {
+            "model": model,
+            "training_file": training_file,
+            "validation_file": validation_file,
+            "hyperparameters": hyperparameters,
+            "suffix": suffix,
+        }
+        req = urllib.request.Request(
+            url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.client.api_key}",
+                "User-Agent": "Yoyo-Python-SDK/1.0.0",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.client.timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise _map_http_error(e)
+        except Exception as e:
+            raise YoyoError(f"Network error: {str(e)}")
+
+    def retrieve(self, fine_tuning_job_id: str) -> Dict[str, Any]:
+        url = f"{self.client.base_url}/fine_tuning/jobs/{fine_tuning_job_id}"
+        req = urllib.request.Request(
+            url,
+            headers={"Authorization": f"Bearer {self.client.api_key}"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.client.timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise _map_http_error(e)
+        except Exception as e:
+            raise YoyoError(f"Network error: {str(e)}")
+
+    def list(self, limit: int = 20) -> Dict[str, Any]:
+        url = f"{self.client.base_url}/fine_tuning/jobs?limit={limit}"
+        req = urllib.request.Request(
+            url,
+            headers={"Authorization": f"Bearer {self.client.api_key}"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.client.timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise _map_http_error(e)
+        except Exception as e:
+            raise YoyoError(f"Network error: {str(e)}")
+
+    def cancel(self, fine_tuning_job_id: str) -> Dict[str, Any]:
+        url = f"{self.client.base_url}/fine_tuning/jobs/{fine_tuning_job_id}/cancel"
+        req = urllib.request.Request(
+            url,
+            data=b"{}",
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.client.api_key}",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.client.timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise _map_http_error(e)
+        except Exception as e:
+            raise YoyoError(f"Network error: {str(e)}")
+
+    def list_events(self, fine_tuning_job_id: str) -> Dict[str, Any]:
+        url = f"{self.client.base_url}/fine_tuning/jobs/{fine_tuning_job_id}/events"
+        req = urllib.request.Request(
+            url,
+            headers={"Authorization": f"Bearer {self.client.api_key}"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.client.timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise _map_http_error(e)
+        except Exception as e:
+            raise YoyoError(f"Network error: {str(e)}")
+
+
+class FineTuning:
+    def __init__(self, client: "Yoyo"):
+        self.jobs = FineTuningJobs(client)
+
+
 class Yoyo:
     """YOYO Cloud AI Model API Client (Synchronous)."""
 
@@ -410,6 +515,7 @@ class Yoyo:
         self.rerank = Rerank(self)
         self.files = Files(self)
         self.batches = Batches(self)
+        self.fine_tuning = FineTuning(self)
 
 
 class AsyncChatCompletions:
@@ -511,3 +617,4 @@ class AsyncYoyo:
         self.rerank = Rerank(self)  # type: ignore
         self.files = Files(self)  # type: ignore
         self.batches = Batches(self)  # type: ignore
+        self.fine_tuning = FineTuning(self)  # type: ignore

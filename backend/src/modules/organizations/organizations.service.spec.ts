@@ -13,6 +13,7 @@ describe('OrganizationsService', () => {
       organization: {
         findUnique: jest.fn(),
         create: jest.fn(),
+        update: jest.fn(),
       },
       organizationMember: {
         findMany: jest.fn(),
@@ -169,6 +170,68 @@ describe('OrganizationsService', () => {
     await expect(
       service.createProject('user_billing', 'org_1', { name: 'New Service' })
     ).rejects.toThrow(ForbiddenException);
+  });
+
+  describe('Enterprise SSO Management', () => {
+    it('should throw ForbiddenException if user is not a member when fetching SSO config', async () => {
+      prisma.organizationMember.findUnique.mockResolvedValueOnce(null);
+
+      await expect(service.getSsoConfig('user_outsider', 'org_1')).rejects.toThrow(
+        ForbiddenException
+      );
+    });
+
+    it('should return SSO config for organization member', async () => {
+      prisma.organizationMember.findUnique.mockResolvedValueOnce({ role: OrgRole.DEVELOPER });
+      prisma.organization.findUnique.mockResolvedValueOnce({
+        id: 'org_1',
+        name: 'Acme',
+        slug: 'acme',
+        ssoEnabled: true,
+        ssoProvider: 'SAML',
+        ssoDomain: 'acme.com',
+      });
+
+      const config = await service.getSsoConfig('user_dev', 'org_1');
+      expect(config.ssoEnabled).toBe(true);
+      expect(config.ssoProvider).toBe('SAML');
+      expect(config.ssoDomain).toBe('acme.com');
+    });
+
+    it('should throw ForbiddenException if non-admin/owner tries to update SSO config', async () => {
+      prisma.organizationMember.findUnique.mockResolvedValueOnce({ role: OrgRole.DEVELOPER });
+
+      await expect(
+        service.updateSsoConfig('user_dev', 'org_1', { ssoEnabled: true })
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should allow Owner to update SSO config', async () => {
+      prisma.organizationMember.findUnique.mockResolvedValueOnce({ role: OrgRole.OWNER });
+      prisma.organization.update.mockResolvedValueOnce({
+        id: 'org_1',
+        name: 'Acme',
+        slug: 'acme',
+        ssoEnabled: true,
+        ssoProvider: 'OKTA',
+        ssoDomain: 'acme.com',
+      });
+
+      const updated = await service.updateSsoConfig('user_owner', 'org_1', {
+        ssoEnabled: true,
+        ssoProvider: 'OKTA',
+        ssoDomain: 'ACME.COM ',
+      });
+
+      expect(updated.ssoEnabled).toBe(true);
+      expect(updated.ssoProvider).toBe('OKTA');
+      expect(prisma.organization.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'org_1' },
+          data: expect.objectContaining({ ssoDomain: 'acme.com', ssoProvider: 'OKTA' }),
+        })
+      );
+    });
   });
 });
 

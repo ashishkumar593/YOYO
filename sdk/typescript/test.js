@@ -60,6 +60,18 @@ if (typeof client.batches.create === 'function' && typeof client.batches.list ==
   throw new Error('client.batches methods missing');
 }
 
+if (
+  typeof client.fineTuning.jobs.create === 'function' &&
+  typeof client.fineTuning.jobs.list === 'function' &&
+  typeof client.fineTuning.jobs.retrieve === 'function' &&
+  typeof client.fineTuning.jobs.cancel === 'function' &&
+  typeof client.fineTuning.jobs.listEvents === 'function'
+) {
+  console.log('[OK] client.fineTuning.jobs (create, list, retrieve, cancel, listEvents) exist');
+} else {
+  throw new Error('client.fineTuning.jobs methods missing');
+}
+
 // 3. Missing API key rejection
 try {
   delete process.env.YOYO_API_KEY;

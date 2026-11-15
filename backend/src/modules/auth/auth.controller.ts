@@ -33,6 +33,23 @@ export class AuthController {
     return this.authService.login(dto, userAgent, ipAddress);
   }
 
+  @Post('sso/initiate')
+  @HttpCode(HttpStatus.OK)
+  async initiateSso(@Body('domainOrSlug') domainOrSlug: string) {
+    return this.authService.initiateSso(domainOrSlug);
+  }
+
+  @Post('sso/callback')
+  @HttpCode(HttpStatus.OK)
+  async ssoCallback(
+    @Body() dto: { email: string; organizationSlug: string; fullName?: string; ssoToken?: string },
+    @Req() req: any
+  ) {
+    const userAgent = req.headers['user-agent'];
+    const ipAddress = req.ip;
+    return this.authService.handleSsoCallback(dto, userAgent, ipAddress);
+  }
+
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(@Body('refreshToken') refreshToken: string) {

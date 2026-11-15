@@ -368,5 +368,88 @@ export class OrganizationsService {
       },
     });
   }
+
+  async getSsoConfig(userId: string, orgId: string) {
+    const membership = await this.prisma.organizationMember.findUnique({
+      where: {
+        organizationId_userId: {
+          organizationId: orgId,
+          userId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new ForbiddenException('You do not have access to this organization.');
+    }
+
+    const org = await this.prisma.organization.findUnique({
+      where: { id: orgId },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        ssoEnabled: true,
+        ssoProvider: true,
+        ssoDomain: true,
+        ssoMetadataUrl: true,
+        ssoEntityId: true,
+      },
+    });
+
+    if (!org) {
+      throw new NotFoundException('Organization not found.');
+    }
+
+    return org;
+  }
+
+  async updateSsoConfig(
+    userId: string,
+    orgId: string,
+    dto: {
+      ssoEnabled?: boolean;
+      ssoProvider?: string;
+      ssoDomain?: string;
+      ssoMetadataUrl?: string;
+      ssoEntityId?: string;
+    }
+  ) {
+    const membership = await this.prisma.organizationMember.findUnique({
+      where: {
+        organizationId_userId: {
+          organizationId: orgId,
+          userId,
+        },
+      },
+    });
+
+    if (!membership || (membership.role !== OrgRole.OWNER && membership.role !== OrgRole.ADMIN)) {
+      throw new ForbiddenException('Only Owners and Admins can configure Enterprise SSO.');
+    }
+
+    const updated = await this.prisma.organization.update({
+      where: { id: orgId },
+      data: {
+        ...(dto.ssoEnabled !== undefined ? { ssoEnabled: dto.ssoEnabled } : {}),
+        ...(dto.ssoProvider !== undefined ? { ssoProvider: dto.ssoProvider } : {}),
+        ...(dto.ssoDomain !== undefined ? { ssoDomain: dto.ssoDomain?.toLowerCase().trim() } : {}),
+        ...(dto.ssoMetadataUrl !== undefined ? { ssoMetadataUrl: dto.ssoMetadataUrl } : {}),
+        ...(dto.ssoEntityId !== undefined ? { ssoEntityId: dto.ssoEntityId } : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        ssoEnabled: true,
+        ssoProvider: true,
+        ssoDomain: true,
+        ssoMetadataUrl: true,
+        ssoEntityId: true,
+      },
+    });
+
+    return updated;
+  }
 }
 

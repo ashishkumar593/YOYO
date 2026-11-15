@@ -75,6 +75,7 @@ model User {
   webhookEndpoints    WebhookEndpoint[]
   memberships         OrganizationMember[]
   adapters            ModelAdapter[]
+  fineTuningJobs      FineTuningJob[]
 
   @@map("users")
 }
@@ -352,10 +353,12 @@ model BatchFile {
   content   String     @db.Text
   createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz
 
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  inputBatches  BatchJob[] @relation("BatchInputFile")
-  outputBatches BatchJob[] @relation("BatchOutputFile")
-  errorBatches  BatchJob[] @relation("BatchErrorFile")
+  user                      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inputBatches              BatchJob[]      @relation("BatchInputFile")
+  outputBatches             BatchJob[]      @relation("BatchOutputFile")
+  errorBatches              BatchJob[]      @relation("BatchErrorFile")
+  fineTuningTrainingJobs    FineTuningJob[] @relation("FineTuneTrainingFile")
+  fineTuningValidationJobs  FineTuningJob[] @relation("FineTuneValidationFile")
 
   @@index([userId, createdAt(sort: Desc)])
   @@map("batch_files")
@@ -436,11 +439,16 @@ enum OrgRole {
 }
 
 model Organization {
-  id        String               @id @default(uuid()) @db.Uuid
-  name      String               @db.VarChar(100)
-  slug      String               @unique @db.VarChar(100)
-  createdAt DateTime             @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime             @updatedAt @map("updated_at") @db.Timestamptz
+  id             String               @id @default(uuid()) @db.Uuid
+  name           String               @db.VarChar(100)
+  slug           String               @unique @db.VarChar(100)
+  ssoEnabled     Boolean              @default(false) @map("sso_enabled")
+  ssoProvider    String?              @map("sso_provider") @db.VarChar(50)
+  ssoMetadataUrl String?              @map("sso_metadata_url") @db.Text
+  ssoEntityId    String?              @map("sso_entity_id") @db.VarChar(255)
+  ssoDomain      String?              @map("sso_domain") @db.VarChar(100)
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz
 
   members   OrganizationMember[]
   projects  Project[]
@@ -504,4 +512,52 @@ model ModelAdapter {
   @@index([baseModelId])
   @@index([userId])
   @@map("model_adapters")
+}
+
+enum FineTuningStatus {
+  VALIDATING_FILES
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+model FineTuningJob {
+  id               String           @id @default(uuid()) @db.Uuid
+  userId           String           @map("user_id") @db.Uuid
+  organizationId   String?          @map("organization_id") @db.Uuid
+  model            String           @db.VarChar(120)
+  trainingFileId   String           @map("training_file_id") @db.Uuid
+  validationFileId String?          @map("validation_file_id") @db.Uuid
+  suffix           String?          @db.VarChar(64)
+  fineTunedModel   String?          @map("fine_tuned_model") @db.VarChar(150)
+  status           FineTuningStatus @default(VALIDATING_FILES)
+  hyperparameters  Json             @default("{\"n_epochs\": 3, \"batch_size\": 4, \"learning_rate_multiplier\": 1.0}")
+  trainedTokens    Int?             @map("trained_tokens")
+  error            String?          @db.Text
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  finishedAt       DateTime?        @map("finished_at") @db.Timestamptz
+
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trainingFile     BatchFile        @relation("FineTuneTrainingFile", fields: [trainingFileId], references: [id], onDelete: Cascade)
+  validationFile   BatchFile?       @relation("FineTuneValidationFile", fields: [validationFileId], references: [id], onDelete: SetNull)
+  events           FineTuningEvent[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("fine_tuning_jobs")
+}
+
+model FineTuningEvent {
+  id        String        @id @default(uuid()) @db.Uuid
+  jobId     String        @map("job_id") @db.Uuid
+  level     String        @default("info") @db.VarChar(20)
+  message   String        @db.Text
+  data      Json?
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  job       FineTuningJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId, createdAt(sort: Asc)])
+  @@map("fine_tuning_events")
 }

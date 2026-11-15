@@ -29,6 +29,14 @@ describe('AuthService', () => {
       userProfile: {
         upsert: jest.fn(),
       },
+      organization: {
+        findFirst: jest.fn(),
+        findUnique: jest.fn(),
+      },
+      organizationMember: {
+        findUnique: jest.fn(),
+        create: jest.fn(),
+      },
     };
 
     jwtService = {
@@ -283,6 +291,69 @@ describe('AuthService', () => {
       expect(user.email).toBe('test@yoyo.ai');
       expect(user.quota?.monthlyTokenLimit).toBe(5000000);
       expect(user.quota?.currentMonthTokensUsed).toBe(125000);
+    });
+  });
+
+  describe('SSO Enterprise Flow', () => {
+    it('should throw BadRequestException if SSO is not enabled for organization', async () => {
+      prisma.organization.findFirst.mockResolvedValue({
+        id: 'org_1',
+        slug: 'acme-corp',
+        ssoEnabled: false,
+      });
+
+      await expect(service.initiateSso('acme-corp')).rejects.toThrow(BadRequestException);
+    });
+
+    it('should return SSO initiation metadata with redirect URL and relayState', async () => {
+      prisma.organization.findFirst.mockResolvedValue({
+        id: 'org_1',
+        name: 'Acme Corp',
+        slug: 'acme-corp',
+        ssoEnabled: true,
+        ssoProvider: 'OKTA',
+        ssoMetadataUrl: 'https://acme.okta.com/app/sso',
+        ssoEntityId: 'https://api.yoyo.ai/v1/auth/sso/saml/acme-corp',
+      });
+
+      const res = await service.initiateSso('acme.com');
+      expect(res.ssoEnabled).toBe(true);
+      expect(res.provider).toBe('OKTA');
+      expect(res.organizationSlug).toBe('acme-corp');
+      expect(res.redirectUrl).toBe('https://acme.okta.com/app/sso');
+      expect(res.relayState).toBeDefined();
+    });
+
+    it('should JIT-provision user and return JWT tokens on valid SSO callback', async () => {
+      prisma.organization.findUnique.mockResolvedValue({
+        id: 'org_1',
+        name: 'Acme Corp',
+        slug: 'acme-corp',
+        ssoEnabled: true,
+      });
+
+      prisma.user.findUnique.mockResolvedValue(null); // User does not exist yet
+      prisma.user.create.mockResolvedValue({
+        id: 'usr_sso_1',
+        email: 'alice@acme.com',
+        role: UserRole.USER,
+        profile: { fullName: 'Alice Smith' },
+      });
+      prisma.organizationMember.findUnique.mockResolvedValue(null);
+      prisma.organizationMember.create.mockResolvedValue({});
+      prisma.session.create.mockResolvedValue({});
+
+      const res = await service.handleSsoCallback({
+        email: 'alice@acme.com',
+        organizationSlug: 'acme-corp',
+        fullName: 'Alice Smith',
+      });
+
+      expect(res.user.email).toBe('alice@acme.com');
+      expect(res.organization.slug).toBe('acme-corp');
+      expect(res.accessToken).toBeDefined();
+      expect(res.refreshToken).toBeDefined();
+      expect(prisma.organizationMember.create).toHaveBeenCalled();
     });
   });
 });

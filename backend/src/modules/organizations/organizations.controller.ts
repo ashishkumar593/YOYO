@@ -77,5 +77,26 @@ export class OrganizationsController {
   ) {
     return this.organizationsService.createProject(user.id, orgId, dto);
   }
+
+  @Get(':id/sso')
+  async getSso(@CurrentUser() user: any, @Param('id') orgId: string) {
+    return this.organizationsService.getSsoConfig(user.id, orgId);
+  }
+
+  @Patch(':id/sso')
+  async updateSso(
+    @CurrentUser() user: any,
+    @Param('id') orgId: string,
+    @Body()
+    dto: {
+      ssoEnabled?: boolean;
+      ssoProvider?: string;
+      ssoDomain?: string;
+      ssoMetadataUrl?: string;
+      ssoEntityId?: string;
+    }
+  ) {
+    return this.organizationsService.updateSsoConfig(user.id, orgId, dto);
+  }
 }
 

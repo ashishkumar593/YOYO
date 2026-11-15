@@ -371,6 +371,66 @@ export class Yoyo {
     },
   };
 
+  public fineTuning = {
+    jobs: {
+      create: async (params: {
+        model: string;
+        training_file: string;
+        validation_file?: string;
+        hyperparameters?: {
+          n_epochs?: number;
+          batch_size?: number;
+          learning_rate_multiplier?: number;
+        };
+        suffix?: string;
+      }): Promise<any> => {
+        const res = await fetch(`${this.baseUrl}/fine_tuning/jobs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.apiKey}`,
+          },
+          body: JSON.stringify(params),
+        });
+        if (!res.ok) throw new Error(`YOYO FineTuning API Error [${res.status}]: ${await res.text()}`);
+        return res.json() as any;
+      },
+      list: async (limit = 20): Promise<{ object: 'list'; data: any[] }> => {
+        const res = await fetch(`${this.baseUrl}/fine_tuning/jobs?limit=${limit}`, {
+          headers: { Authorization: `Bearer ${this.apiKey}` },
+        });
+        if (!res.ok) throw new Error(`YOYO FineTuning API Error [${res.status}]: ${await res.text()}`);
+        return res.json() as any;
+      },
+      retrieve: async (jobId: string): Promise<any> => {
+        const res = await fetch(`${this.baseUrl}/fine_tuning/jobs/${jobId}`, {
+          headers: { Authorization: `Bearer ${this.apiKey}` },
+        });
+        if (!res.ok) throw new Error(`YOYO FineTuning API Error [${res.status}]: ${await res.text()}`);
+        return res.json() as any;
+      },
+      cancel: async (jobId: string): Promise<any> => {
+        const res = await fetch(`${this.baseUrl}/fine_tuning/jobs/${jobId}/cancel`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.apiKey}`,
+          },
+          body: '{}',
+        });
+        if (!res.ok) throw new Error(`YOYO FineTuning API Error [${res.status}]: ${await res.text()}`);
+        return res.json() as any;
+      },
+      listEvents: async (jobId: string): Promise<{ object: 'list'; data: any[] }> => {
+        const res = await fetch(`${this.baseUrl}/fine_tuning/jobs/${jobId}/events`, {
+          headers: { Authorization: `Bearer ${this.apiKey}` },
+        });
+        if (!res.ok) throw new Error(`YOYO FineTuning API Error [${res.status}]: ${await res.text()}`);
+        return res.json() as any;
+      },
+    },
+  };
+
 
 
   private async createNonStream(params: ChatCompletionParams): Promise<ChatCompletionResponse> {
