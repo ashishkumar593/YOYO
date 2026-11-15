@@ -30,6 +30,10 @@ import {
   AlertCircle,
   Loader2,
   BarChart3,
+  Trophy,
+  History,
+  Plus,
+  ExternalLink,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
@@ -138,10 +142,41 @@ const DEFAULT_SUITES = [
   },
 ];
 
+interface LeaderboardEntry {
+  rank: number;
+  model: string;
+  elo: number;
+  matches: number;
+  wins: number;
+  losses: number;
+  ties: number;
+  winRate: number;
+  avgScore: number;
+  avgLatencyMs: number;
+}
+
+const DEFAULT_LEADERBOARD: LeaderboardEntry[] = [
+  { rank: 1, model: 'deepseek-r1-70b', elo: 1685, matches: 38, wins: 33, losses: 3, ties: 2, winRate: 87, avgScore: 9.6, avgLatencyMs: 580 },
+  { rank: 2, model: 'llama-3.3-70b', elo: 1630, matches: 45, wins: 35, losses: 8, ties: 2, winRate: 78, avgScore: 9.1, avgLatencyMs: 395 },
+  { rank: 3, model: 'qwen-2.5-coder-32b', elo: 1610, matches: 40, wins: 30, losses: 8, ties: 2, winRate: 75, avgScore: 9.0, avgLatencyMs: 340 },
+  { rank: 4, model: 'qwen-2.5-vl-72b', elo: 1560, matches: 28, wins: 19, losses: 7, ties: 2, winRate: 68, avgScore: 8.7, avgLatencyMs: 520 },
+  { rank: 5, model: 'llama-3.3-70b:legal-v1', elo: 1545, matches: 24, wins: 16, losses: 7, ties: 1, winRate: 67, avgScore: 8.8, avgLatencyMs: 410 },
+  { rank: 6, model: 'llama-3.2-11b-vision', elo: 1470, matches: 30, wins: 15, losses: 14, ties: 1, winRate: 50, avgScore: 7.8, avgLatencyMs: 275 },
+];
+
 export default function ArenaPage() {
   const { toast } = useToast();
 
-  const [arenaMode, setArenaMode] = useState<'interactive' | 'automated_evals'>('interactive');
+  const [arenaMode, setArenaMode] = useState<'interactive' | 'automated_evals' | 'leaderboard_history'>('interactive');
+  const [suitesList, setSuitesList] = useState<any[]>(DEFAULT_SUITES);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(DEFAULT_LEADERBOARD);
+  const [evalHistory, setEvalHistory] = useState<any[]>([]);
+
+  const [isGeneratingSuite, setIsGeneratingSuite] = useState<boolean>(false);
+  const [synthDomain, setSynthDomain] = useState<string>('Distributed Consensus & Raft');
+  const [synthCategory, setSynthCategory] = useState<'coding' | 'reasoning' | 'safety' | 'general'>('coding');
+  const [synthCount, setSynthCount] = useState<number>(3);
+
   const [benchmarkSuiteId, setBenchmarkSuiteId] = useState<string>('coding_bench');
   const [judgeModel, setJudgeModel] = useState<string>('deepseek-r1-70b');
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
@@ -206,17 +241,23 @@ export default function ArenaPage() {
     }
   };
 
-  // Fetch models dynamically from /v1/models
+  // Fetch models dynamically from /v1/models and leaderboard/history from /v1/evaluations
   useEffect(() => {
-    async function loadModels() {
+    async function loadData() {
       try {
         const token = localStorage.getItem('yoyo_access_token');
         const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.yoyo.ai';
-        const res = await fetch(`${apiBase}/v1/models`, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (res.ok) {
-          const json = await res.json();
+        const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+        const [modelsRes, lbRes, histRes, suitesRes] = await Promise.all([
+          fetch(`${apiBase}/v1/models`, { headers }).catch(() => null),
+          fetch(`${apiBase}/v1/evaluations/leaderboard`, { headers }).catch(() => null),
+          fetch(`${apiBase}/v1/evaluations/history`, { headers }).catch(() => null),
+          fetch(`${apiBase}/v1/evaluations/benchmarks`, { headers }).catch(() => null),
+        ]);
+
+        if (modelsRes && modelsRes.ok) {
+          const json = await modelsRes.json();
           if (Array.isArray(json.data) && json.data.length > 0) {
             const list: ModelInfo[] = json.data.map((m: any) => ({
               id: m.id,
@@ -227,11 +268,40 @@ export default function ArenaPage() {
             setAvailableModels(list);
           }
         }
+
+        if (lbRes && lbRes.ok) {
+          const lbData = await lbRes.json();
+          if (Array.isArray(lbData) && lbData.length > 0) {
+            setLeaderboard(lbData);
+          }
+        }
+
+        if (histRes && histRes.ok) {
+          const histData = await histRes.json();
+          if (Array.isArray(histData) && histData.length > 0) {
+            setEvalHistory(histData);
+          }
+        }
+
+        if (suitesRes && suitesRes.ok) {
+          const sData = await suitesRes.json();
+          if (Array.isArray(sData) && sData.length > 0) {
+            setSuitesList(
+              sData.map((s: any) => ({
+                id: s.id,
+                name: s.name,
+                description: s.description,
+                category: s.category,
+                sampleCount: s.samples?.length || 3,
+              }))
+            );
+          }
+        }
       } catch {
-        // Fallback to DEFAULT_MODELS
+        // Fallback to local defaults
       }
     }
-    loadModels();
+    loadData();
   }, []);
 
   const handleStop = () => {
@@ -288,11 +358,72 @@ export default function ArenaPage() {
       if (data.sampleResults && data.sampleResults.length > 0) {
         setExpandedSampleId(data.sampleResults[0].sampleId);
       }
+      setEvalHistory((prev) => [data, ...prev]);
+
+      // Refresh leaderboard dynamically
+      fetch(`${apiBase}/v1/evaluations/leaderboard`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      })
+        .then((r) => r.ok && r.json())
+        .then((lb) => {
+          if (Array.isArray(lb) && lb.length > 0) setLeaderboard(lb);
+        })
+        .catch(() => {});
+
       toast('Automated LLM-as-a-Judge benchmark finished successfully!', 'success');
     } catch (err: any) {
       toast(err.message || 'Failed to complete benchmark evaluation.', 'error');
     } finally {
       setIsEvaluating(false);
+    }
+  };
+
+  const handleGenerateSuite = async () => {
+    if (!synthDomain.trim() || isGeneratingSuite) return;
+    setIsGeneratingSuite(true);
+    try {
+      const token = localStorage.getItem('yoyo_access_token');
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.yoyo.ai';
+      const res = await fetch(`${apiBase}/v1/evaluations/generate-suite`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          domain: synthDomain,
+          category: synthCategory,
+          testCount: synthCount,
+          generatorModel: 'llama-3.3-70b',
+        }),
+      });
+
+      if (!res.ok) {
+        let errText = await res.text();
+        try {
+          const parsed = JSON.parse(errText);
+          errText = parsed.error?.message || parsed.message || errText;
+        } catch {}
+        throw new Error(errText || `Failed to generate suite: HTTP ${res.status}`);
+      }
+
+      const newSuite = await res.json();
+      const mappedSuite = {
+        id: newSuite.id,
+        name: newSuite.name,
+        description: newSuite.description,
+        category: newSuite.category,
+        sampleCount: newSuite.samples?.length || synthCount,
+      };
+
+      setSuitesList((prev) => [mappedSuite, ...prev]);
+      setBenchmarkSuiteId(newSuite.id);
+      toast(`Successfully synthesized ${mappedSuite.sampleCount} test cases for "${synthDomain}"!`, 'success');
+      setArenaMode('automated_evals');
+    } catch (err: any) {
+      toast(err.message || 'Failed to synthesize test suite.', 'error');
+    } finally {
+      setIsGeneratingSuite(false);
     }
   };
 
@@ -556,7 +687,7 @@ export default function ArenaPage() {
       </div>
 
       {/* Mode Switcher Tabs */}
-      <div className="flex items-center gap-2 p-1 bg-slate-900/90 border border-slate-800 rounded-xl w-fit">
+      <div className="flex flex-wrap items-center gap-2 p-1 bg-slate-900/90 border border-slate-800 rounded-xl w-fit">
         <button
           type="button"
           onClick={() => setArenaMode('interactive')}
@@ -582,6 +713,21 @@ export default function ArenaPage() {
           LLM-as-a-Judge Automated Benchmark
           <span className="px-1.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
             Automated
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setArenaMode('leaderboard_history')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            arenaMode === 'leaderboard_history'
+              ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/40 shadow-sm'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Trophy className="w-4 h-4" />
+          Global Leaderboard & Synthetic Suites
+          <span className="px-1.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            Elo
           </span>
         </button>
       </div>
@@ -1040,7 +1186,7 @@ export default function ArenaPage() {
         </div>
       </div>
     </div>
-  ) : (
+  ) : arenaMode === 'automated_evals' ? (
     <div className="flex flex-col gap-6">
           {/* Suite Selection Cards */}
           <div>
@@ -1054,7 +1200,7 @@ export default function ArenaPage() {
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {DEFAULT_SUITES.map((suite) => {
+              {suitesList.map((suite) => {
                 const isSelected = benchmarkSuiteId === suite.id;
                 return (
                   <div
@@ -1576,6 +1722,332 @@ export default function ArenaPage() {
               </div>
             </div>
           )}
+        </div>
+      ) : (
+        /* GLOBAL LEADERBOARD & SYNTHETIC SUITES VIEW */
+        <div className="flex flex-col gap-6">
+          {/* Top KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Trophy className="w-3.5 h-3.5 text-amber-400" /> Platform Champion
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono">
+                  #1 Global
+                </span>
+              </div>
+              <div className="text-lg font-bold text-white tracking-tight">
+                {leaderboard[0]?.model || 'deepseek-r1-70b'}
+              </div>
+              <div className="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                <span className="text-amber-400 font-bold">{leaderboard[0]?.elo || 1685} Elo</span>
+                <span>•</span>
+                <span className="text-emerald-400 font-semibold">{leaderboard[0]?.winRate || 87}% Win Rate</span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                Evaluated Matches
+              </span>
+              <div className="text-2xl font-bold text-white tracking-tight">
+                {leaderboard.reduce((acc, curr) => acc + curr.matches, 0) || 124}
+              </div>
+              <span className="text-xs text-slate-500 mt-1 block">
+                Dual-blind LLM referee adjudicated encounters
+              </span>
+            </div>
+
+            <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                Active Benchmark Suites
+              </span>
+              <div className="text-2xl font-bold text-emerald-400 tracking-tight">
+                {suitesList.length}
+              </div>
+              <span className="text-xs text-slate-500 mt-1 block">
+                Standard & AI-synthesized evaluation sets
+              </span>
+            </div>
+
+            <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+                Average Decision Latency
+              </span>
+              <div className="text-2xl font-bold text-blue-400 tracking-tight">
+                {Math.round(leaderboard.reduce((acc, curr) => acc + curr.avgLatencyMs, 0) / (leaderboard.length || 1))}ms
+              </div>
+              <span className="text-xs text-slate-500 mt-1 block">
+                Mean candidate response generation time
+              </span>
+            </div>
+          </div>
+
+          {/* AI Synthetic Benchmark Suite Generator Card */}
+          <div className="p-5 bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/30 border border-slate-800 rounded-2xl shadow-xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  Synthesize Custom Benchmark Suite via AI
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Generate challenging, multi-turn evaluation prompt pairs and criteria for any proprietary domain, API, or compliance spec.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+              <div className="sm:col-span-6">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  Target Domain or Challenge Topic
+                </label>
+                <input
+                  type="text"
+                  value={synthDomain}
+                  onChange={(e) => setSynthDomain(e.target.value)}
+                  placeholder="e.g. Distributed Consensus & Raft, HIPAA PII Redaction, SQL Window Functions..."
+                  className="w-full bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-xl px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  Category
+                </label>
+                <select
+                  value={synthCategory}
+                  onChange={(e) => setSynthCategory(e.target.value as any)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                >
+                  <option value="coding">Coding</option>
+                  <option value="reasoning">Reasoning</option>
+                  <option value="safety">Safety</option>
+                  <option value="general">General</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                  Test Count
+                </label>
+                <select
+                  value={synthCount}
+                  onChange={(e) => setSynthCount(parseInt(e.target.value, 10))}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                >
+                  <option value={2}>2 Cases</option>
+                  <option value={3}>3 Cases</option>
+                  <option value={4}>4 Cases</option>
+                  <option value={5}>5 Cases</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <button
+                  type="button"
+                  onClick={handleGenerateSuite}
+                  disabled={isGeneratingSuite || !synthDomain.trim()}
+                  className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-orange-500/20 text-xs transition-all disabled:opacity-40"
+                >
+                  {isGeneratingSuite ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Synthesizing...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-3.5 h-3.5" /> Synthesize Suite
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Global Model Leaderboard Table */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="p-4 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Trophy className="w-4 h-4 text-amber-400" />
+                  Global Model Arena Elo Leaderboard
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Dynamic Elo ratings updated after each head-to-head match using K=32 calibration.
+                </p>
+              </div>
+              <span className="text-xs text-slate-500 font-mono">
+                {leaderboard.length} Models Tracked
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-950 text-slate-400 uppercase tracking-wider text-[11px] border-b border-slate-800">
+                  <tr>
+                    <th className="py-3 px-4">Rank</th>
+                    <th className="py-3 px-4">Model Candidate</th>
+                    <th className="py-3 px-4">Elo Rating</th>
+                    <th className="py-3 px-4">Win Rate</th>
+                    <th className="py-3 px-4">Score / 10</th>
+                    <th className="py-3 px-4">Avg Latency</th>
+                    <th className="py-3 px-4 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/80">
+                  {leaderboard.map((entry) => {
+                    const isLoRA = entry.model.includes(':');
+                    const rankMedal =
+                      entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `#${entry.rank}`;
+
+                    return (
+                      <tr key={entry.model} className="hover:bg-slate-800/40 transition-colors">
+                        <td className="py-3 px-4 font-bold text-slate-200 text-sm">
+                          {rankMedal}
+                        </td>
+                        <td className="py-3 px-4 font-mono font-medium text-slate-100">
+                          <div className="flex items-center gap-2">
+                            <span>{entry.model}</span>
+                            {isLoRA && (
+                              <span className="px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-sans">
+                                LoRA Adapter
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 font-mono">
+                            {entry.elo} Elo
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
+                              <div
+                                className="bg-emerald-500 h-full rounded-full"
+                                style={{ width: `${entry.winRate}%` }}
+                              />
+                            </div>
+                            <span className="font-semibold text-slate-200">{entry.winRate}%</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 font-semibold text-slate-200">
+                          {entry.avgScore}
+                        </td>
+                        <td className="py-3 px-4 text-slate-400 font-mono">
+                          {entry.avgLatencyMs}ms
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setModelA(entry.model);
+                              setArenaMode('automated_evals');
+                            }}
+                            className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-colors text-[11px] font-semibold"
+                          >
+                            Challenge
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Historical Evaluation Runs Audit Ledger */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="p-4 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <History className="w-4 h-4 text-amber-400" />
+                  Recent Evaluation Runs Audit Ledger
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Immutable record of recent automated head-to-head judge evaluations.
+                </p>
+              </div>
+              <span className="text-xs text-slate-500 font-mono">
+                {evalHistory.length} Runs Recorded
+              </span>
+            </div>
+
+            {evalHistory.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-500">
+                No custom runs logged yet. Execute an automated evaluation suite to build the audit ledger.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-950 text-slate-400 uppercase tracking-wider text-[11px] border-b border-slate-800">
+                    <tr>
+                      <th className="py-3 px-4">Run ID & Date</th>
+                      <th className="py-3 px-4">Benchmark Suite</th>
+                      <th className="py-3 px-4">Contenders (A vs B)</th>
+                      <th className="py-3 px-4">Referee Verdict</th>
+                      <th className="py-3 px-4">Quality Differential</th>
+                      <th className="py-3 px-4 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/80">
+                    {evalHistory.map((run: any) => {
+                      const winnerTag =
+                        run.summary.winsA > run.summary.winsB
+                          ? { label: `Winner: ${run.modelA}`, color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' }
+                          : run.summary.winsB > run.summary.winsA
+                          ? { label: `Winner: ${run.modelB}`, color: 'bg-blue-500/20 text-blue-300 border-blue-500/30' }
+                          : { label: 'Tied Decision', color: 'bg-slate-700 text-slate-300 border-slate-600' };
+
+                      return (
+                        <tr key={run.id} className="hover:bg-slate-800/40 transition-colors">
+                          <td className="py-3 px-4">
+                            <span className="font-mono text-slate-300 block">{run.id}</span>
+                            <span className="text-[10px] text-slate-500 font-mono">
+                              {new Date(run.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-medium text-slate-200">
+                            {run.suiteName}
+                          </td>
+                          <td className="py-3 px-4 font-mono text-slate-300">
+                            <span className="text-emerald-400">{run.modelA}</span>
+                            <span className="text-slate-500 mx-1.5">vs</span>
+                            <span className="text-blue-400">{run.modelB}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`px-2 py-0.5 rounded-full border text-[11px] font-semibold ${winnerTag.color}`}>
+                              {winnerTag.label}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-mono text-slate-300">
+                            {run.summary.avgOverallScoreA} vs {run.summary.avgOverallScoreB}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEvalResult(run);
+                                if (run.sampleResults && run.sampleResults.length > 0) {
+                                  setExpandedSampleId(run.sampleResults[0].sampleId);
+                                }
+                                setArenaMode('automated_evals');
+                              }}
+                              className="px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30 transition-colors text-[11px] font-semibold"
+                            >
+                              Inspect Verdict
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

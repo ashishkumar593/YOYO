@@ -65,6 +65,26 @@ export interface RunEvaluationParams {
   samples?: EvaluationBenchmarkSample[];
 }
 
+export interface EvaluationLeaderboardEntry {
+  rank: number;
+  model: string;
+  elo: number;
+  matches: number;
+  wins: number;
+  losses: number;
+  ties: number;
+  winRate: number;
+  avgScore: number;
+  avgLatencyMs: number;
+}
+
+export interface GenerateSuiteParams {
+  domain: string;
+  category?: 'coding' | 'reasoning' | 'safety' | 'general';
+  testCount?: number;
+  generatorModel?: string;
+}
+
 export type ResponseFormat =
   | { type: 'text' }
   | { type: 'json_object' }
@@ -498,6 +518,40 @@ export class Yoyo {
     },
     run: async (params: RunEvaluationParams): Promise<any> => {
       const res = await fetch(`${this.baseUrl}/evaluations/run`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(params),
+      });
+      if (!res.ok) throw new Error(`YOYO Evaluations API Error [${res.status}]: ${await res.text()}`);
+      return res.json() as any;
+    },
+    getLeaderboard: async (): Promise<EvaluationLeaderboardEntry[]> => {
+      const res = await fetch(`${this.baseUrl}/evaluations/leaderboard`, {
+        headers: { Authorization: `Bearer ${this.apiKey}` },
+      });
+      if (!res.ok) throw new Error(`YOYO Evaluations API Error [${res.status}]: ${await res.text()}`);
+      return res.json() as any;
+    },
+    getHistory: async (limit?: number): Promise<any[]> => {
+      const url = limit ? `${this.baseUrl}/evaluations/history?limit=${limit}` : `${this.baseUrl}/evaluations/history`;
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${this.apiKey}` },
+      });
+      if (!res.ok) throw new Error(`YOYO Evaluations API Error [${res.status}]: ${await res.text()}`);
+      return res.json() as any;
+    },
+    getHistoryById: async (id: string): Promise<any> => {
+      const res = await fetch(`${this.baseUrl}/evaluations/history/${id}`, {
+        headers: { Authorization: `Bearer ${this.apiKey}` },
+      });
+      if (!res.ok) throw new Error(`YOYO Evaluations API Error [${res.status}]: ${await res.text()}`);
+      return res.json() as any;
+    },
+    generateSuite: async (params: GenerateSuiteParams): Promise<EvaluationBenchmarkSuite> => {
+      const res = await fetch(`${this.baseUrl}/evaluations/generate-suite`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

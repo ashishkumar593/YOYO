@@ -133,4 +133,55 @@ describe('EvaluationsService', () => {
       expect(result.sampleResults[0].sampleTitle).toBe('Custom Test');
     });
   });
+
+  describe('getLeaderboard', () => {
+    it('should return ranked models with Elo ratings and win rates', () => {
+      const leaderboard = service.getLeaderboard();
+      expect(leaderboard.length).toBeGreaterThanOrEqual(6);
+      expect(leaderboard[0].rank).toBe(1);
+      expect(leaderboard[0].elo).toBeGreaterThanOrEqual(leaderboard[1].elo);
+      expect(leaderboard.some((m) => m.model === 'deepseek-r1-70b')).toBe(true);
+      expect(leaderboard.some((m) => m.model === 'llama-3.3-70b')).toBe(true);
+    });
+  });
+
+  describe('getHistory & getHistoryById', () => {
+    it('should return seeded and dynamic evaluation runs', async () => {
+      const initialHistory = service.getHistory();
+      expect(initialHistory.length).toBeGreaterThanOrEqual(3);
+
+      const firstRun = service.getHistoryById(initialHistory[0].id);
+      expect(firstRun.id).toBe(initialHistory[0].id);
+      expect(() => service.getHistoryById('nonexistent-id')).toThrow(NotFoundException);
+
+      // Run new eval and verify it prepends to history
+      const newRun = await service.runEvaluation({
+        modelA: 'llama-3.3-70b',
+        modelB: 'deepseek-r1-70b',
+        benchmarkSuiteId: 'reasoning_bench',
+      });
+
+      const updatedHistory = service.getHistory();
+      expect(updatedHistory[0].id).toBe(newRun.id);
+    });
+  });
+
+  describe('generateSyntheticSuite', () => {
+    it('should generate a benchmark suite from domain description', async () => {
+      const suite = await service.generateSyntheticSuite({
+        domain: 'Kubernetes Operator Concurrency & Mutexes',
+        category: 'coding',
+        testCount: 3,
+      });
+
+      expect(suite.id).toMatch(/^synthetic_/);
+      expect(suite.name).toContain('Kubernetes Operator Concurrency');
+      expect(suite.samples).toHaveLength(3);
+      expect(suite.category).toBe('coding');
+
+      // Verify it was added to active suites
+      const activeSuites = service.listBenchmarkSuites();
+      expect(activeSuites.some((s) => s.id === suite.id)).toBe(true);
+    });
+  });
 });

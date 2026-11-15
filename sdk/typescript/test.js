@@ -81,9 +81,13 @@ if (typeof client.moderations.create === 'function') {
 if (
   typeof client.evaluations.listBenchmarks === 'function' &&
   typeof client.evaluations.getBenchmark === 'function' &&
-  typeof client.evaluations.run === 'function'
+  typeof client.evaluations.run === 'function' &&
+  typeof client.evaluations.getLeaderboard === 'function' &&
+  typeof client.evaluations.getHistory === 'function' &&
+  typeof client.evaluations.getHistoryById === 'function' &&
+  typeof client.evaluations.generateSuite === 'function'
 ) {
-  console.log('[OK] client.evaluations (listBenchmarks, getBenchmark, run) exist');
+  console.log('[OK] client.evaluations (listBenchmarks, getBenchmark, run, getLeaderboard, getHistory, getHistoryById, generateSuite) exist');
 } else {
   throw new Error('client.evaluations methods missing');
 }

@@ -299,7 +299,11 @@ def showcase_evaluations_engine(client: Yoyo, is_live: bool):
     assert callable(client.evaluations.list_benchmarks)
     assert callable(client.evaluations.get_benchmark)
     assert callable(client.evaluations.run)
-    print("[OK] client.evaluations (list_benchmarks, get_benchmark, run) verified.")
+    assert callable(client.evaluations.get_leaderboard)
+    assert callable(client.evaluations.get_history)
+    assert callable(client.evaluations.get_history_by_id)
+    assert callable(client.evaluations.generate_suite)
+    print("[OK] client.evaluations (list_benchmarks, get_benchmark, run, get_leaderboard, get_history, generate_suite) verified.")
 
     if is_live:
         try:
@@ -307,6 +311,8 @@ def showcase_evaluations_engine(client: Yoyo, is_live: bool):
             print(f"[OK] Live benchmark suites discovered: {len(suites)}")
             for s in suites:
                 print(f"     - {s.get('id')}: {s.get('name')} ({len(s.get('samples', []))} cases)")
+            lb = client.evaluations.get_leaderboard()
+            print(f"[OK] Global Elo Leaderboard models ranked: {len(lb)} (Top: {lb[0].get('model')} with {lb[0].get('elo')} Elo)")
             return
         except Exception as e:
             print(f"[WARN] Live evaluations discovery failed ({e}); falling back to documentation.")
@@ -315,6 +321,8 @@ def showcase_evaluations_engine(client: Yoyo, is_live: bool):
     print("       * Standard Suites: coding_bench, reasoning_bench, safety_guardrails_bench")
     print("       * Dual-Model Blind Adjudication via Referee Model (default: deepseek-r1-70b)")
     print("       * Multi-Criterion Rubric: Accuracy, Reasoning Depth, Instruction Adherence")
+    print("       * Dynamic Elo Leaderboard calculation (K=32 rating calibration)")
+    print("       * AI Synthetic Suite Generator (domain-specific benchmark creation)")
     print("       * Sub-token latency & cost delta tracking")
 
 

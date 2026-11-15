@@ -1,6 +1,12 @@
-import { Controller, Get, Post, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { EvaluationsService } from './evaluations.service';
-import { RunEvaluationDto, BenchmarkSuite, EvaluationRunResult } from './evaluations.types';
+import {
+  RunEvaluationDto,
+  BenchmarkSuite,
+  EvaluationRunResult,
+  LeaderboardEntry,
+  GenerateSuiteDto,
+} from './evaluations.types';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @Controller('v1/evaluations')
@@ -15,6 +21,31 @@ export class EvaluationsController {
   @Get('benchmarks/:id')
   getBenchmark(@Param('id') id: string): BenchmarkSuite {
     return this.evaluationsService.getBenchmarkSuite(id);
+  }
+
+  @Get('leaderboard')
+  getLeaderboard(): LeaderboardEntry[] {
+    return this.evaluationsService.getLeaderboard();
+  }
+
+  @Get('history')
+  getHistory(@Query('limit') limit?: string): EvaluationRunResult[] {
+    const num = limit ? parseInt(limit, 10) : 20;
+    return this.evaluationsService.getHistory(num);
+  }
+
+  @Get('history/:id')
+  getHistoryById(@Param('id') id: string): EvaluationRunResult {
+    return this.evaluationsService.getHistoryById(id);
+  }
+
+  @Post('generate-suite')
+  @HttpCode(HttpStatus.OK)
+  async generateSuite(
+    @Body() dto: GenerateSuiteDto,
+    @CurrentUser() user: any
+  ): Promise<BenchmarkSuite> {
+    return this.evaluationsService.generateSyntheticSuite(dto, user);
   }
 
   @Post('run')

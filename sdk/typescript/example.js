@@ -187,13 +187,19 @@ function showcaseEvaluationsEngine(client) {
   if (
     typeof client.evaluations.listBenchmarks === 'function' &&
     typeof client.evaluations.getBenchmark === 'function' &&
-    typeof client.evaluations.run === 'function'
+    typeof client.evaluations.run === 'function' &&
+    typeof client.evaluations.getLeaderboard === 'function' &&
+    typeof client.evaluations.getHistory === 'function' &&
+    typeof client.evaluations.getHistoryById === 'function' &&
+    typeof client.evaluations.generateSuite === 'function'
   ) {
-    console.log('[OK] client.evaluations (listBenchmarks, getBenchmark, run) verified.');
+    console.log('[OK] client.evaluations (listBenchmarks, getBenchmark, run, getLeaderboard, getHistory, generateSuite) verified.');
     console.log('     Capabilities:');
     console.log('       * Standard Suites: coding_bench, reasoning_bench, safety_guardrails_bench');
     console.log('       * Dual-Model Blind Adjudication via Referee Model (default: deepseek-r1-70b)');
     console.log('       * Multi-Criterion Rubric: Accuracy, Reasoning Depth, Instruction Adherence');
+    console.log('       * Dynamic Elo Leaderboard calculation (K=32 calibration)');
+    console.log('       * AI Synthetic Suite Generator (domain-specific benchmark creation)');
     console.log('       * Sub-token latency & cost delta tracking');
   } else {
     throw new Error('client.evaluations methods missing');

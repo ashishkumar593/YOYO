@@ -346,7 +346,7 @@ All prompts and completions are computed purely in volatile GPU VRAM and never p
 ## Verification & Testing Suite
 
 ### Unified One-Command Verification Runner
-Run all 6 verification stages across environment, compose profiles, backend Jest suites (23 suites, 181 tests), frontend typechecks, and both SDKs with colored scorecard reporting:
+Run all 6 verification stages across environment, compose profiles, backend Jest suites (23 suites, 184 tests), frontend typechecks, and both SDKs with colored scorecard reporting:
 
 ```powershell
 # Windows PowerShell:
@@ -366,7 +366,7 @@ powershell -ExecutionPolicy Bypass -File scripts/test-e2e-gateway.ps1
 
 ### Individual Check Commands
 ```bash
-# 1. Backend unit & provider tests (23 suites, 181/181 tests passing)
+# 1. Backend unit & provider tests (23 suites, 184/184 tests passing)
 cd backend && pnpm test
 
 # 2. Frontend Next.js 15 typecheck (0 TypeScript errors)

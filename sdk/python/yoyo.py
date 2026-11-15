@@ -583,6 +583,76 @@ class Evaluations:
         except urllib.error.HTTPError as e:
             raise _map_http_error(e)
 
+    def get_leaderboard(self) -> List[Dict[str, Any]]:
+        """Retrieve the global dynamic model Elo leaderboard."""
+        req = urllib.request.Request(
+            f"{self.client.base_url}/evaluations/leaderboard",
+            headers={"Authorization": f"Bearer {self.client.api_key}"},
+            method="GET",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.client.timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise _map_http_error(e)
+
+    def get_history(self, limit: int = 20) -> List[Dict[str, Any]]:
+        """Retrieve recent evaluation runs from the audit history ledger."""
+        req = urllib.request.Request(
+            f"{self.client.base_url}/evaluations/history?limit={limit}",
+            headers={"Authorization": f"Bearer {self.client.api_key}"},
+            method="GET",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.client.timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise _map_http_error(e)
+
+    def get_history_by_id(self, run_id: str) -> Dict[str, Any]:
+        """Retrieve details of a specific evaluation run by ID."""
+        req = urllib.request.Request(
+            f"{self.client.base_url}/evaluations/history/{run_id}",
+            headers={"Authorization": f"Bearer {self.client.api_key}"},
+            method="GET",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.client.timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise _map_http_error(e)
+
+    def generate_suite(
+        self,
+        domain: str,
+        category: str = "coding",
+        test_count: int = 3,
+        generator_model: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Synthesize a custom golden evaluation benchmark suite using an LLM."""
+        payload: Dict[str, Any] = {
+            "domain": domain,
+            "category": category,
+            "testCount": test_count,
+        }
+        if generator_model:
+            payload["generatorModel"] = generator_model
+
+        req = urllib.request.Request(
+            f"{self.client.base_url}/evaluations/generate-suite",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.client.api_key}",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.client.timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise _map_http_error(e)
+
 
 class Yoyo:
     """YOYO Cloud AI Model API Client (Synchronous)."""

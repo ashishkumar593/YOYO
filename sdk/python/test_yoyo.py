@@ -38,6 +38,10 @@ class TestYoyoSDK(unittest.TestCase):
         self.assertTrue(callable(client.evaluations.list_benchmarks))
         self.assertTrue(callable(client.evaluations.get_benchmark))
         self.assertTrue(callable(client.evaluations.run))
+        self.assertTrue(callable(client.evaluations.get_leaderboard))
+        self.assertTrue(callable(client.evaluations.get_history))
+        self.assertTrue(callable(client.evaluations.get_history_by_id))
+        self.assertTrue(callable(client.evaluations.generate_suite))
 
     def test_missing_api_key_raises(self):
         import os

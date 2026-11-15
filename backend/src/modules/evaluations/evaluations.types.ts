@@ -87,3 +87,23 @@ export interface EvaluationRunResult {
   summary: EvaluationSummary;
   sampleResults: SampleResult[];
 }
+
+export interface LeaderboardEntry {
+  rank: number;
+  model: string;
+  elo: number;
+  matches: number;
+  wins: number;
+  losses: number;
+  ties: number;
+  winRate: number; // 0-100%
+  avgScore: number; // 0-10
+  avgLatencyMs: number;
+}
+
+export interface GenerateSuiteDto {
+  domain: string;
+  category?: 'coding' | 'reasoning' | 'safety' | 'general';
+  testCount?: number;
+  generatorModel?: string;
+}
