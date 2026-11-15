@@ -22,6 +22,8 @@ import {
   Terminal,
   ShieldCheck,
   DollarSign,
+  Image as ImageIcon,
+  X,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
@@ -49,6 +51,8 @@ const DEFAULT_MODELS: ModelInfo[] = [
   { id: 'llama-3.3-70b', name: 'Llama 3.3 70B Instruct', owned_by: 'meta' },
   { id: 'qwen-2.5-coder-32b', name: 'Qwen 2.5 Coder 32B', owned_by: 'qwen' },
   { id: 'deepseek-r1-70b', name: 'DeepSeek R1 70B Reasoner', owned_by: 'deepseek' },
+  { id: 'qwen-2.5-vl-72b', name: 'Qwen 2.5 VL 72B Vision', owned_by: 'qwen' },
+  { id: 'llama-3.2-11b-vision', name: 'Llama 3.2 11B Vision', owned_by: 'meta' },
   { id: 'llama-3.3-70b:legal-v1', name: 'Llama 3.3 70B (LoRA Legal)', owned_by: 'custom-adapter', isAdapter: true },
 ];
 
@@ -60,6 +64,10 @@ const PRESET_PROMPTS = [
   {
     label: 'Logic & Reasoning',
     prompt: 'A farmer has 17 sheep and all but 9 die. How many are left? Explain your step-by-step logic and common pitfalls.',
+  },
+  {
+    label: 'Vision Inspection',
+    prompt: 'Analyze this image and describe the architectural features, foreground and background layout, and transcribe any visible text.',
   },
   {
     label: 'Legal Analysis',
@@ -75,6 +83,8 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'llama-3.3-70b': { input: 0.59, output: 0.79 },
   'qwen-2.5-coder-32b': { input: 0.20, output: 0.40 },
   'deepseek-r1-70b': { input: 0.75, output: 1.50 },
+  'qwen-2.5-vl-72b': { input: 0.80, output: 1.60 },
+  'llama-3.2-11b-vision': { input: 0.25, output: 0.50 },
   'llama-3.3-70b:legal-v1': { input: 0.65, output: 0.85 },
 };
 
@@ -113,6 +123,8 @@ export default function ArenaPage() {
     'You are a high-performance enterprise AI model serving through YOYO Cloud Platform.'
   );
   const [userPrompt, setUserPrompt] = useState<string>('');
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const [submittedImage, setSubmittedImage] = useState<string | null>(null);
 
   const [isBenchmarking, setIsBenchmarking] = useState<boolean>(false);
   const [resultA, setResultA] = useState<StreamResult>(initialStreamState);
@@ -129,6 +141,33 @@ export default function ArenaPage() {
   const [copiedB, setCopiedB] = useState<boolean>(false);
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast('Please select an image file (PNG, JPG, WebP, GIF)', 'error');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast('Image must be under 10MB', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setAttachedImage(event.target?.result as string);
+      toast('Vision image attached for dual-model arena benchmark.', 'info');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setAttachedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   // Fetch models dynamically from /v1/models
   useEffect(() => {
@@ -171,12 +210,18 @@ export default function ArenaPage() {
     setResultA(initialStreamState);
     setResultB(initialStreamState);
     setVote(null);
+    setAttachedImage(null);
+    setSubmittedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const runSingleModelStream = async (
     targetModel: string,
     temperature: number,
     promptText: string,
+    imagePayload: string | null,
     signal: AbortSignal,
     onUpdate: (updater: (prev: StreamResult) => StreamResult) => void
   ) => {
@@ -184,7 +229,7 @@ export default function ArenaPage() {
     let firstTokenRecorded = false;
     let accumulatedContent = '';
     let tokenCount = 0;
-    let promptTokens = Math.max(12, Math.floor(promptText.length / 4));
+    let promptTokens = Math.max(12, Math.floor(promptText.length / 4)) + (imagePayload ? 500 : 0);
     let cachedTokens = Math.floor(promptTokens * 0.5); // 50% prefix cache simulation
 
     onUpdate(() => ({
@@ -208,7 +253,15 @@ export default function ArenaPage() {
           model: targetModel,
           messages: [
             ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
-            { role: 'user', content: promptText },
+            imagePayload
+              ? {
+                  role: 'user',
+                  content: [
+                    { type: 'text', text: promptText || 'Analyze this image in detail.' },
+                    { type: 'image_url', image_url: { url: imagePayload, detail: 'auto' } },
+                  ],
+                }
+              : { role: 'user', content: promptText },
           ],
           temperature,
           max_tokens: maxTokens,
@@ -310,17 +363,20 @@ export default function ArenaPage() {
   };
 
   const handleBenchmark = async () => {
-    if (!userPrompt.trim() || isBenchmarking) return;
+    if ((!userPrompt.trim() && !attachedImage) || isBenchmarking) return;
 
     setIsBenchmarking(true);
     setVote(null);
+    setSubmittedImage(attachedImage);
 
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
+    const currentImage = attachedImage;
+
     await Promise.all([
-      runSingleModelStream(modelA, tempA, userPrompt, abortController.signal, setResultA),
-      runSingleModelStream(modelB, tempB, userPrompt, abortController.signal, setResultB),
+      runSingleModelStream(modelA, tempA, userPrompt, currentImage, abortController.signal, setResultA),
+      runSingleModelStream(modelB, tempB, userPrompt, currentImage, abortController.signal, setResultB),
     ]);
 
     setIsBenchmarking(false);
@@ -436,6 +492,26 @@ export default function ArenaPage() {
           </button>
         ))}
       </div>
+
+      {/* Submitted Vision Banner */}
+      {submittedImage && (
+        <div className="flex items-center gap-4 bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={submittedImage}
+            alt="Arena visual prompt"
+            className="w-16 h-16 object-cover rounded-xl border border-slate-700 shadow-md"
+          />
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+              <ImageIcon className="w-3.5 h-3.5 text-amber-400" /> Active Visual Benchmark Input
+            </span>
+            <span className="text-[11px] text-slate-400 font-mono">
+              Visual payload dispatched concurrently to {modelA} and {modelB}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Main Dual Arena Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -749,7 +825,43 @@ export default function ArenaPage() {
           </div>
         </div>
 
+        {/* Attached Vision Image Preview Banner */}
+        {attachedImage && (
+          <div className="flex items-center justify-between bg-slate-950/80 border border-amber-500/30 rounded-xl p-2.5">
+            <div className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={attachedImage}
+                alt="Attachment preview"
+                className="w-10 h-10 object-cover rounded-lg border border-amber-500/40"
+              />
+              <div className="flex flex-col">
+                <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-amber-400" /> Vision Attachment Loaded
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">Ready for dual-dispatch benchmark</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              title="Remove Image"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         <div className="flex gap-3">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageSelect}
+            className="hidden"
+          />
+
           <textarea
             value={userPrompt}
             onChange={(e) => setUserPrompt(e.target.value)}
@@ -759,13 +871,31 @@ export default function ArenaPage() {
                 handleBenchmark();
               }
             }}
-            placeholder="Type a benchmark prompt or challenge (e.g. reasoning problem, complex coding question, or legal brief)... [Press Ctrl + Enter to Dispatch]"
+            placeholder={
+              attachedImage
+                ? "Enter visual question or comparison criteria... [Press Ctrl + Enter to Dispatch]"
+                : "Type a benchmark prompt or challenge (e.g. reasoning problem, complex coding question, or legal brief)... [Press Ctrl + Enter to Dispatch]"
+            }
             rows={3}
             disabled={isBenchmarking}
             className="flex-1 bg-slate-950 border border-slate-800 focus:border-amber-500/70 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50 resize-none disabled:opacity-50"
           />
 
           <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isBenchmarking}
+              className={`p-2 rounded-lg border transition-all flex items-center justify-center ${
+                attachedImage
+                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border-slate-700'
+              }`}
+              title="Attach image for vision comparison"
+            >
+              <ImageIcon className="w-4 h-4" />
+            </button>
+
             {isBenchmarking ? (
               <button
                 type="button"
@@ -778,7 +908,7 @@ export default function ArenaPage() {
               <button
                 type="button"
                 onClick={handleBenchmark}
-                disabled={!userPrompt.trim()}
+                disabled={!userPrompt.trim() && !attachedImage}
                 className="h-full px-6 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Send className="w-4 h-4" /> Benchmark
