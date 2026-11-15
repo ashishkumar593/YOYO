@@ -1,5 +1,24 @@
 export type ChatRole = 'system' | 'user' | 'assistant' | 'tool';
 
+export interface ImageUrlDetail {
+  url: string;
+  detail?: 'low' | 'high' | 'auto';
+}
+
+export interface ImageUrlPart {
+  type: 'image_url';
+  image_url: ImageUrlDetail;
+}
+
+export interface TextContentPart {
+  type: 'text';
+  text: string;
+}
+
+export type ContentPart = TextContentPart | ImageUrlPart | { type: string; [key: string]: any };
+
+export type MessageContent = string | ContentPart[] | null;
+
 export interface ToolCall {
   id: string;
   type: 'function';
@@ -36,7 +55,7 @@ export type ResponseFormat =
 
 export interface ChatMessage {
   role: ChatRole;
-  content?: string | null;
+  content?: MessageContent;
   name?: string;
   tool_call_id?: string;
   tool_calls?: ToolCall[];

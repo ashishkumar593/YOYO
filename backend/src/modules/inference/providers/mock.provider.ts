@@ -151,6 +151,43 @@ export class MockProvider implements InferenceProviderInterface {
       };
     }
 
+    // 3b. Multi-modal vision image request detection
+    const hasImage = request.messages?.some(
+      (m) =>
+        Array.isArray(m.content) &&
+        m.content.some((p: any) => p.type === 'image_url' && p.image_url?.url)
+    );
+
+    if (hasImage) {
+      const visionReply = `[YOYO Vision Multi-Modal Analysis via ${request.model}] I have processed the uploaded visual asset. The image displays a high-resolution visual context with clear structural demarcations, verified by YOYO edge inference pipeline.`;
+      const completionTokens = estimateTokens(visionReply);
+
+      return {
+        id: `chatcmpl-${Date.now()}`,
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: request.model,
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: 'assistant',
+              content: visionReply,
+            },
+            finish_reason: 'stop',
+          },
+        ],
+        usage: {
+          prompt_tokens: promptTokens,
+          completion_tokens: completionTokens,
+          total_tokens: promptTokens + completionTokens,
+          prompt_tokens_details: {
+            cached_tokens: Math.floor(promptTokens * 0.5),
+          },
+        },
+      };
+    }
+
     // 4. Standard text reply
     const mockReply = `[YOYO AI Mock Response from ${request.model}] I have successfully processed your request. Everything is functioning in nominal state.`;
     const completionTokens = estimateTokens(mockReply);
@@ -187,22 +224,44 @@ export class MockProvider implements InferenceProviderInterface {
     abortSignal?: AbortSignal
   ): AsyncIterable<ChatCompletionChunk> {
     const id = `chatcmpl-${Date.now()}`;
-    const words = [
-      'This',
-      ' is',
-      ' a',
-      ' streaming',
-      ' response',
-      ' from',
-      ' YOYO',
-      ' AI',
-      ' platform.',
-      ' Running',
-      ' on',
-      ' model: ',
-      request.model,
-      '.',
-    ];
+    const hasImage = request.messages?.some(
+      (m) =>
+        Array.isArray(m.content) &&
+        m.content.some((p: any) => p.type === 'image_url' && p.image_url?.url)
+    );
+
+    const words = hasImage
+      ? [
+          '[Vision',
+          ' Analysis]',
+          ' The',
+          ' provided',
+          ' visual',
+          ' asset',
+          ' has',
+          ' been',
+          ' parsed',
+          ' by',
+          ' YOYO',
+          ' multi-modal',
+          ' pipeline.',
+        ]
+      : [
+          'This',
+          ' is',
+          ' a',
+          ' streaming',
+          ' response',
+          ' from',
+          ' YOYO',
+          ' AI',
+          ' platform.',
+          ' Running',
+          ' on',
+          ' model: ',
+          request.model,
+          '.',
+        ];
 
     for (let i = 0; i < words.length; i++) {
       if (abortSignal?.aborted) break;

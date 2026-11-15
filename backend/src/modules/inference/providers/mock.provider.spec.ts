@@ -58,4 +58,29 @@ describe('MockProvider', () => {
     expect(response.data[0].embedding).toHaveLength(768);
     expect(response.data[1].embedding).toHaveLength(768);
   });
+
+  it('should process multi-modal vision messages with image_url correctly', async () => {
+    const request: ChatCompletionRequest = {
+      model: 'qwen-2.5-vl-72b',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Describe the architecture' },
+            {
+              type: 'image_url',
+              image_url: {
+                url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const response = await provider.chatCompletion('http://localhost:11434', request);
+
+    expect(response.choices[0].message.content).toContain('[YOYO Vision Multi-Modal Analysis via qwen-2.5-vl-72b]');
+    expect(response.usage.prompt_tokens).toBeGreaterThan(500); // 500 image tokens + text
+  });
 });

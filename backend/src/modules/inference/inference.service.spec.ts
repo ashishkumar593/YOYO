@@ -192,7 +192,7 @@ describe('InferenceService', () => {
     );
 
     expect(res.choices[0].finish_reason).toBe('stop');
-    const parsed = JSON.parse(res.choices[0].message.content!);
+    const parsed = JSON.parse(res.choices[0].message.content as string);
     expect(parsed.schema_name).toBe('UserExtraction');
     expect(parsed.status).toBe('success');
   });

@@ -26,6 +26,8 @@ import {
   Shield,
   Wrench,
   Code2,
+  Image as ImageIcon,
+  X,
 } from 'lucide-react';
 
 interface ToolCall {
@@ -40,6 +42,7 @@ interface ToolCall {
 interface Message {
   role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
+  imageUrl?: string;
   tool_calls?: ToolCall[];
   tool_call_id?: string;
   name?: string;
@@ -141,6 +144,10 @@ const PROMPT_PRESETS = [
     title: 'RAG Context Synthesis',
     prompt: 'Given the following 3 documentation passages about CUDA memory management, synthesize a clear guide on avoiding CUDA OOM errors during FP8 KV caching.',
   },
+  {
+    title: 'Multi-Modal Vision',
+    prompt: 'Analyze this image and describe the key objects, architectural structure, spatial layout, and extract any visible text.',
+  },
 ];
 
 const SYSTEM_PRESETS: Record<string, string> = {
@@ -172,6 +179,7 @@ function PlaygroundInner() {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputPrompt, setInputPrompt] = useState<string>('');
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [streamMetrics, setStreamMetrics] = useState<{
     ttftMs?: number;
@@ -187,6 +195,7 @@ function PlaygroundInner() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function init() {
@@ -209,11 +218,41 @@ function PlaygroundInner() {
     setSystemPrompt(SYSTEM_PRESETS[name] || '');
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      error('Please select a valid image file (PNG, JPEG, WebP, GIF)');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      error('Image size must be less than 10MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setAttachedImage(event.target?.result as string);
+      info('Image attached for vision inference.');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setAttachedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSend = async (textToSend?: string) => {
     const text = (textToSend || inputPrompt).trim();
-    if (!text || isGenerating) return;
+    if ((!text && !attachedImage) || isGenerating) return;
 
-    const userMessage: Message = { role: 'user', content: text };
+    const userMessage: Message = {
+      role: 'user',
+      content: text,
+      imageUrl: attachedImage || undefined,
+    };
     const updatedMessages: Message[] = [
       ...(systemPrompt ? [{ role: 'system' as const, content: systemPrompt }] : []),
       ...messages,
@@ -222,6 +261,10 @@ function PlaygroundInner() {
 
     setMessages((prev) => [...prev, userMessage]);
     setInputPrompt('');
+    setAttachedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     setIsGenerating(true);
     setStreamMetrics({});
 
@@ -246,13 +289,27 @@ function PlaygroundInner() {
         },
         body: JSON.stringify({
           model: selectedModel,
-          messages: updatedMessages.map((m) => ({
-            role: m.role,
-            content: m.content || null,
-            ...(m.tool_calls ? { tool_calls: m.tool_calls } : {}),
-            ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
-            ...(m.name ? { name: m.name } : {}),
-          })),
+          messages: updatedMessages.map((m) => {
+            if (m.imageUrl) {
+              return {
+                role: m.role,
+                content: [
+                  { type: 'text', text: m.content || 'Analyze this image.' },
+                  { type: 'image_url', image_url: { url: m.imageUrl, detail: 'auto' } },
+                ],
+                ...(m.tool_calls ? { tool_calls: m.tool_calls } : {}),
+                ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
+                ...(m.name ? { name: m.name } : {}),
+              };
+            }
+            return {
+              role: m.role,
+              content: m.content || null,
+              ...(m.tool_calls ? { tool_calls: m.tool_calls } : {}),
+              ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
+              ...(m.name ? { name: m.name } : {}),
+            };
+          }),
           temperature,
           top_p: topP,
           max_tokens: maxTokens,
@@ -447,6 +504,10 @@ function PlaygroundInner() {
   const handleReset = () => {
     handleStop();
     setMessages([]);
+    setAttachedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     setStreamMetrics({});
     info('Playground reset.');
   };
@@ -496,13 +557,31 @@ function PlaygroundInner() {
     const formattedMessages = [
       ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
       ...(messages.length > 0
-        ? messages.map((m) => ({
-            role: m.role,
-            content: m.content || null,
-            ...(m.tool_calls ? { tool_calls: m.tool_calls } : {}),
-            ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
-            ...(m.name ? { name: m.name } : {}),
-          }))
+        ? messages.map((m) => {
+            if (m.imageUrl) {
+              const urlTruncated =
+                m.imageUrl.length > 80
+                  ? `${m.imageUrl.slice(0, 35)}...[image-data]...`
+                  : m.imageUrl;
+              return {
+                role: m.role,
+                content: [
+                  { type: 'text', text: m.content || 'Analyze this image.' },
+                  { type: 'image_url', image_url: { url: urlTruncated } },
+                ],
+                ...(m.tool_calls ? { tool_calls: m.tool_calls } : {}),
+                ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
+                ...(m.name ? { name: m.name } : {}),
+              };
+            }
+            return {
+              role: m.role,
+              content: m.content || null,
+              ...(m.tool_calls ? { tool_calls: m.tool_calls } : {}),
+              ...(m.tool_call_id ? { tool_call_id: m.tool_call_id } : {}),
+              ...(m.name ? { name: m.name } : {}),
+            };
+          })
         : [{ role: 'user', content: 'Explain zero-downtime deployment in 2 sentences.' }]),
     ];
 
@@ -756,19 +835,31 @@ for chunk in stream:
                         </pre>
                       </div>
                     ) : (
-                      <div
-                        className={`rounded-2xl p-4 text-xs leading-relaxed whitespace-pre-wrap ${
-                          msg.role === 'user'
-                            ? 'bg-primary text-primary-foreground font-medium rounded-tr-none shadow-md shadow-primary/20'
-                            : 'bg-muted/50 text-foreground border border-border/80 rounded-tl-none font-mono shadow-sm'
-                        }`}
-                      >
-                        {msg.content || (isGenerating && i === messages.length - 1 ? (
-                          <span className="inline-flex items-center space-x-1.5 text-primary animate-pulse font-mono font-medium">
-                            <span className="w-2 h-2 rounded-full bg-primary" />
-                            <span>Generating stream...</span>
-                          </span>
-                        ) : null)}
+                      <div className={`flex flex-col space-y-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                        {msg.imageUrl && (
+                          <div className="max-w-xs md:max-w-sm rounded-xl overflow-hidden border border-border/80 shadow-md bg-black/20">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={msg.imageUrl}
+                              alt="Vision input"
+                              className="max-h-60 w-auto object-contain rounded-xl"
+                            />
+                          </div>
+                        )}
+                        <div
+                          className={`rounded-2xl p-4 text-xs leading-relaxed whitespace-pre-wrap ${
+                            msg.role === 'user'
+                              ? 'bg-primary text-primary-foreground font-medium rounded-tr-none shadow-md shadow-primary/20'
+                              : 'bg-muted/50 text-foreground border border-border/80 rounded-tl-none font-mono shadow-sm'
+                          }`}
+                        >
+                          {msg.content || (isGenerating && i === messages.length - 1 ? (
+                            <span className="inline-flex items-center space-x-1.5 text-primary animate-pulse font-mono font-medium">
+                              <span className="w-2 h-2 rounded-full bg-primary" />
+                              <span>Generating stream...</span>
+                            </span>
+                          ) : null)}
+                        </div>
                       </div>
                     )}
 
@@ -909,6 +1000,37 @@ for chunk in stream:
             </div>
           )}
 
+          {/* Attached Image Preview */}
+          {attachedImage && (
+            <div className="px-4 py-2.5 bg-primary/5 border-t border-primary/20 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={attachedImage}
+                  alt="Attachment thumbnail"
+                  className="w-9 h-9 rounded-lg object-cover border border-primary/40 shadow-sm"
+                />
+                <div className="flex flex-col">
+                  <span className="text-xs font-semibold text-foreground flex items-center space-x-1.5">
+                    <ImageIcon className="w-3.5 h-3.5 text-primary" />
+                    <span>Vision Attachment Loaded</span>
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-mono">
+                    Ready for multi-modal vision prompt
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all"
+                title="Remove image"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           {/* Prompt Input Form */}
           <form
             onSubmit={(e) => {
@@ -918,10 +1040,36 @@ for chunk in stream:
             className="p-4 border-t border-border bg-card/60 flex items-center space-x-3"
           >
             <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isGenerating}
+              className={`p-3 rounded-xl border transition-all ${
+                attachedImage
+                  ? 'bg-primary/20 text-primary border-primary/40 shadow-sm'
+                  : 'bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted border-border'
+              }`}
+              title="Attach image for vision models (PNG, JPG, WebP, GIF)"
+            >
+              <ImageIcon className="w-4 h-4" />
+            </button>
+
+            <input
               type="text"
               value={inputPrompt}
               onChange={(e) => setInputPrompt(e.target.value)}
-              placeholder={`Message ${selectedModel}... (Press Enter)`}
+              placeholder={
+                attachedImage
+                  ? 'Ask a question about this image... (or press Enter to analyze)'
+                  : `Message ${selectedModel}... (Press Enter)`
+              }
               disabled={isGenerating}
               className="flex-1 px-4 py-3 rounded-xl bg-muted/40 border border-border text-xs focus:border-primary focus:outline-none transition-all text-foreground font-medium"
             />
@@ -938,7 +1086,7 @@ for chunk in stream:
             ) : (
               <button
                 type="submit"
-                disabled={!inputPrompt.trim()}
+                disabled={!inputPrompt.trim() && !attachedImage}
                 className="p-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all shadow-md shadow-primary/20 disabled:opacity-40"
               >
                 <Send className="w-4 h-4" />

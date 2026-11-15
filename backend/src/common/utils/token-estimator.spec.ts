@@ -30,5 +30,28 @@ describe('TokenEstimator', () => {
     expect(totalTokens).toBeGreaterThan(20);
     expect(totalTokens).toBeLessThan(45);
   });
+
+  it('should accurately calculate multi-modal vision tokens with image_url parts', () => {
+    const visionMessages: ChatMessage[] = [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'What is inside this architectural diagram?' },
+          {
+            type: 'image_url',
+            image_url: {
+              url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+              detail: 'auto',
+            },
+          },
+        ],
+      },
+    ];
+
+    const visionTokens = estimateMessagesTokens(visionMessages);
+    // 500 vision tokens + text tokens + envelope overhead > 510
+    expect(visionTokens).toBeGreaterThan(500);
+    expect(visionTokens).toBeLessThan(550);
+  });
 });
 

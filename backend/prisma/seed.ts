@@ -284,6 +284,42 @@ async function main() {
       },
       workerId: worker1.id,
     },
+    {
+      apiIdentifier: 'qwen-2.5-vl-72b',
+      name: 'Qwen 2.5 VL 72B Multi-Modal',
+      providerFamily: 'Alibaba',
+      category: ModelCategory.VISION,
+      description: 'Flagship open-weights vision-language model with OCR, video comprehension, and architectural diagram analysis.',
+      license: 'Qwen License',
+      defaultContextWindow: 131072,
+      pricing: { input: 0.90, output: 1.80 },
+      version: {
+        tag: '72b-vl-fp16',
+        parameterSize: BigInt(72000000000),
+        quantizationLevel: 'FP16',
+        diskSizeBytes: BigInt(144000000000),
+        vramRequiredBytes: BigInt(150000000000),
+      },
+      workerId: worker1.id,
+    },
+    {
+      apiIdentifier: 'llama-3.2-11b-vision',
+      name: 'Llama 3.2 11B Vision Instruct',
+      providerFamily: 'Meta',
+      category: ModelCategory.VISION,
+      description: 'Ultra-fast visual reasoning, charts, image-to-text OCR, and document layout understanding.',
+      license: 'Llama 3.2 Community License',
+      defaultContextWindow: 131072,
+      pricing: { input: 0.25, output: 0.50 },
+      version: {
+        tag: '11b-vision-fp16',
+        parameterSize: BigInt(11000000000),
+        quantizationLevel: 'FP16',
+        diskSizeBytes: BigInt(22000000000),
+        vramRequiredBytes: BigInt(24000000000),
+      },
+      workerId: worker2.id,
+    },
   ];
 
   for (const item of defaultModels) {
