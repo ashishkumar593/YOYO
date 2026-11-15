@@ -41,6 +41,30 @@ export interface JsonSchemaFormat {
   };
 }
 
+export interface EvaluationBenchmarkSample {
+  id: string;
+  title: string;
+  prompt: string;
+  expectedCriteria: string;
+  category: 'coding' | 'reasoning' | 'safety' | 'general';
+}
+
+export interface EvaluationBenchmarkSuite {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  samples: EvaluationBenchmarkSample[];
+}
+
+export interface RunEvaluationParams {
+  modelA: string;
+  modelB: string;
+  judgeModel?: string;
+  benchmarkSuiteId: string;
+  samples?: EvaluationBenchmarkSample[];
+}
+
 export type ResponseFormat =
   | { type: 'text' }
   | { type: 'json_object' }
@@ -453,6 +477,35 @@ export class Yoyo {
         body: JSON.stringify(params),
       });
       if (!res.ok) throw new Error(`YOYO Moderations API Error [${res.status}]: ${await res.text()}`);
+      return res.json() as any;
+    },
+  };
+
+  public evaluations = {
+    listBenchmarks: async (): Promise<EvaluationBenchmarkSuite[]> => {
+      const res = await fetch(`${this.baseUrl}/evaluations/benchmarks`, {
+        headers: { Authorization: `Bearer ${this.apiKey}` },
+      });
+      if (!res.ok) throw new Error(`YOYO Evaluations API Error [${res.status}]: ${await res.text()}`);
+      return res.json() as any;
+    },
+    getBenchmark: async (suiteId: string): Promise<EvaluationBenchmarkSuite> => {
+      const res = await fetch(`${this.baseUrl}/evaluations/benchmarks/${suiteId}`, {
+        headers: { Authorization: `Bearer ${this.apiKey}` },
+      });
+      if (!res.ok) throw new Error(`YOYO Evaluations API Error [${res.status}]: ${await res.text()}`);
+      return res.json() as any;
+    },
+    run: async (params: RunEvaluationParams): Promise<any> => {
+      const res = await fetch(`${this.baseUrl}/evaluations/run`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(params),
+      });
+      if (!res.ok) throw new Error(`YOYO Evaluations API Error [${res.status}]: ${await res.text()}`);
       return res.json() as any;
     },
   };

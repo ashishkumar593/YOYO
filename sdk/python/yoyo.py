@@ -517,6 +517,73 @@ class Moderations:
             raise _map_http_error(e)
 
 
+class Evaluations:
+    """Evaluations API for automated LLM-as-a-Judge benchmarking suites."""
+
+    def __init__(self, client: "Yoyo"):
+        self.client = client
+
+    def list_benchmarks(self) -> List[Dict[str, Any]]:
+        """List all available standardized golden benchmark suites."""
+        req = urllib.request.Request(
+            f"{self.client.base_url}/evaluations/benchmarks",
+            headers={"Authorization": f"Bearer {self.client.api_key}"},
+            method="GET",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.client.timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise _map_http_error(e)
+
+    def get_benchmark(self, suite_id: str) -> Dict[str, Any]:
+        """Retrieve details of a specific golden benchmark suite."""
+        req = urllib.request.Request(
+            f"{self.client.base_url}/evaluations/benchmarks/{suite_id}",
+            headers={"Authorization": f"Bearer {self.client.api_key}"},
+            method="GET",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.client.timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise _map_http_error(e)
+
+    def run(
+        self,
+        model_a: str,
+        model_b: str,
+        benchmark_suite_id: str,
+        judge_model: Optional[str] = None,
+        samples: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        """Execute an automated LLM-as-a-Judge evaluation benchmark comparing two models."""
+        payload: Dict[str, Any] = {
+            "modelA": model_a,
+            "modelB": model_b,
+            "benchmarkSuiteId": benchmark_suite_id,
+        }
+        if judge_model:
+            payload["judgeModel"] = judge_model
+        if samples is not None:
+            payload["samples"] = samples
+
+        req = urllib.request.Request(
+            f"{self.client.base_url}/evaluations/run",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.client.api_key}",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.client.timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise _map_http_error(e)
+
+
 class Yoyo:
     """YOYO Cloud AI Model API Client (Synchronous)."""
 
@@ -540,6 +607,7 @@ class Yoyo:
         self.batches = Batches(self)
         self.fine_tuning = FineTuning(self)
         self.moderations = Moderations(self)
+        self.evaluations = Evaluations(self)
 
 
 class AsyncChatCompletions:
@@ -643,3 +711,4 @@ class AsyncYoyo:
         self.batches = Batches(self)  # type: ignore
         self.fine_tuning = FineTuning(self)  # type: ignore
         self.moderations = Moderations(self)  # type: ignore
+        self.evaluations = Evaluations(self)  # type: ignore

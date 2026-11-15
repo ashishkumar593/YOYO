@@ -182,6 +182,24 @@ function showcaseSemanticRouter(client) {
   console.log('     - Vision payloads (image)  -> Automatically routed to llama-3.2-11b-vision');
 }
 
+function showcaseEvaluationsEngine(client) {
+  printSection('15. Automated LLM-as-a-Judge Benchmark Engine');
+  if (
+    typeof client.evaluations.listBenchmarks === 'function' &&
+    typeof client.evaluations.getBenchmark === 'function' &&
+    typeof client.evaluations.run === 'function'
+  ) {
+    console.log('[OK] client.evaluations (listBenchmarks, getBenchmark, run) verified.');
+    console.log('     Capabilities:');
+    console.log('       * Standard Suites: coding_bench, reasoning_bench, safety_guardrails_bench');
+    console.log('       * Dual-Model Blind Adjudication via Referee Model (default: deepseek-r1-70b)');
+    console.log('       * Multi-Criterion Rubric: Accuracy, Reasoning Depth, Instruction Adherence');
+    console.log('       * Sub-token latency & cost delta tracking');
+  } else {
+    throw new Error('client.evaluations methods missing');
+  }
+}
+
 function main() {
   console.log('*'.repeat(70));
   console.log('   YOYO CLOUD AI PLATFORM -- TYPESCRIPT SDK COMPREHENSIVE SUITE   ');
@@ -201,9 +219,10 @@ function main() {
   showcaseErrorHandling();
   showcaseEnterpriseGuardrails(client);
   showcaseSemanticRouter(client);
+  showcaseEvaluationsEngine(client);
 
   console.log(`\n${'*'.repeat(70)}`);
-  console.log('   ALL 14 TYPESCRIPT SDK SHOWCASE SUITES EXECUTED & VERIFIED!    ');
+  console.log('   ALL 15 TYPESCRIPT SDK SHOWCASE SUITES EXECUTED & VERIFIED!    ');
   console.log(`${'*'.repeat(70)}\n`);
 }
 

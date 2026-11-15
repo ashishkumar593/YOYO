@@ -294,6 +294,30 @@ def showcase_semantic_router(client: Yoyo, is_live: bool):
     print("     - Vision payloads (image) -> Automatically routed to llama-3.2-11b-vision")
 
 
+def showcase_evaluations_engine(client: Yoyo, is_live: bool):
+    print_section("15. Automated LLM-as-a-Judge Benchmark Engine")
+    assert callable(client.evaluations.list_benchmarks)
+    assert callable(client.evaluations.get_benchmark)
+    assert callable(client.evaluations.run)
+    print("[OK] client.evaluations (list_benchmarks, get_benchmark, run) verified.")
+
+    if is_live:
+        try:
+            suites = client.evaluations.list_benchmarks()
+            print(f"[OK] Live benchmark suites discovered: {len(suites)}")
+            for s in suites:
+                print(f"     - {s.get('id')}: {s.get('name')} ({len(s.get('samples', []))} cases)")
+            return
+        except Exception as e:
+            print(f"[WARN] Live evaluations discovery failed ({e}); falling back to documentation.")
+
+    print("     Capabilities:")
+    print("       * Standard Suites: coding_bench, reasoning_bench, safety_guardrails_bench")
+    print("       * Dual-Model Blind Adjudication via Referee Model (default: deepseek-r1-70b)")
+    print("       * Multi-Criterion Rubric: Accuracy, Reasoning Depth, Instruction Adherence")
+    print("       * Sub-token latency & cost delta tracking")
+
+
 def main():
     print("*" * 70)
     print("      YOYO CLOUD AI PLATFORM -- PYTHON SDK COMPREHENSIVE SUITE      ")
@@ -318,9 +342,10 @@ def main():
     showcase_error_handling_hierarchy()
     showcase_enterprise_guardrails(client, is_live)
     showcase_semantic_router(client, is_live)
+    showcase_evaluations_engine(client, is_live)
 
     print(f"\n{'*' * 70}")
-    print("   ALL 14 PYTHON SDK SHOWCASE SUITES EXECUTED & VERIFIED CLEANLY!   ")
+    print("   ALL 15 PYTHON SDK SHOWCASE SUITES EXECUTED & VERIFIED CLEANLY!   ")
     print("*" * 70 + "\n")
 
 

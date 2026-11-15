@@ -37,7 +37,7 @@ flowchart TD
   - `/dashboard`: Cockpit overview with token meters and active key monitors.
   - `/dashboard/models`: Foundation model catalog and dynamic LoRA adapter registry with live pricing tags.
   - `/dashboard/playground`: Full-featured SSE streaming playground with parameter tuning, tool calling, JSON schema mode, vision upload, and prefix cache savings badge.
-  - `/dashboard/arena`: Model comparison arena for concurrent head-to-head benchmarking, multi-modal vision comparison, live TTFT/TPS/Cost deltas, and human-in-the-loop voting.
+  - `/dashboard/arena`: Dual-mode battle arena featuring interactive head-to-head testing and an automated LLM-as-a-Judge Evaluation Engine (standardized golden benchmark suites: coding, reasoning, safety; blind candidate adjudication; multi-criterion rubric scoring).
   - `/dashboard/fine-tuning`: Visual LoRA training wizard, training dataset JSONL uploader, metrics ribbon, and real-time epoch event ledger.
   - `/dashboard/team`: Enterprise multi-tenancy, workspace switcher, project isolation, and RBAC (`OWNER`, `ADMIN`, `DEVELOPER`, `BILLING_VIEWER`).
   - `/dashboard/security`: Dual-view security center with immutable SOC2/HIPAA audit ledger and AI Safety Guardrails (PII redaction, prompt injection defense, live sandbox).
@@ -48,10 +48,10 @@ flowchart TD
   - `/dashboard/billing`: Credit balance top-ups, Stripe checkout integration, prefix caching arbitrage savings calculator, and ledger.
   - `/dashboard/admin`: Cloud GPU worker node supervisor (RunPod, Lambda, AWS) and model worker dispatch.
   - `/dashboard/settings`: Profile management, Bcrypt 12 password updates, active sessions, HMAC Webhook endpoints, and Enterprise SSO (SAML 2.0 / OIDC).
-- **[`backend/`](./backend)**: High-throughput NestJS 11 + Fastify 5 API gateway, Prisma ORM, Redis sliding-window rate limiters, multi-worker dispatching, circuit breaker state machine (`CLOSED`/`OPEN`/`HALF_OPEN`), native `/metrics` Prometheus exporter, AI Safety Guardrails (`/v1/moderations`), Semantic Dynamic Router (`auto`), and Prompt Prefix Caching (90% discount).
+- **[`backend/`](./backend)**: High-throughput NestJS 11 + Fastify 5 API gateway, Prisma ORM, Redis sliding-window rate limiters, multi-worker dispatching, circuit breaker state machine (`CLOSED`/`OPEN`/`HALF_OPEN`), native `/metrics` Prometheus exporter, AI Safety Guardrails (`/v1/moderations`), Semantic Dynamic Router (`auto`), Prompt Prefix Caching (90% discount), and Automated LLM-as-a-Judge Evaluation Engine (`/v1/evaluations`).
 - **[`deploy/helm/yoyo/`](./deploy/helm/yoyo)**: Production Helm 3 chart with HorizontalPodAutoscaler (HPA), Ingress TLS cert-manager, ConfigMaps, and Prometheus ServiceMonitor.
-- **[`sdk/python/`](./sdk/python)**: Official Python SDK (`yoyo-ai`) with standard OpenAI semantics, streaming generator, tool calling, JSON schema, multi-modal vision, fine-tuning jobs, moderations, and zero external dependencies.
-- **[`sdk/typescript/`](./sdk/typescript)**: Official TypeScript/JavaScript SDK (`@yoyo-ai/sdk`) with typed error hierarchy, dual ESM/CJS exports, streaming iterators, fine-tuning, and moderations.
+- **[`sdk/python/`](./sdk/python)**: Official Python SDK (`yoyo-ai`) with standard OpenAI semantics, streaming generator, tool calling, JSON schema, multi-modal vision, fine-tuning jobs, moderations, evaluations engine (`client.evaluations`), and zero external dependencies.
+- **[`sdk/typescript/`](./sdk/typescript)**: Official TypeScript/JavaScript SDK (`@yoyo-ai/sdk`) with typed error hierarchy, dual ESM/CJS exports, streaming iterators, fine-tuning, moderations, and evaluations engine (`client.evaluations`).
 - **[`docker/`](./docker)**: Production containerization configs, `docker-compose.prod.yml`, Traefik reverse proxy, and turnkey Prometheus + Grafana cockpit monitoring stack (`docker-compose --profile monitoring up`).
 
 ---
@@ -346,7 +346,7 @@ All prompts and completions are computed purely in volatile GPU VRAM and never p
 ## Verification & Testing Suite
 
 ### Unified One-Command Verification Runner
-Run all 6 verification stages across environment, compose profiles, backend Jest suites (19 suites, 139 tests), frontend typechecks, and both SDKs with colored scorecard reporting:
+Run all 6 verification stages across environment, compose profiles, backend Jest suites (23 suites, 181 tests), frontend typechecks, and both SDKs with colored scorecard reporting:
 
 ```powershell
 # Windows PowerShell:
@@ -366,17 +366,17 @@ powershell -ExecutionPolicy Bypass -File scripts/test-e2e-gateway.ps1
 
 ### Individual Check Commands
 ```bash
-# 1. Backend unit & provider tests (19 suites, 139/139 tests passing)
+# 1. Backend unit & provider tests (23 suites, 181/181 tests passing)
 cd backend && pnpm test
 
 # 2. Frontend Next.js 15 typecheck (0 TypeScript errors)
 cd ../frontend && pnpm run typecheck
 
-# 3. Official Python SDK unit tests & showcase
+# 3. Official Python SDK unit tests & 15-stage showcase
 python sdk/python/test_yoyo.py
 python sdk/python/example.py
 
-# 4. Official TypeScript SDK compilation & showcase
+# 4. Official TypeScript SDK compilation & 15-stage showcase
 cd sdk/typescript && pnpm run build && node test.js && node example.js
 
 # 5. Live End-to-End Client Flow & Probe

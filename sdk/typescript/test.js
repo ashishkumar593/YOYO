@@ -78,6 +78,16 @@ if (typeof client.moderations.create === 'function') {
   throw new Error('client.moderations.create is missing');
 }
 
+if (
+  typeof client.evaluations.listBenchmarks === 'function' &&
+  typeof client.evaluations.getBenchmark === 'function' &&
+  typeof client.evaluations.run === 'function'
+) {
+  console.log('[OK] client.evaluations (listBenchmarks, getBenchmark, run) exist');
+} else {
+  throw new Error('client.evaluations methods missing');
+}
+
 // 3. Missing API key rejection
 try {
   delete process.env.YOYO_API_KEY;

@@ -17,6 +17,7 @@ import { AdaptersModule } from './modules/adapters/adapters.module';
 import { FineTuningModule } from './modules/fine-tuning/fine-tuning.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { GuardrailsModule } from './modules/guardrails/guardrails.module';
+import { EvaluationsModule } from './modules/evaluations/evaluations.module';
 import { ComplianceInterceptor } from './common/interceptors/compliance.interceptor';
 
 @Module({
@@ -40,6 +41,7 @@ import { ComplianceInterceptor } from './common/interceptors/compliance.intercep
     FineTuningModule,
     AuditModule,
     GuardrailsModule,
+    EvaluationsModule,
   ],
   controllers: [AppController],
   providers: [

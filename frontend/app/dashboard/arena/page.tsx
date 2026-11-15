@@ -24,6 +24,12 @@ import {
   DollarSign,
   Image as ImageIcon,
   X,
+  Play,
+  CheckCircle2,
+  ChevronRight,
+  AlertCircle,
+  Loader2,
+  BarChart3,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
@@ -108,8 +114,39 @@ const initialStreamState: StreamResult = {
   error: null,
 };
 
+const DEFAULT_SUITES = [
+  {
+    id: 'coding_bench',
+    name: 'Software Engineering & Algorithmic Correctness',
+    description: 'Thread-safety, concurrency locks, and optimal data structure design under rigorous criteria.',
+    category: 'coding',
+    sampleCount: 3,
+  },
+  {
+    id: 'reasoning_bench',
+    name: 'Formal Deduction & Complex Multi-Step Reasoning',
+    description: 'Counter-intuitive word problems, math puzzles, and multi-step deduction tracking.',
+    category: 'reasoning',
+    sampleCount: 3,
+  },
+  {
+    id: 'safety_guardrails_bench',
+    name: 'Adversarial Robustness & Safety Guardrails',
+    description: 'Adversarial jailbreaks, PII injection, and policy compliance verification.',
+    category: 'safety',
+    sampleCount: 2,
+  },
+];
+
 export default function ArenaPage() {
   const { toast } = useToast();
+
+  const [arenaMode, setArenaMode] = useState<'interactive' | 'automated_evals'>('interactive');
+  const [benchmarkSuiteId, setBenchmarkSuiteId] = useState<string>('coding_bench');
+  const [judgeModel, setJudgeModel] = useState<string>('deepseek-r1-70b');
+  const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
+  const [evalResult, setEvalResult] = useState<any | null>(null);
+  const [expandedSampleId, setExpandedSampleId] = useState<string | null>(null);
 
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>(DEFAULT_MODELS);
   const [modelA, setModelA] = useState<string>('llama-3.3-70b');
@@ -214,6 +251,48 @@ export default function ArenaPage() {
     setSubmittedImage(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRunEvaluation = async () => {
+    if (isEvaluating) return;
+    setIsEvaluating(true);
+    try {
+      const token = localStorage.getItem('yoyo_access_token');
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.yoyo.ai';
+      const res = await fetch(`${apiBase}/v1/evaluations/run`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          modelA,
+          modelB,
+          judgeModel,
+          benchmarkSuiteId,
+        }),
+      });
+
+      if (!res.ok) {
+        let errText = await res.text();
+        try {
+          const parsed = JSON.parse(errText);
+          errText = parsed.error?.message || parsed.message || errText;
+        } catch {}
+        throw new Error(errText || `Evaluation failed: HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      setEvalResult(data);
+      if (data.sampleResults && data.sampleResults.length > 0) {
+        setExpandedSampleId(data.sampleResults[0].sampleId);
+      }
+      toast('Automated LLM-as-a-Judge benchmark finished successfully!', 'success');
+    } catch (err: any) {
+      toast(err.message || 'Failed to complete benchmark evaluation.', 'error');
+    } finally {
+      setIsEvaluating(false);
     }
   };
 
@@ -476,7 +555,40 @@ export default function ArenaPage() {
         </div>
       </div>
 
-      {/* Preset Prompts Pill Bar */}
+      {/* Mode Switcher Tabs */}
+      <div className="flex items-center gap-2 p-1 bg-slate-900/90 border border-slate-800 rounded-xl w-fit">
+        <button
+          type="button"
+          onClick={() => setArenaMode('interactive')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            arenaMode === 'interactive'
+              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Swords className="w-4 h-4" />
+          Interactive Battle Arena
+        </button>
+        <button
+          type="button"
+          onClick={() => setArenaMode('automated_evals')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            arenaMode === 'automated_evals'
+              ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/40 shadow-sm'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Scale className="w-4 h-4" />
+          LLM-as-a-Judge Automated Benchmark
+          <span className="px-1.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            Automated
+          </span>
+        </button>
+      </div>
+
+      {arenaMode === 'interactive' ? (
+        <div className="space-y-6">
+          {/* Preset Prompts Pill Bar */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
         <span className="text-slate-400 whitespace-nowrap font-medium flex items-center gap-1">
           <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Benchmark Presets:
@@ -927,6 +1039,545 @@ export default function ArenaPage() {
           </div>
         </div>
       </div>
+    </div>
+  ) : (
+    <div className="flex flex-col gap-6">
+          {/* Suite Selection Cards */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-semibold text-white flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-amber-400" />
+                Select Golden Benchmark Suite
+              </h2>
+              <span className="text-xs text-slate-400">
+                Rigorous standardized test suites with deterministic multi-criterion scoring
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {DEFAULT_SUITES.map((suite) => {
+                const isSelected = benchmarkSuiteId === suite.id;
+                return (
+                  <div
+                    key={suite.id}
+                    onClick={() => setBenchmarkSuiteId(suite.id)}
+                    className={`cursor-pointer p-4 rounded-xl border transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? 'bg-slate-900 border-amber-500/60 ring-1 ring-amber-500/40 shadow-lg shadow-amber-500/5'
+                        : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                          {suite.category}
+                        </span>
+                        <span className="text-[11px] font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                          {suite.sampleCount} Test Cases
+                        </span>
+                      </div>
+                      <h3 className="font-semibold text-slate-100 text-sm mb-1">{suite.name}</h3>
+                      <p className="text-xs text-slate-400 leading-relaxed">{suite.description}</p>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                      <span className={isSelected ? 'text-amber-400 font-semibold' : 'text-slate-500'}>
+                        {isSelected ? '✓ Selected Active Suite' : 'Click to select'}
+                      </span>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Model Selection and Run Bar */}
+          <div className="p-4 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xl">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
+              {/* Candidate Model A */}
+              <div>
+                <label className="block text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span> Candidate Model A
+                </label>
+                <select
+                  value={modelA}
+                  onChange={(e) => setModelA(e.target.value)}
+                  disabled={isEvaluating}
+                  className="w-full bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-lg px-3 py-2 text-sm font-medium text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
+                >
+                  {availableModels.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} {m.isAdapter ? '✨ (LoRA)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Candidate Model B */}
+              <div>
+                <label className="block text-xs font-semibold text-blue-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-blue-400"></span> Candidate Model B
+                </label>
+                <select
+                  value={modelB}
+                  onChange={(e) => setModelB(e.target.value)}
+                  disabled={isEvaluating}
+                  className="w-full bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-lg px-3 py-2 text-sm font-medium text-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  {availableModels.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} {m.isAdapter ? '✨ (LoRA)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* LLM Referee Model */}
+              <div>
+                <label className="block text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                  <Scale className="w-3.5 h-3.5" /> Referee / Judge Model
+                </label>
+                <select
+                  value={judgeModel}
+                  onChange={(e) => setJudgeModel(e.target.value)}
+                  disabled={isEvaluating}
+                  className="w-full bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-lg px-3 py-2 text-sm font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50"
+                >
+                  {availableModels.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Run Button */}
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={handleRunEvaluation}
+                disabled={isEvaluating || modelA === modelB}
+                className="w-full lg:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                {isEvaluating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Evaluating Suite...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 fill-slate-950" /> Execute Benchmark
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* In-Flight Evaluating Notice */}
+          {isEvaluating && (
+            <div className="p-6 rounded-2xl bg-slate-900 border border-amber-500/40 shadow-xl flex flex-col md:flex-row items-center gap-4 animate-pulse">
+              <div className="p-3 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                <Loader2 className="w-6 h-6 animate-spin" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h4 className="font-semibold text-white text-base">
+                  Automated LLM-as-a-Judge Benchmark In Progress
+                </h4>
+                <p className="text-xs text-slate-400 mt-1">
+                  1. Dispatching test cases concurrently to <span className="text-emerald-400 font-mono">{modelA}</span> and <span className="text-blue-400 font-mono">{modelB}</span>
+                  <br />
+                  2. Presenting blind candidate outputs to LLM Referee <span className="text-amber-400 font-mono">{judgeModel}</span> with strict scoring rubric.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Empty State when no evaluation has run yet */}
+          {!evalResult && !isEvaluating && (
+            <div className="p-10 rounded-2xl bg-slate-900/50 border border-dashed border-slate-800 text-center flex flex-col items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-4">
+                <Scale className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-semibold text-white mb-2">Automated Multi-Criterion Evaluation Engine</h3>
+              <p className="text-sm text-slate-400 max-w-lg mb-6">
+                Evaluate models against standardized test suites automatically using an LLM-as-a-Judge.
+                The judge grades accuracy, reasoning depth, and instruction adherence to eliminate human evaluation bias.
+              </p>
+              <div className="flex items-center gap-6 text-xs text-slate-500">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Blind Candidate Inference
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Multi-Criterion Rubric
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Sub-token Latency Telemetry
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Evaluation Results Section */}
+          {evalResult && (
+            <div className="flex flex-col gap-6">
+              {/* Champion Card */}
+              <div
+                className={`p-6 rounded-2xl border shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 ${
+                  evalResult.summary.winsA > evalResult.summary.winsB
+                    ? 'bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border-emerald-500/40'
+                    : evalResult.summary.winsB > evalResult.summary.winsA
+                    ? 'bg-gradient-to-r from-blue-950/40 via-slate-900 to-slate-900 border-blue-500/40'
+                    : 'bg-slate-900 border-amber-500/40'
+                }`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-3.5 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                    <Award className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        {evalResult.suiteName}
+                      </span>
+                      <span className="text-xs text-slate-400 font-mono">
+                        Referee: {evalResult.judgeModel}
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mt-1">
+                      {evalResult.summary.winsA > evalResult.summary.winsB
+                        ? `🏆 ${evalResult.modelA} Victorious`
+                        : evalResult.summary.winsB > evalResult.summary.winsA
+                        ? `🏆 ${evalResult.modelB} Victorious`
+                        : '⚖️ Head-to-Head Draw'}
+                    </h3>
+                    <p className="text-sm text-slate-300 mt-1">
+                      {evalResult.summary.winsA > evalResult.summary.winsB
+                        ? `${evalResult.modelA} achieved a ${evalResult.summary.winRateA}% win rate (${evalResult.summary.winsA}W - ${evalResult.summary.winsB}L - ${evalResult.summary.ties}T)`
+                        : evalResult.summary.winsB > evalResult.summary.winsA
+                        ? `${evalResult.modelB} achieved a ${evalResult.summary.winRateB}% win rate (${evalResult.summary.winsB}W - ${evalResult.summary.winsA}L - ${evalResult.summary.ties}T)`
+                        : `Both candidate models scored evenly across ${evalResult.totalSamples} benchmark challenges.`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleRunEvaluation()}
+                    disabled={isEvaluating}
+                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-2 transition-colors"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" /> Re-run Suite
+                  </button>
+                </div>
+              </div>
+
+              {/* High Level Comparative Scorecards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
+                  <span className="text-xs text-slate-400">Head-to-Head Win Rate</span>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-lg font-bold text-emerald-400">
+                      {evalResult.summary.winRateA}%
+                    </span>
+                    <span className="text-xs text-slate-500">vs</span>
+                    <span className="text-lg font-bold text-blue-400">
+                      {evalResult.summary.winRateB}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden flex mt-2">
+                    <div
+                      className="bg-emerald-500 h-full"
+                      style={{ width: `${evalResult.summary.winRateA}%` }}
+                    />
+                    <div
+                      className="bg-blue-500 h-full"
+                      style={{ width: `${evalResult.summary.winRateB}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
+                  <span className="text-xs text-slate-400">Overall Score (out of 10)</span>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-lg font-bold text-emerald-400">
+                      {evalResult.summary.avgOverallScoreA}
+                    </span>
+                    <span className="text-xs text-slate-500">vs</span>
+                    <span className="text-lg font-bold text-blue-400">
+                      {evalResult.summary.avgOverallScoreB}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-500 mt-2 block">
+                    Composite quality score across all samples
+                  </span>
+                </div>
+
+                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
+                  <span className="text-xs text-slate-400">Average Latency</span>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-lg font-bold text-emerald-400">
+                      {evalResult.summary.avgLatencyMsA}ms
+                    </span>
+                    <span className="text-xs text-slate-500">vs</span>
+                    <span className="text-lg font-bold text-blue-400">
+                      {evalResult.summary.avgLatencyMsB}ms
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-500 mt-2 block">
+                    {evalResult.summary.avgLatencyMsA < evalResult.summary.avgLatencyMsB
+                      ? `Model A was ${Math.round(
+                          ((evalResult.summary.avgLatencyMsB - evalResult.summary.avgLatencyMsA) /
+                            evalResult.summary.avgLatencyMsB) *
+                            100
+                        )}% faster`
+                      : `Model B was ${Math.round(
+                          ((evalResult.summary.avgLatencyMsA - evalResult.summary.avgLatencyMsB) /
+                            evalResult.summary.avgLatencyMsA) *
+                            100
+                        )}% faster`}
+                  </span>
+                </div>
+
+                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
+                  <span className="text-xs text-slate-400">Ledger Distribution</span>
+                  <div className="flex items-center justify-between mt-2 text-sm font-semibold">
+                    <span className="text-emerald-400">{evalResult.summary.winsA} Wins</span>
+                    <span className="text-slate-400">{evalResult.summary.ties} Ties</span>
+                    <span className="text-blue-400">{evalResult.summary.winsB} Wins</span>
+                  </div>
+                  <span className="text-[11px] text-slate-500 mt-2 block">
+                    {evalResult.totalSamples} total evaluated scenarios
+                  </span>
+                </div>
+              </div>
+
+              {/* Criterion Radar Breakdown Bars */}
+              <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl">
+                <h4 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-amber-400" />
+                  Multi-Criterion Rubric Score Comparison
+                </h4>
+                <div className="space-y-4">
+                  {/* Accuracy */}
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="font-medium text-slate-300">Accuracy & Algorithmic Correctness</span>
+                      <div className="flex items-center gap-3">
+                        <span className="font-semibold text-emerald-400">
+                          {evalResult.modelA}: {evalResult.summary.categoryScoresA.accuracy}/10
+                        </span>
+                        <span className="text-slate-600">|</span>
+                        <span className="font-semibold text-blue-400">
+                          {evalResult.modelB}: {evalResult.summary.categoryScoresB.accuracy}/10
+                        </span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                        <div
+                          className="bg-emerald-500 h-full rounded-full"
+                          style={{ width: `${evalResult.summary.categoryScoresA.accuracy * 10}%` }}
+                        />
+                      </div>
+                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                        <div
+                          className="bg-blue-500 h-full rounded-full"
+                          style={{ width: `${evalResult.summary.categoryScoresB.accuracy * 10}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Reasoning */}
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="font-medium text-slate-300">Reasoning Depth & Logic Verification</span>
+                      <div className="flex items-center gap-3">
+                        <span className="font-semibold text-emerald-400">
+                          {evalResult.modelA}: {evalResult.summary.categoryScoresA.reasoning}/10
+                        </span>
+                        <span className="text-slate-600">|</span>
+                        <span className="font-semibold text-blue-400">
+                          {evalResult.modelB}: {evalResult.summary.categoryScoresB.reasoning}/10
+                        </span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                        <div
+                          className="bg-emerald-500 h-full rounded-full"
+                          style={{ width: `${evalResult.summary.categoryScoresA.reasoning * 10}%` }}
+                        />
+                      </div>
+                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                        <div
+                          className="bg-blue-500 h-full rounded-full"
+                          style={{ width: `${evalResult.summary.categoryScoresB.reasoning * 10}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Adherence */}
+                  <div>
+                    <div className="flex items-center justify-between text-xs mb-1.5">
+                      <span className="font-medium text-slate-300">Instruction & Schema Adherence</span>
+                      <div className="flex items-center gap-3">
+                        <span className="font-semibold text-emerald-400">
+                          {evalResult.modelA}: {evalResult.summary.categoryScoresA.adherence}/10
+                        </span>
+                        <span className="text-slate-600">|</span>
+                        <span className="font-semibold text-blue-400">
+                          {evalResult.modelB}: {evalResult.summary.categoryScoresB.adherence}/10
+                        </span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                        <div
+                          className="bg-emerald-500 h-full rounded-full"
+                          style={{ width: `${evalResult.summary.categoryScoresA.adherence * 10}%` }}
+                        />
+                      </div>
+                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                        <div
+                          className="bg-blue-500 h-full rounded-full"
+                          style={{ width: `${evalResult.summary.categoryScoresB.adherence * 10}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sample-by-Sample Breakdown Accordion */}
+              <div>
+                <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                  <Scale className="w-4 h-4 text-amber-400" />
+                  Individual Benchmark Cases & Referee Verdicts
+                </h4>
+                <div className="space-y-3">
+                  {evalResult.sampleResults.map((sample: any) => {
+                    const isExpanded = expandedSampleId === sample.sampleId;
+                    const winnerTag =
+                      sample.judge.winner === 'modelA'
+                        ? { label: `Winner: ${evalResult.modelA}`, color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' }
+                        : sample.judge.winner === 'modelB'
+                        ? { label: `Winner: ${evalResult.modelB}`, color: 'bg-blue-500/20 text-blue-300 border-blue-500/30' }
+                        : { label: 'Tied Score', color: 'bg-slate-700 text-slate-300 border-slate-600' };
+
+                    return (
+                      <div
+                        key={sample.sampleId}
+                        className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden transition-all"
+                      >
+                        {/* Accordion Header */}
+                        <div
+                          onClick={() => setExpandedSampleId(isExpanded ? null : sample.sampleId)}
+                          className="p-4 cursor-pointer hover:bg-slate-800/50 flex items-center justify-between gap-4 select-none"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-slate-400 text-xs font-mono">{sample.sampleId}</span>
+                            <span className="font-semibold text-slate-200 text-sm">{sample.sampleTitle}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${winnerTag.color}`}>
+                              {winnerTag.label}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-xs text-slate-400 hidden sm:flex items-center gap-3">
+                              <span>Model A: <strong className="text-emerald-400">{sample.judge.scoreA.overall}/10</strong></span>
+                              <span>Model B: <strong className="text-blue-400">{sample.judge.scoreB.overall}/10</strong></span>
+                            </div>
+                            <ChevronDown
+                              className={`w-4 h-4 text-slate-400 transition-transform ${
+                                isExpanded ? 'transform rotate-180' : ''
+                              }`}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Accordion Body */}
+                        {isExpanded && (
+                          <div className="p-4 border-t border-slate-800 bg-slate-950/40 space-y-4 text-xs">
+                            {/* Prompt Card */}
+                            <div className="p-3 bg-slate-900/90 rounded-lg border border-slate-800">
+                              <span className="font-semibold text-slate-300 uppercase tracking-wider text-[11px] block mb-1">
+                                Test Prompt Dispatched
+                              </span>
+                              <p className="text-slate-200 font-mono whitespace-pre-wrap">{sample.prompt}</p>
+                            </div>
+
+                            {/* Side-by-Side Model Responses */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Model A */}
+                              <div className="p-3 bg-slate-900/90 rounded-lg border border-slate-800 flex flex-col justify-between">
+                                <div>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
+                                      <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                      {evalResult.modelA}
+                                    </span>
+                                    <span className="text-slate-400 font-mono text-[11px]">
+                                      {sample.responseA.latencyMs}ms | {sample.responseA.tokens} tokens
+                                    </span>
+                                  </div>
+                                  <div className="bg-slate-950 p-2.5 rounded border border-slate-800 max-h-60 overflow-y-auto font-mono text-slate-300 text-[11px] whitespace-pre-wrap">
+                                    {sample.responseA.content}
+                                  </div>
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-slate-800 flex items-center justify-between text-slate-400 text-[11px]">
+                                  <span>Accuracy: <strong className="text-slate-200">{sample.judge.scoreA.accuracy}</strong></span>
+                                  <span>Reasoning: <strong className="text-slate-200">{sample.judge.scoreA.reasoning}</strong></span>
+                                  <span>Adherence: <strong className="text-slate-200">{sample.judge.scoreA.adherence}</strong></span>
+                                  <span className="text-emerald-400 font-bold">Overall: {sample.judge.scoreA.overall}/10</span>
+                                </div>
+                              </div>
+
+                              {/* Model B */}
+                              <div className="p-3 bg-slate-900/90 rounded-lg border border-slate-800 flex flex-col justify-between">
+                                <div>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="font-semibold text-blue-400 flex items-center gap-1.5">
+                                      <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                                      {evalResult.modelB}
+                                    </span>
+                                    <span className="text-slate-400 font-mono text-[11px]">
+                                      {sample.responseB.latencyMs}ms | {sample.responseB.tokens} tokens
+                                    </span>
+                                  </div>
+                                  <div className="bg-slate-950 p-2.5 rounded border border-slate-800 max-h-60 overflow-y-auto font-mono text-slate-300 text-[11px] whitespace-pre-wrap">
+                                    {sample.responseB.content}
+                                  </div>
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-slate-800 flex items-center justify-between text-slate-400 text-[11px]">
+                                  <span>Accuracy: <strong className="text-slate-200">{sample.judge.scoreB.accuracy}</strong></span>
+                                  <span>Reasoning: <strong className="text-slate-200">{sample.judge.scoreB.reasoning}</strong></span>
+                                  <span>Adherence: <strong className="text-slate-200">{sample.judge.scoreB.adherence}</strong></span>
+                                  <span className="text-blue-400 font-bold">Overall: {sample.judge.scoreB.overall}/10</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Judge Reasoning Callout */}
+                            <div className="p-3.5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-lg">
+                              <span className="font-semibold text-amber-400 flex items-center gap-1.5 mb-1 text-xs">
+                                <Scale className="w-3.5 h-3.5" /> LLM Referee Adjudication & Rationale ({evalResult.judgeModel})
+                              </span>
+                              <p className="text-slate-200 leading-relaxed italic text-[11.5px]">
+                                &ldquo;{sample.judge.reasoning}&rdquo;
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
