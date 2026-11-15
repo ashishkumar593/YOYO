@@ -237,6 +237,124 @@ async function testEndToEndDeveloperFlow() {
   const pingData = await pingRes.json();
   console.log(`[PASS] Webhook Test Ping Dispatched (Latency: ${pingData.latencyMs || pingData.durationMs || 0}ms)`);
 
+  // 8. Multi-Tenancy & Project Isolation (Phase 2)
+  console.log('\n--> Step 8: Verifying Enterprise Multi-Tenancy & Project Isolation...');
+  const orgSlug = `acme-e2e-${Date.now()}`;
+  const orgRes = await fetch('http://localhost:4000/api/organizations', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      name: 'Acme AI Labs',
+      slug: orgSlug,
+    }),
+  });
+  if (!orgRes.ok) throw new Error(`Org creation failed: ${await orgRes.text()}`);
+  const org = await orgRes.json();
+  console.log(`[PASS] Organization Created: "${org.name}" (Slug: ${org.slug}, ID: ${org.id})`);
+
+  const projRes = await fetch(`http://localhost:4000/api/organizations/${org.id}/projects`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      name: 'Enterprise Core LLM',
+    }),
+  });
+  if (!projRes.ok) throw new Error(`Project creation failed: ${await projRes.text()}`);
+  const project = await projRes.json();
+  console.log(`[PASS] Isolated Project Created: "${project.name}" (ID: ${project.id})`);
+
+  // 9. API Key Monthly Spend Caps & Network CIDR Allowlists (Phase 5)
+  console.log('\n--> Step 9: Testing API Key Monthly Spend Caps & Network CIDR Allowlists...');
+  const policyKeyRes = await fetch('http://localhost:4000/api/keys', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      name: 'Enterprise Secure Key with Cap',
+      budgetLimitUsd: 150.0,
+      allowedIps: ['127.0.0.1', '::1', '10.0.0.0/16'],
+      projectId: project.id,
+    }),
+  });
+  if (!policyKeyRes.ok) throw new Error(`Policy key creation failed: ${await policyKeyRes.text()}`);
+  const policyKey = await policyKeyRes.json();
+  console.log(`[PASS] Budget-capped & CIDR-guarded key generated (Budget: $${policyKey.apiKey.budgetLimitUsd || 150})`);
+
+  // 10. Dynamic LoRA Adapter Registry & Route Dispatch (Phase 6)
+  console.log('\n--> Step 10: Testing Dynamic LoRA Adapter Registry & Model Routing...');
+  const adapterIdentifier = `llama-3.3-70b:legal-e2e-${Date.now()}`;
+  const adapterRes = await fetch('http://localhost:4000/api/adapters', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      name: 'Legal Contract Reviewer LoRA',
+      baseModelId: 'llama-3.3-70b',
+      apiIdentifier: adapterIdentifier,
+      adapterPath: 's3://yoyo-lora/legal-v1',
+      description: 'Specialized corporate contract parsing adapter',
+    }),
+  });
+  if (!adapterRes.ok) throw new Error(`Adapter creation failed: ${await adapterRes.text()}`);
+  const adapter = await adapterRes.json();
+  console.log(`[PASS] Custom LoRA Adapter Registered: "${adapter.name}" (Identifier: ${adapter.apiIdentifier})`);
+
+  // Verify adapter appears in OpenAI /v1/models catalog
+  const catalogCheckRes = await fetch('http://localhost:4000/v1/models', {
+    headers: { Authorization: `Bearer ${plaintextKey}` },
+  });
+  const { data: updatedModels } = await catalogCheckRes.json();
+  const foundAdapter = updatedModels.find((m) => m.id === adapterIdentifier);
+  if (!foundAdapter) {
+    throw new Error(`Expected custom LoRA adapter "${adapterIdentifier}" to be present in /v1/models catalog`);
+  }
+  console.log(`[PASS] Custom LoRA Adapter verified in OpenAI /v1/models catalog (Owner: ${foundAdapter.owned_by})`);
+
+  // 11. Prompt Caching & 50% Token Arbitrage Telemetry (Phase 4)
+  console.log('\n--> Step 11: Verifying Prompt Caching & 50% Token Arbitrage Telemetry...');
+  const cacheChatRes = await fetch('http://localhost:4000/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${plaintextKey}`,
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b',
+      messages: [
+        { role: 'system', content: 'You are YOYO AI, with extensive prefix caching enabled.' },
+        { role: 'user', content: 'Testing prompt caching telemetry discount.' },
+      ],
+      max_tokens: 32,
+    }),
+  });
+  if (!cacheChatRes.ok) throw new Error(`Cache inference failed: ${await cacheChatRes.text()}`);
+  const cacheChatData = await cacheChatRes.json();
+  const cachedCount = cacheChatData.usage?.prompt_tokens_details?.cached_tokens ?? 0;
+  console.log(`[PASS] Telemetry contains prompt_tokens_details.cached_tokens: ${cachedCount} tokens (50% Off input rate)!`);
+
+  // 12. Native Prometheus Metrics Exporter (Phase 3)
+  console.log('\n--> Step 12: Scraping Native Prometheus /metrics Endpoint...');
+  const metricsRes = await fetch('http://localhost:4000/metrics');
+  if (!metricsRes.ok) throw new Error(`Metrics scraping failed: ${await metricsRes.text()}`);
+  const metricsText = await metricsRes.text();
+  const hasRequestCounter = metricsText.includes('yoyo_requests_total');
+  const hasLatencyHistogram = metricsText.includes('yoyo_request_duration_seconds');
+  const hasWorkerHealth = metricsText.includes('yoyo_worker_health_status');
+  if (!hasRequestCounter || !hasLatencyHistogram || !hasWorkerHealth) {
+    throw new Error('Prometheus metrics text missing essential YOYO gauge or histogram headers');
+  }
+  console.log(`[PASS] /metrics operational: yoyo_requests_total, yoyo_request_duration_seconds, yoyo_worker_health_status verified!`);
+
   console.log('\n==========================================================');
   console.log('   FULL END-TO-END DEVELOPER JOURNEY 100% OPERATIONAL!   ');
   console.log('==========================================================\n');

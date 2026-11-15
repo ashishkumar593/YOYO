@@ -18,6 +18,7 @@ import {
   Activity,
   LogOut,
   Users,
+  Swords,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
@@ -47,6 +48,7 @@ export function Sidebar() {
         { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
         { label: 'Model Catalog', href: '/dashboard/models', icon: Cpu },
         { label: 'Playground', href: '/dashboard/playground', icon: Terminal },
+        { label: 'Model Arena', href: '/dashboard/arena', icon: Swords, badge: 'New' },
         { label: 'Batch Inference', href: '/dashboard/batches', icon: Layers, badge: '50% Off' },
       ],
     },
