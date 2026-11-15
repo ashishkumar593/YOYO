@@ -431,6 +431,32 @@ export class Yoyo {
     },
   };
 
+  public moderations = {
+    create: async (params: {
+      input: string | string[];
+      model?: string;
+    }): Promise<{
+      id: string;
+      model: string;
+      results: Array<{
+        flagged: boolean;
+        categories: Record<string, boolean>;
+        category_scores: Record<string, number>;
+      }>;
+    }> => {
+      const res = await fetch(`${this.baseUrl}/moderations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(params),
+      });
+      if (!res.ok) throw new Error(`YOYO Moderations API Error [${res.status}]: ${await res.text()}`);
+      return res.json() as any;
+    },
+  };
+
 
 
   private async createNonStream(params: ChatCompletionParams): Promise<ChatCompletionResponse> {

@@ -1,0 +1,17 @@
+apiVersion: v2
+name: yoyo
+description: Enterprise Cloud AI Model Gateway & Inference Platform
+type: application
+version: 1.0.0
+appVersion: "2.4.0"
+keywords:
+  - ai-gateway
+  - llm-router
+  - vllm
+  - ollama
+  - openai-api
+  - machine-learning
+home: https://github.com/ashishkumar593/YOYO
+maintainers:
+  - name: YOYO AI Platform Engineering
+    email: dev@yoyo.ai

@@ -1,0 +1,113 @@
+name: yoyo-platform-prod
+
+networks:
+  yoyo-net:
+    driver: bridge
+
+volumes:
+  pg_data:
+  redis_data:
+
+services:
+  # 1. PostgreSQL Database (Production Optimized)
+  postgres:
+    image: postgres:16-alpine
+    container_name: yoyo-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-yoyo_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-yoyo_production_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-yoyo_cloud}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - yoyo-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-yoyo_admin} -d ${POSTGRES_DB:-yoyo_cloud}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2048M
+
+  # 2. Redis In-Memory Cache (Prompt Prefix & Rate Limiting)
+  redis:
+    image: redis:7.4-alpine
+    container_name: yoyo-redis-prod
+    restart: always
+    command: ["redis-server", "--maxmemory", "1024mb", "--maxmemory-policy", "allkeys-lru", "--save", "900 1"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - yoyo-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+
+  # 3. YOYO Backend Edge Gateway
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: yoyo-gateway-prod
+    restart: always
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-yoyo_admin}:${POSTGRES_PASSWORD:-yoyo_production_secret}@postgres:5432/${POSTGRES_DB:-yoyo_cloud}?schema=public
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-change-this-in-production-vault-secret}
+      FEATURE_MOCK_INFERENCE: "false"
+      FEATURE_WORKER_HEALTHCHECK: "true"
+      WORKER_HEALTH_INTERVAL_MS: "30000"
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - yoyo-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:4000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4096M
+
+  # 4. YOYO Frontend Management Platform
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: yoyo-frontend-prod
+    restart: always
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - yoyo-net
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2048M

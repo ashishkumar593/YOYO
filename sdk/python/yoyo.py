@@ -494,6 +494,29 @@ class FineTuning:
         self.jobs = FineTuningJobs(client)
 
 
+class Moderations:
+    def __init__(self, client: "Yoyo"):
+        self.client = client
+
+    def create(self, input: Union[str, List[str]], model: str = "yoyo-guardrails-v1") -> Dict[str, Any]:
+        """Evaluates text against safety policies and returns an OpenAI-compatible moderation response."""
+        payload = {"input": input, "model": model}
+        req = urllib.request.Request(
+            f"{self.client.base_url}/moderations",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.client.api_key}",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.client.timeout) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            raise _map_http_error(e)
+
+
 class Yoyo:
     """YOYO Cloud AI Model API Client (Synchronous)."""
 
@@ -516,6 +539,7 @@ class Yoyo:
         self.files = Files(self)
         self.batches = Batches(self)
         self.fine_tuning = FineTuning(self)
+        self.moderations = Moderations(self)
 
 
 class AsyncChatCompletions:
@@ -618,3 +642,4 @@ class AsyncYoyo:
         self.files = Files(self)  # type: ignore
         self.batches = Batches(self)  # type: ignore
         self.fine_tuning = FineTuning(self)  # type: ignore
+        self.moderations = Moderations(self)  # type: ignore

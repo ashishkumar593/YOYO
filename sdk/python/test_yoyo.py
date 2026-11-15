@@ -34,6 +34,7 @@ class TestYoyoSDK(unittest.TestCase):
         self.assertTrue(callable(client.fine_tuning.jobs.retrieve))
         self.assertTrue(callable(client.fine_tuning.jobs.cancel))
         self.assertTrue(callable(client.fine_tuning.jobs.list_events))
+        self.assertTrue(callable(client.moderations.create))
 
     def test_missing_api_key_raises(self):
         import os

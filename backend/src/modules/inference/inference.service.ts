@@ -19,6 +19,7 @@ import {
   ChatCompletionRequest,
   ChatCompletionResponse,
   ChatCompletionChunk,
+  ChatMessage,
   EmbeddingRequest,
   EmbeddingResponse,
   RerankRequest,
@@ -26,7 +27,9 @@ import {
 } from '../../common/types/openai.types';
 import { InferenceProviderInterface } from '../../common/types/provider.interface';
 import { PrismaService } from '../../database/prisma.service';
-import { estimateMessagesTokens } from '../../common/utils/token-estimator';
+import { estimateMessagesTokens, estimateTokens } from '../../common/utils/token-estimator';
+import { GuardrailsService } from '../guardrails/guardrails.service';
+import { SemanticRouter } from './router/semantic.router';
 import { EngineType, WorkerStatus } from '@prisma/client';
 import * as crypto from 'crypto';
 import Redis from 'ioredis';
@@ -50,7 +53,8 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     private vllmProvider: VllmProvider,
     private mockProvider: MockProvider,
     private prisma: PrismaService,
-    @Optional() private metricsService?: MetricsService
+    @Optional() private metricsService?: MetricsService,
+    @Optional() private guardrailsService?: GuardrailsService
   ) {
     try {
       this.redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
@@ -154,6 +158,26 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     return [];
   }
 
+  private computePrefixKey(
+    model: string,
+    messages: ChatMessage[]
+  ): { prefixKey: string; prefixTokens: number } | null {
+    if (!messages || messages.length === 0) return null;
+    const prefixContent =
+      typeof messages[0].content === 'string'
+        ? messages[0].content
+        : Array.isArray(messages[0].content)
+        ? (messages[0].content as any[])
+            .filter((p) => p.type === 'text')
+            .map((p) => p.text)
+            .join(' ')
+        : '';
+    if (!prefixContent || prefixContent.length < 25) return null;
+    const prefixTokens = estimateTokens(prefixContent);
+    const hash = crypto.createHash('sha256').update(`${model}:${prefixContent}`).digest('hex');
+    return { prefixKey: `cache:prefix:${model}:${hash}`, prefixTokens };
+  }
+
   private computeCacheKey(request: ChatCompletionRequest): string | null {
     // Only cache deterministic outputs (temperature <= 0.5)
     if (request.temperature !== undefined && request.temperature > 0.5) {
@@ -179,6 +203,28 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     userContext?: { id: string; role?: string },
     apiKeyContext?: { keyId: string; allowedModels?: string[] }
   ): Promise<ChatCompletionResponse> {
+    // 1. Guardrails & Content Safety Filtering
+    if (this.guardrailsService) {
+      const sanitized = this.guardrailsService.sanitizeMessages(request.messages);
+      if (sanitized.blocked) {
+        throw new BadRequestException({
+          error: {
+            message: 'Request blocked by YOYO Safety Guardrails.',
+            type: 'guardrail_violation',
+            violations: sanitized.violations,
+          },
+        });
+      }
+      request.messages = sanitized.sanitizedMessages;
+    }
+
+    // 2. Semantic Model Routing (if requested model starts with 'auto')
+    if (request.model.startsWith('auto')) {
+      const routedModel = SemanticRouter.classifyQuery(request.messages, request.model);
+      this.logger.log(`[SemanticRouter] Dynamic dispatch: '${request.model}' -> '${routedModel}'`);
+      request.model = routedModel;
+    }
+
     const { candidates, model } = await this.resolveCandidates(
       request.model,
       apiKeyContext?.allowedModels
@@ -189,6 +235,18 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException(
         `Prompt tokens (${promptTokens}) exceed model max context window (${model.defaultContextWindow}).`
       );
+    }
+
+    // 3. Prompt Prefix Caching Check (Redis)
+    let prefixCachedTokens = 0;
+    const prefixMeta = this.computePrefixKey(request.model, request.messages);
+    if (this.redis && this.redis.status === 'ready' && prefixMeta) {
+      try {
+        const cached = await this.redis.get(prefixMeta.prefixKey);
+        if (cached) {
+          prefixCachedTokens = parseInt(cached, 10) || prefixMeta.prefixTokens;
+        }
+      } catch {}
     }
 
     // Check Redis exact-match cache for instant sub-5ms responses
@@ -243,7 +301,19 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
           candidate.provider.chatCompletion(candidate.endpoint, request)
         );
         const latencyMs = Date.now() - startTime;
-        const cachedTokens = result.usage?.prompt_tokens_details?.cached_tokens || 0;
+        const providerCached = result.usage?.prompt_tokens_details?.cached_tokens || 0;
+        const totalCachedTokens = Math.max(providerCached, prefixCachedTokens);
+
+        if (result.usage) {
+          result.usage.prompt_tokens_details = {
+            cached_tokens: totalCachedTokens,
+          };
+        }
+
+        // Save prefix to Redis for subsequent prompt reuse
+        if (this.redis && this.redis.status === 'ready' && prefixMeta) {
+          this.redis.set(prefixMeta.prefixKey, prefixMeta.prefixTokens.toString(), 'EX', 7200).catch(() => {});
+        }
 
         this.recordTelemetry({
           userId: userContext?.id,
@@ -255,7 +325,7 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
           promptTokens: result.usage.prompt_tokens,
           completionTokens: result.usage.completion_tokens,
           totalTokens: result.usage.total_tokens,
-          cachedTokens,
+          cachedTokens: totalCachedTokens,
           latencyMs,
         }).catch(() => {});
 
@@ -315,6 +385,28 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     userContext?: { id: string; role?: string },
     apiKeyContext?: { keyId: string; allowedModels?: string[] }
   ): AsyncIterable<ChatCompletionChunk> {
+    // 1. Guardrails & Content Safety Filtering
+    if (this.guardrailsService) {
+      const sanitized = this.guardrailsService.sanitizeMessages(request.messages);
+      if (sanitized.blocked) {
+        throw new BadRequestException({
+          error: {
+            message: 'Stream blocked by YOYO Safety Guardrails.',
+            type: 'guardrail_violation',
+            violations: sanitized.violations,
+          },
+        });
+      }
+      request.messages = sanitized.sanitizedMessages;
+    }
+
+    // 2. Semantic Model Routing
+    if (request.model.startsWith('auto')) {
+      const routedModel = SemanticRouter.classifyQuery(request.messages, request.model);
+      this.logger.log(`[SemanticRouter] Stream dynamic dispatch: '${request.model}' -> '${routedModel}'`);
+      request.model = routedModel;
+    }
+
     let resolved;
     try {
       resolved = await this.resolveCandidates(
@@ -633,10 +725,10 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
-  private pricingCache = new Map<string, { input: number; output: number }>();
+  private pricingCache = new Map<string, { input: number; output: number; cacheDiscount?: number }>();
 
-  private async getModelPricing(modelIdentifierOrId?: string): Promise<{ input: number; output: number }> {
-    if (!modelIdentifierOrId) return { input: 0.2, output: 0.4 };
+  private async getModelPricing(modelIdentifierOrId?: string): Promise<{ input: number; output: number; cacheDiscount?: number }> {
+    if (!modelIdentifierOrId) return { input: 0.2, output: 0.4, cacheDiscount: 0.5 };
     if (this.pricingCache.has(modelIdentifierOrId)) {
       return this.pricingCache.get(modelIdentifierOrId)!;
     }
@@ -652,13 +744,14 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
         const rates = {
           input: Number(pricing.inputCostPerMillion),
           output: Number(pricing.outputCostPerMillion),
+          cacheDiscount: pricing.cacheDiscount ? Number(pricing.cacheDiscount) : 0.5,
         };
         this.pricingCache.set(modelIdentifierOrId, rates);
         return rates;
       }
     } catch {}
 
-    return { input: 0.2, output: 0.4 };
+    return { input: 0.2, output: 0.4, cacheDiscount: 0.5 };
   }
 
   private async recordTelemetry(data: {
@@ -683,16 +776,18 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
       latencyMs: data.latencyMs,
       promptTokens: data.promptTokens,
       completionTokens: data.completionTokens,
+      cachedTokens: data.cachedTokens,
     });
 
     try {
       const rates = await this.getModelPricing(data.modelIdentifier || data.modelId);
       const cachedTokens = Math.max(0, Math.min(data.promptTokens, data.cachedTokens || 0));
       const uncachedPromptTokens = Math.max(0, data.promptTokens - cachedTokens);
+      const discount = rates.cacheDiscount ?? 0.5;
 
-      // Prompt caching arbitrage: 50% discount on cached tokens
+      // Prompt caching economics: discounted rate on cached tokens
       const promptCost =
-        (uncachedPromptTokens * rates.input + cachedTokens * (rates.input * 0.5)) / 1_000_000;
+        (uncachedPromptTokens * rates.input + cachedTokens * (rates.input * discount)) / 1_000_000;
       const completionCost = (data.completionTokens * rates.output) / 1_000_000;
       const computeCostUsd = parseFloat((promptCost + completionCost).toFixed(6));
 

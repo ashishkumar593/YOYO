@@ -72,6 +72,12 @@ if (
   throw new Error('client.fineTuning.jobs methods missing');
 }
 
+if (typeof client.moderations.create === 'function') {
+  console.log('[OK] client.moderations.create exists');
+} else {
+  throw new Error('client.moderations.create is missing');
+}
+
 // 3. Missing API key rejection
 try {
   delete process.env.YOYO_API_KEY;

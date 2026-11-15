@@ -1,0 +1,97 @@
+# Global parameters
+global:
+  environment: production
+  imagePullSecrets: []
+
+# Backend Edge Gateway (NestJS + Fastify)
+gateway:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/ashishkumar593/yoyo-gateway
+    tag: "2.4.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 4000
+    targetPort: 4000
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 2048Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 80
+  env:
+    PORT: 4000
+    NODE_ENV: production
+    FEATURE_MOCK_INFERENCE: "false"
+    FEATURE_WORKER_HEALTHCHECK: "true"
+    WORKER_HEALTH_INTERVAL_MS: "30000"
+    REDIS_URL: "redis://yoyo-redis:6379"
+
+# Frontend Platform (Next.js 15)
+frontend:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/ashishkumar593/yoyo-frontend
+    tag: "2.4.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+  env:
+    NODE_ENV: production
+    NEXT_PUBLIC_API_URL: "https://api.yoyo.ai"
+
+# Ingress Configuration (NGINX / Traefik / ALB with TLS cert-manager)
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+  hosts:
+    api:
+      host: api.yoyo.ai
+      paths:
+        - path: /
+          pathType: Prefix
+    app:
+      host: app.yoyo.ai
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: yoyo-tls-cert
+      hosts:
+        - api.yoyo.ai
+        - app.yoyo.ai
+
+# Prometheus Monitoring ServiceMonitor
+serviceMonitor:
+  enabled: true
+  interval: 15s
+  path: /metrics
+  labels:
+    release: prometheus-stack
+
+# Secrets (Can be mounted from external secret store like AWS Secrets Manager / Vault)
+secrets:
+  jwtSecret: "change-this-in-production-vault-secret"
+  databaseUrl: "postgresql://yoyo_admin:secret@yoyo-postgres:5432/yoyo_cloud?schema=public"

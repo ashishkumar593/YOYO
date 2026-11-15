@@ -10,6 +10,7 @@ export interface RequestMetricEvent {
   ttftMs?: number;
   promptTokens?: number;
   completionTokens?: number;
+  cachedTokens?: number;
 }
 
 @Injectable()
@@ -21,6 +22,7 @@ export class MetricsService {
   private totalLatencyMs = new Map<string, number>();
   private promptTokensCount = new Map<string, number>();
   private completionTokensCount = new Map<string, number>();
+  private cachedTokensCount = new Map<string, number>();
   private ttftSumMs = new Map<string, number>();
   private ttftCount = new Map<string, number>();
 
@@ -43,6 +45,14 @@ export class MetricsService {
       this.completionTokensCount.set(
         cKey,
         (this.completionTokensCount.get(cKey) || 0) + event.completionTokens
+      );
+    }
+
+    if (event.cachedTokens && event.cachedTokens > 0) {
+      const cacheKey = `model="${model}",type="cached_prompt"`;
+      this.cachedTokensCount.set(
+        cacheKey,
+        (this.cachedTokensCount.get(cacheKey) || 0) + event.cachedTokens
       );
     }
 
@@ -84,6 +94,17 @@ export class MetricsService {
     }
     for (const [key, count] of this.completionTokensCount.entries()) {
       lines.push(`yoyo_tokens_total{${key}} ${count}`);
+    }
+
+    lines.push('');
+    lines.push('# HELP yoyo_cached_tokens_total Total prompt prefix tokens served from cache (90% discount)');
+    lines.push('# TYPE yoyo_cached_tokens_total counter');
+    if (this.cachedTokensCount.size === 0) {
+      lines.push('yoyo_cached_tokens_total{model="none",type="cached_prompt"} 0');
+    } else {
+      for (const [key, count] of this.cachedTokensCount.entries()) {
+        lines.push(`yoyo_cached_tokens_total{${key}} ${count}`);
+      }
     }
 
     lines.push('');
@@ -135,6 +156,7 @@ export class MetricsService {
     this.totalLatencyMs.clear();
     this.promptTokensCount.clear();
     this.completionTokensCount.clear();
+    this.cachedTokensCount.clear();
     this.ttftSumMs.clear();
     this.ttftCount.clear();
   }
