@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # YOYO Cloud AI Platform — Live Gateway End-to-End Smoke Test Suite (PowerShell)
 # Verifies Auth, Multi-Tenancy, Spend Caps, Tool Calling, LoRA, Caching & Prometheus
 # ==============================================================================
@@ -22,7 +22,7 @@ try {
 }
 
 if ($gatewayLive) {
-    Write-Host "`n[2/3] Executing Full 12-Step End-to-End Developer Journey..." -ForegroundColor Yellow
+    Write-Host "`n[2/3] Executing Full 15-Step End-to-End Developer Journey..." -ForegroundColor Yellow
     node backend/test-e2e-client-flow.js
     if ($LASTEXITCODE -ne 0) {
         Write-Host "`n[FAIL] Live E2E smoke tests encountered an error." -ForegroundColor Red
@@ -33,11 +33,11 @@ if ($gatewayLive) {
     Write-Host "`n[2/3] Checking Node.js E2E Test Suite Syntax & Dependencies..." -ForegroundColor Yellow
     node --check backend/test-e2e-client-flow.js
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "  [OK] backend/test-e2e-client-flow.js syntax validated cleanly." -ForegroundColor Green
+        Write-Host "  [OK] backend/test-e2e-client-flow.js syntax validated cleanly (15 enterprise steps ready)." -ForegroundColor Green
     }
 
     Write-Host "`n[3/3] Local Instruction:" -ForegroundColor Yellow
-    Write-Host "  To execute the live 12-step flow against a running cluster:" -ForegroundColor White
+    Write-Host "  To execute the live 15-step flow against a running cluster:" -ForegroundColor White
     Write-Host "    Terminal 1: cd backend; pnpm start:dev" -ForegroundColor Cyan
     Write-Host "    Terminal 2: powershell -ExecutionPolicy Bypass -File scripts/test-e2e-gateway.ps1" -ForegroundColor Cyan
 }

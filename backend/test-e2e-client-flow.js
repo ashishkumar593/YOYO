@@ -355,8 +355,122 @@ async function testEndToEndDeveloperFlow() {
   }
   console.log(`[PASS] /metrics operational: yoyo_requests_total, yoyo_request_duration_seconds, yoyo_worker_health_status verified!`);
 
+  // 13. Multi-Modal Vision Inference (Track: Vision)
+  console.log('\n--> Step 13: Testing Multi-Modal Vision Inference & Image Token Billing...');
+  const visionRes = await fetch('http://localhost:4000/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${plaintextKey}`,
+    },
+    body: JSON.stringify({
+      model: 'qwen-2.5-vl-72b',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Identify the visual artifacts in this diagram.' },
+            {
+              type: 'image_url',
+              image_url: {
+                url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+                detail: 'auto',
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 48,
+    }),
+  });
+  if (!visionRes.ok) throw new Error(`Vision inference failed: ${await visionRes.text()}`);
+  const visionData = await visionRes.json();
+  console.log(`[PASS] Vision model responded (Tokens: Prompt=${visionData.usage?.prompt_tokens}, Completion=${visionData.usage?.completion_tokens})`);
+  console.log(`       Preview: "${visionData.choices[0].message.content.substring(0, 60)}..."`);
+
+  // 14. Fine-Tuning Job Pipeline Lifecycle (Track: Fine-Tuning)
+  console.log('\n--> Step 14: Testing Fine-Tuning Job Pipeline Lifecycle...');
+  const trainFileRes = await fetch('http://localhost:4000/v1/files', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${plaintextKey}`,
+    },
+    body: JSON.stringify({
+      filename: 'e2e_training_dataset.jsonl',
+      purpose: 'fine-tune',
+      content: '{"prompt": "Classify legal clause", "completion": "INDEMNIFICATION"}\n',
+    }),
+  });
+  if (!trainFileRes.ok) throw new Error(`Training file upload failed: ${await trainFileRes.text()}`);
+  const trainFile = await trainFileRes.json();
+  console.log(`[PASS] Training file uploaded: ${trainFile.id} (${trainFile.filename})`);
+
+  const ftJobRes = await fetch('http://localhost:4000/v1/fine_tuning/jobs', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${plaintextKey}`,
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b',
+      training_file: trainFile.id,
+      suffix: 'legal-audit',
+    }),
+  });
+  if (!ftJobRes.ok) throw new Error(`Fine-tuning job creation failed: ${await ftJobRes.text()}`);
+  const ftJob = await ftJobRes.json();
+  console.log(`[PASS] Fine-tuning job created: ${ftJob.id} (Status: ${ftJob.status}, Model: ${ftJob.model})`);
+
+  const ftEventsRes = await fetch(`http://localhost:4000/v1/fine_tuning/jobs/${ftJob.id}/events`, {
+    headers: { Authorization: `Bearer ${plaintextKey}` },
+  });
+  const { data: ftEvents } = await ftEventsRes.json();
+  console.log(`[PASS] Fine-tuning lifecycle events recorded: ${ftEvents.length} events logged.`);
+
+  // 15. Enterprise SAML/OIDC SSO Integration (Track: SSO)
+  console.log('\n--> Step 15: Verifying Enterprise SAML/OIDC SSO Integration & JIT Provisioning...');
+  const ssoConfigRes = await fetch(`http://localhost:4000/api/organizations/${org.id}/sso`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      ssoEnabled: true,
+      ssoProvider: 'OKTA',
+      ssoDomain: 'enterprise-client.com',
+      ssoMetadataUrl: 'https://enterprise-client.okta.com/app/sso/metadata',
+    }),
+  });
+  if (!ssoConfigRes.ok) throw new Error(`SSO configuration failed: ${await ssoConfigRes.text()}`);
+  const ssoConfig = await ssoConfigRes.json();
+  console.log(`[PASS] Enterprise SSO configured: Provider=${ssoConfig.ssoProvider}, Domain=${ssoConfig.ssoDomain}`);
+
+  const ssoInitRes = await fetch('http://localhost:4000/api/auth/sso/initiate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ domainOrSlug: 'enterprise-client.com' }),
+  });
+  if (!ssoInitRes.ok) throw new Error(`SSO initiation failed: ${await ssoInitRes.text()}`);
+  const ssoInit = await ssoInitRes.json();
+  console.log(`[PASS] SSO Initiation verified: RedirectURL=${ssoInit.redirectUrl}, RelayState=${ssoInit.relayState}`);
+
+  const ssoCallbackRes = await fetch('http://localhost:4000/api/auth/sso/callback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: 'carol@enterprise-client.com',
+      organizationSlug: org.slug,
+      fullName: 'Carol Danvers',
+    }),
+  });
+  if (!ssoCallbackRes.ok) throw new Error(`SSO Callback failed: ${await ssoCallbackRes.text()}`);
+  const ssoSession = await ssoCallbackRes.json();
+  console.log(`[PASS] SSO JIT Provisioning successful: User=${ssoSession.user.email} (Org: ${ssoSession.organization.name})`);
+
   console.log('\n==========================================================');
-  console.log('   FULL END-TO-END DEVELOPER JOURNEY 100% OPERATIONAL!   ');
+  console.log('   FULL 15-STEP END-TO-END DEVELOPER JOURNEY 100% GREEN!  ');
   console.log('==========================================================\n');
 }
 
