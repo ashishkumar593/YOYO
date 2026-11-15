@@ -20,6 +20,7 @@ import {
   Users,
   Swords,
   ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { cn } from '@/lib/utils';
@@ -50,6 +51,7 @@ export function Sidebar() {
         { label: 'Model Catalog', href: '/dashboard/models', icon: Cpu },
         { label: 'Playground', href: '/dashboard/playground', icon: Terminal },
         { label: 'Model Arena', href: '/dashboard/arena', icon: Swords, badge: 'New' },
+        { label: 'Fine-Tuning', href: '/dashboard/fine-tuning', icon: Sparkles },
         { label: 'Batch Inference', href: '/dashboard/batches', icon: Layers, badge: '50% Off' },
       ],
     },
@@ -65,7 +67,8 @@ export function Sidebar() {
       group: 'Enterprise & Setup',
       links: [
         { label: 'Team & Workspaces', href: '/dashboard/team', icon: Users },
-        { label: 'Security & Audit Log', href: '/dashboard/security', icon: ShieldCheck },
+        { label: 'Enterprise SSO', href: '/dashboard/settings?tab=sso', icon: ShieldCheck, badge: 'SAML' },
+        { label: 'Security & Audit Log', href: '/dashboard/security', icon: ShieldAlert },
         { label: 'Billing & Ledger', href: '/dashboard/billing', icon: CreditCard },
         { label: 'System Status', href: '/status', icon: Activity, live: true },
         { label: 'API Documentation', href: '/docs', icon: BookOpen },
