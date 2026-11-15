@@ -36,21 +36,23 @@ flowchart TD
   - `/status`: Real-time system health, 90-day uptime calendar, latency tables, and synthetic monitoring.
   - `/dashboard`: Cockpit overview with token meters and active key monitors.
   - `/dashboard/models`: Foundation model catalog and dynamic LoRA adapter registry with live pricing tags.
-  - `/dashboard/playground`: Full-featured SSE streaming playground with parameter tuning, tool calling, JSON schema mode, and prefix cache savings badge.
-  - `/dashboard/arena`: Model comparison arena for concurrent head-to-head benchmarking, live TTFT/TPS/Cost deltas, and human-in-the-loop voting.
+  - `/dashboard/playground`: Full-featured SSE streaming playground with parameter tuning, tool calling, JSON schema mode, vision upload, and prefix cache savings badge.
+  - `/dashboard/arena`: Model comparison arena for concurrent head-to-head benchmarking, multi-modal vision comparison, live TTFT/TPS/Cost deltas, and human-in-the-loop voting.
+  - `/dashboard/fine-tuning`: Visual LoRA training wizard, training dataset JSONL uploader, metrics ribbon, and real-time epoch event ledger.
   - `/dashboard/team`: Enterprise multi-tenancy, workspace switcher, project isolation, and RBAC (`OWNER`, `ADMIN`, `DEVELOPER`, `BILLING_VIEWER`).
-  - `/dashboard/security`: Immutable SOC2 / HIPAA-ready audit ledger with date filters, metadata inspector, and one-click CSV report export.
+  - `/dashboard/security`: Dual-view security center with immutable SOC2/HIPAA audit ledger and AI Safety Guardrails (PII redaction, prompt injection defense, live sandbox).
   - `/dashboard/batches`: 24-hour SLA asynchronous batch inference jobs with 50% pricing discount, JSONL uploads, and outputs inspector.
   - `/dashboard/keys`: Zero-knowledge SHA-256 API key manager with monthly spend budget caps, CIDR IP allowlists, and per-key model scoping.
   - `/dashboard/logs`: High-density live telemetry inspector with 5s auto-refresh polling, status/model filters, CSV/JSON export, and drawer replay.
-  - `/dashboard/analytics`: Historical usage velocity charts and per-model token breakdown.
+  - `/dashboard/analytics`: Historical usage velocity charts, per-model token breakdown, and prompt cache savings telemetry.
   - `/dashboard/billing`: Credit balance top-ups, Stripe checkout integration, prefix caching arbitrage savings calculator, and ledger.
   - `/dashboard/admin`: Cloud GPU worker node supervisor (RunPod, Lambda, AWS) and model worker dispatch.
-  - `/dashboard/settings`: Profile management, Bcrypt 12 password updates, active sessions, and HMAC Webhook endpoints.
-- **[`backend/`](./backend)**: High-throughput NestJS 11 + Fastify 5 API gateway, Prisma ORM, Redis sliding-window rate limiters, multi-worker dispatching, circuit breaker state machine (`CLOSED`/`OPEN`/`HALF_OPEN`), and native `/metrics` Prometheus exporter.
-- **[`sdk/python/`](./sdk/python)**: Official Python SDK (`yoyo-ai`) with standard OpenAI semantics, streaming generator, tool calling, JSON schema, and zero external dependencies.
-- **[`sdk/typescript/`](./sdk/typescript)**: Official TypeScript/JavaScript SDK (`@yoyo-ai/sdk`) with typed error hierarchy, dual ESM/CJS exports, and streaming iterators.
-- **[`docker/`](./docker)**: Production containerization configs, Traefik reverse proxy, and turnkey Prometheus + Grafana cockpit monitoring stack (`docker-compose --profile monitoring up`).
+  - `/dashboard/settings`: Profile management, Bcrypt 12 password updates, active sessions, HMAC Webhook endpoints, and Enterprise SSO (SAML 2.0 / OIDC).
+- **[`backend/`](./backend)**: High-throughput NestJS 11 + Fastify 5 API gateway, Prisma ORM, Redis sliding-window rate limiters, multi-worker dispatching, circuit breaker state machine (`CLOSED`/`OPEN`/`HALF_OPEN`), native `/metrics` Prometheus exporter, AI Safety Guardrails (`/v1/moderations`), Semantic Dynamic Router (`auto`), and Prompt Prefix Caching (90% discount).
+- **[`deploy/helm/yoyo/`](./deploy/helm/yoyo)**: Production Helm 3 chart with HorizontalPodAutoscaler (HPA), Ingress TLS cert-manager, ConfigMaps, and Prometheus ServiceMonitor.
+- **[`sdk/python/`](./sdk/python)**: Official Python SDK (`yoyo-ai`) with standard OpenAI semantics, streaming generator, tool calling, JSON schema, multi-modal vision, fine-tuning jobs, moderations, and zero external dependencies.
+- **[`sdk/typescript/`](./sdk/typescript)**: Official TypeScript/JavaScript SDK (`@yoyo-ai/sdk`) with typed error hierarchy, dual ESM/CJS exports, streaming iterators, fine-tuning, and moderations.
+- **[`docker/`](./docker)**: Production containerization configs, `docker-compose.prod.yml`, Traefik reverse proxy, and turnkey Prometheus + Grafana cockpit monitoring stack (`docker-compose --profile monitoring up`).
 
 ---
 
