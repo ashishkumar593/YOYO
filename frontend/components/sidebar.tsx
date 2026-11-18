@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -44,7 +44,51 @@ export function Sidebar() {
   const { user, logout } = useAuth();
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
 
-  const sections: SidebarSection[] = [
+  const adminRoutes = ['/dashboard/admin', '/dashboard/security', '/dashboard/team', '/dashboard/billing'];
+  const isCurrentOnAdminPath = adminRoutes.some((route) => pathname.startsWith(route));
+
+  // Strict isolation between Developer and Admin Dashboard modes
+  const [activeMode, setActiveMode] = useState<'developer' | 'admin'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('yoyo_dashboard_mode');
+      if (saved === 'admin' || saved === 'developer') return saved;
+    }
+    return isCurrentOnAdminPath && isAdmin ? 'admin' : 'developer';
+  });
+
+  useEffect(() => {
+    if (isCurrentOnAdminPath && isAdmin) {
+      setActiveMode('admin');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('yoyo_dashboard_mode', 'admin');
+      }
+    } else if (
+      pathname === '/dashboard' ||
+      pathname.startsWith('/dashboard/playground') ||
+      pathname.startsWith('/dashboard/models') ||
+      pathname.startsWith('/dashboard/arena') ||
+      pathname.startsWith('/dashboard/keys') ||
+      pathname.startsWith('/dashboard/logs') ||
+      pathname.startsWith('/dashboard/analytics') ||
+      pathname.startsWith('/dashboard/batches') ||
+      pathname.startsWith('/dashboard/fine-tuning')
+    ) {
+      setActiveMode('developer');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('yoyo_dashboard_mode', 'developer');
+      }
+    }
+  }, [pathname, isCurrentOnAdminPath, isAdmin]);
+
+  const handleSwitchMode = (mode: 'developer' | 'admin') => {
+    setActiveMode(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('yoyo_dashboard_mode', mode);
+    }
+  };
+
+  // DEVELOPER DASHBOARD: strictly developer capabilities
+  const developerSections: SidebarSection[] = [
     {
       group: 'Developer Dashboard',
       links: [
@@ -59,10 +103,19 @@ export function Sidebar() {
         { label: 'Fine-Tuning', href: '/dashboard/fine-tuning', icon: Sparkles },
       ],
     },
+    {
+      group: 'Developer Resources',
+      links: [
+        { label: 'API Documentation', href: '/docs', icon: BookOpen },
+        { label: 'System Status', href: '/status', icon: Activity, live: true },
+        { label: 'Account Settings', href: '/dashboard/settings', icon: Settings },
+      ],
+    },
   ];
 
-  if (isAdmin) {
-    sections.push({
+  // ADMIN DASHBOARD: strictly admin infrastructure and operations
+  const adminSections: SidebarSection[] = [
+    {
       group: 'Admin Dashboard',
       links: [
         { label: 'Cluster Supervisor', href: '/dashboard/admin', icon: ShieldAlert },
@@ -70,17 +123,18 @@ export function Sidebar() {
         { label: 'Team & Workspaces', href: '/dashboard/team', icon: Users },
         { label: 'Billing & Quotas', href: '/dashboard/billing', icon: CreditCard },
       ],
-    });
-  }
+    },
+    {
+      group: 'Platform Administration',
+      links: [
+        { label: 'Platform Settings', href: '/dashboard/settings', icon: Settings },
+        { label: 'System Status', href: '/status', icon: Activity, live: true },
+        { label: 'API Documentation', href: '/docs', icon: BookOpen },
+      ],
+    },
+  ];
 
-  sections.push({
-    group: 'Settings & Resources',
-    links: [
-      { label: 'Platform Settings', href: '/dashboard/settings', icon: Settings },
-      { label: 'API Documentation', href: '/docs', icon: BookOpen },
-      { label: 'System Status', href: '/status', icon: Activity, live: true },
-    ],
-  });
+  const sections = isAdmin && activeMode === 'admin' ? adminSections : developerSections;
 
   return (
     <aside className="w-64 border-r border-border/80 bg-[#0A0C14]/90 backdrop-blur-xl flex flex-col h-screen sticky top-0 select-none">
@@ -93,6 +147,46 @@ export function Sidebar() {
           v1.0.0
         </span>
       </div>
+
+      {/* Dashboard Mode Switcher (Visible to Admins) */}
+      {isAdmin && (
+        <div className="px-3 pt-3 pb-2 border-b border-border/40">
+          <div className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/60 font-mono px-1 mb-1.5 flex items-center justify-between">
+            <span>Dashboard Mode</span>
+            <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 font-bold border border-amber-500/20">
+              Admin Access
+            </span>
+          </div>
+          <div className="grid grid-cols-2 p-1 bg-muted/40 border border-border/70 rounded-xl text-xs font-semibold gap-1">
+            <Link
+              href="/dashboard"
+              onClick={() => handleSwitchMode('developer')}
+              className={cn(
+                'flex items-center justify-center py-1.5 px-2 rounded-lg transition-all text-xs',
+                activeMode === 'developer'
+                  ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/20 font-bold'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+              )}
+            >
+              <Terminal className="w-3.5 h-3.5 mr-1.5" />
+              <span>Developer</span>
+            </Link>
+            <Link
+              href="/dashboard/admin"
+              onClick={() => handleSwitchMode('admin')}
+              className={cn(
+                'flex items-center justify-center py-1.5 px-2 rounded-lg transition-all text-xs',
+                activeMode === 'admin'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-sm shadow-amber-500/20'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+              )}
+            >
+              <ShieldAlert className="w-3.5 h-3.5 mr-1.5" />
+              <span>Admin</span>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Grouped Nav links */}
       <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">

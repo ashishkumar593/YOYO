@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { cn } from '@/lib/utils';
 import {
   Terminal,
   BookOpen,
@@ -37,21 +38,46 @@ export function Navbar() {
   const { user } = useAuth();
   const pathname = usePathname();
   const currentTitle = ROUTE_TITLES[pathname] || 'Console';
+  const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+  const adminRoutes = ['/dashboard/admin', '/dashboard/security', '/dashboard/team', '/dashboard/billing'];
+  const isAdminPath = adminRoutes.some((route) => pathname.startsWith(route));
 
   return (
     <header className="h-16 border-b border-border/70 bg-background/85 backdrop-blur-xl px-6 flex items-center justify-between sticky top-0 z-40">
       {/* Left: Dynamic Developer Breadcrumbs & Cluster Pill */}
       <div className="flex items-center space-x-3 text-xs">
         <div className="flex items-center space-x-1.5 text-muted-foreground font-mono">
-          <Link href="/dashboard" className="hover:text-foreground transition-colors font-medium">
-            console
+          <Link
+            href={isAdminPath ? '/dashboard/admin' : '/dashboard'}
+            className="hover:text-foreground transition-colors font-medium flex items-center gap-1"
+          >
+            {isAdminPath ? (
+              <span className="text-amber-400 font-bold">Admin</span>
+            ) : (
+              <span className="text-primary font-bold">Developer</span>
+            )}
           </Link>
           <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/60" />
           <span className="font-semibold text-foreground font-sans">{currentTitle}</span>
         </div>
 
+        {/* Dashboard Mode Quick Switcher Pill for Admins */}
+        {isAdmin && (
+          <Link
+            href={isAdminPath ? '/dashboard' : '/dashboard/admin'}
+            className={cn(
+              'hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold transition-all border',
+              isAdminPath
+                ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20'
+                : 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
+            )}
+          >
+            <span>Go to {isAdminPath ? 'Developer Dashboard' : 'Admin Dashboard'} &rarr;</span>
+          </Link>
+        )}
+
         {/* Region & Hardware Badge */}
-        <div className="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-muted/40 border border-border/80 text-[11px] font-mono text-muted-foreground">
+        <div className="hidden xl:flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-muted/40 border border-border/80 text-[11px] font-mono text-muted-foreground">
           <Cpu className="w-3 h-3 text-cyan-400" />
           <span>H100 SXM5</span>
           <span className="text-border">•</span>
