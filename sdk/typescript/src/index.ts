@@ -85,6 +85,76 @@ export interface GenerateSuiteParams {
   generatorModel?: string;
 }
 
+export interface QualityGateParams {
+  candidateModel: string;
+  baselineModel: string;
+  benchmarkSuiteId: string;
+  minWinRate?: number;
+  minOverallScore?: number;
+  minAccuracyScore?: number;
+  maxLatencyMs?: number;
+  failOnThreshold?: boolean;
+}
+
+export interface QualityGateViolation {
+  metric: string;
+  actual: number;
+  threshold: number;
+  message: string;
+}
+
+export interface QualityGateResult {
+  passed: boolean;
+  deploymentApproved: boolean;
+  candidateModel: string;
+  baselineModel: string;
+  metrics: {
+    candidateModel: string;
+    baselineModel: string;
+    candidateWinRate: number;
+    candidateOverallScore: number;
+    candidateAccuracyScore: number;
+    candidateLatencyMs: number;
+    baselineOverallScore: number;
+    baselineLatencyMs: number;
+  };
+  thresholds: {
+    minWinRate: number;
+    minOverallScore: number;
+    minAccuracyScore: number;
+    maxLatencyMs: number;
+  };
+  violations: QualityGateViolation[];
+  runId: string;
+}
+
+export interface ModelDriftReport {
+  model: string;
+  driftDetected: boolean;
+  baselineScore: number;
+  currentScore: number;
+  scoreDelta: number;
+  scoreDeltaPct: number;
+  baselineLatencyMs: number;
+  currentLatencyMs: number;
+  latencyDeltaMs: number;
+  status: 'STABLE' | 'DEGRADED' | 'ACCELERATED' | 'INSUFFICIENT_DATA';
+  recommendation: string;
+}
+
+export interface AuditReportExport {
+  runId: string;
+  suiteId: string;
+  suiteName: string;
+  modelA: string;
+  modelB: string;
+  judgeModel: string;
+  winner: string;
+  exportFormat: 'json' | 'csv' | 'markdown';
+  content: string;
+  complianceHash: string;
+}
+
 export type ResponseFormat =
   | { type: 'text' }
   | { type: 'json_object' }
@@ -560,6 +630,32 @@ export class Yoyo {
         body: JSON.stringify(params),
       });
       if (!res.ok) throw new Error(`YOYO Evaluations API Error [${res.status}]: ${await res.text()}`);
+      return res.json() as any;
+    },
+    assertQualityGate: async (params: QualityGateParams): Promise<QualityGateResult> => {
+      const res = await fetch(`${this.baseUrl}/evaluations/assert`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(params),
+      });
+      if (!res.ok) throw new Error(`YOYO Evaluations Quality Gate API Error [${res.status}]: ${await res.text()}`);
+      return res.json() as any;
+    },
+    detectDrift: async (modelId: string): Promise<ModelDriftReport> => {
+      const res = await fetch(`${this.baseUrl}/evaluations/drift/${encodeURIComponent(modelId)}`, {
+        headers: { Authorization: `Bearer ${this.apiKey}` },
+      });
+      if (!res.ok) throw new Error(`YOYO Evaluations Drift API Error [${res.status}]: ${await res.text()}`);
+      return res.json() as any;
+    },
+    exportAuditReport: async (runId: string, format: 'json' | 'csv' | 'markdown' = 'markdown'): Promise<AuditReportExport> => {
+      const res = await fetch(`${this.baseUrl}/evaluations/history/${encodeURIComponent(runId)}/export?format=${format}`, {
+        headers: { Authorization: `Bearer ${this.apiKey}` },
+      });
+      if (!res.ok) throw new Error(`YOYO Evaluations Export API Error [${res.status}]: ${await res.text()}`);
       return res.json() as any;
     },
   };

@@ -107,3 +107,79 @@ export interface GenerateSuiteDto {
   testCount?: number;
   generatorModel?: string;
 }
+
+export interface QualityGateDto {
+  candidateModel: string;
+  baselineModel: string;
+  benchmarkSuiteId: string;
+  judgeModel?: string;
+  minWinRate?: number; // default 50%
+  minOverallScore?: number; // default 7.5 / 10
+  minAccuracyScore?: number; // default 7.0 / 10
+  maxLatencyMs?: number; // default 2000ms
+  failOnThreshold?: boolean; // if true, throws 422 Unprocessable Entity
+}
+
+export interface QualityGateViolation {
+  criterion: string;
+  expected: string;
+  actual: string;
+}
+
+export interface QualityGateResult {
+  passed: boolean;
+  deploymentApproved: boolean;
+  candidateModel: string;
+  baselineModel: string;
+  suiteId: string;
+  suiteName: string;
+  evaluatedAt: string;
+  metrics: {
+    winRate: number;
+    baselineWinRate: number;
+    overallScore: number;
+    baselineOverallScore: number;
+    accuracyScore: number;
+    baselineAccuracyScore: number;
+    avgLatencyMs: number;
+    baselineLatencyMs: number;
+  };
+  thresholds: {
+    minWinRate: number;
+    minOverallScore: number;
+    minAccuracyScore: number;
+    maxLatencyMs: number;
+  };
+  violations: QualityGateViolation[];
+  runId: string;
+}
+
+export interface ModelDriftReport {
+  model: string;
+  driftDetected: boolean;
+  historicalRunsCount: number;
+  baselineScore: number;
+  currentScore: number;
+  scoreDelta: number;
+  scoreDeltaPct: number;
+  baselineLatencyMs: number;
+  currentLatencyMs: number;
+  latencyDeltaMs: number;
+  status: 'STABLE' | 'DEGRADED' | 'IMPROVED' | 'INSUFFICIENT_DATA';
+  recommendation: string;
+  evaluatedAt: string;
+}
+
+export interface AuditReportExport {
+  runId: string;
+  suiteId: string;
+  suiteName: string;
+  modelA: string;
+  modelB: string;
+  judgeModel: string;
+  winner: string;
+  evaluatedAt: string;
+  exportFormat: 'json' | 'csv' | 'markdown';
+  content: string;
+  complianceHash: string; // SHA-256 tamper-evident integrity hash
+}

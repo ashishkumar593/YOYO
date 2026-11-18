@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { createHash } from 'crypto';
 import { InferenceService } from '../inference/inference.service';
 import {
   BenchmarkSuite,
@@ -10,6 +11,11 @@ import {
   EvaluationSummary,
   LeaderboardEntry,
   GenerateSuiteDto,
+  QualityGateDto,
+  QualityGateResult,
+  QualityGateViolation,
+  ModelDriftReport,
+  AuditReportExport,
 } from './evaluations.types';
 
 @Injectable()
@@ -350,6 +356,298 @@ Respond ONLY with valid JSON array of objects conforming to:
     this.BENCHMARK_SUITES.unshift(newSuite);
 
     return newSuite;
+  }
+
+  async assertQualityGate(dto: QualityGateDto, userContext?: any): Promise<QualityGateResult> {
+    const minWinRate = dto.minWinRate !== undefined ? dto.minWinRate : 50;
+    const minOverallScore = dto.minOverallScore !== undefined ? dto.minOverallScore : 7.5;
+    const minAccuracyScore = dto.minAccuracyScore !== undefined ? dto.minAccuracyScore : 7.0;
+    const maxLatencyMs = dto.maxLatencyMs !== undefined ? dto.maxLatencyMs : 2500;
+
+    const evalResult = await this.runEvaluation(
+      {
+        modelA: dto.candidateModel,
+        modelB: dto.baselineModel,
+        judgeModel: dto.judgeModel,
+        benchmarkSuiteId: dto.benchmarkSuiteId,
+      },
+      userContext
+    );
+
+    const violations: QualityGateViolation[] = [];
+
+    // Check candidate metrics (Model A)
+    if (evalResult.summary.winRateA < minWinRate) {
+      violations.push({
+        criterion: 'Min Win Rate',
+        expected: `>= ${minWinRate}%`,
+        actual: `${evalResult.summary.winRateA}%`,
+      });
+    }
+
+    if (evalResult.summary.avgOverallScoreA < minOverallScore) {
+      violations.push({
+        criterion: 'Min Overall Score',
+        expected: `>= ${minOverallScore} / 10`,
+        actual: `${evalResult.summary.avgOverallScoreA} / 10`,
+      });
+    }
+
+    if (evalResult.summary.categoryScoresA.accuracy < minAccuracyScore) {
+      violations.push({
+        criterion: 'Min Accuracy Score',
+        expected: `>= ${minAccuracyScore} / 10`,
+        actual: `${evalResult.summary.categoryScoresA.accuracy} / 10`,
+      });
+    }
+
+    if (evalResult.summary.avgLatencyMsA > maxLatencyMs) {
+      violations.push({
+        criterion: 'Max Latency',
+        expected: `<= ${maxLatencyMs} ms`,
+        actual: `${evalResult.summary.avgLatencyMsA} ms`,
+      });
+    }
+
+    const passed = violations.length === 0;
+
+    if (!passed && dto.failOnThreshold) {
+      throw new UnprocessableEntityException({
+        statusCode: 422,
+        message: `Quality Gate Assertion Failed: ${violations.length} criterion violation(s) detected for candidate '${dto.candidateModel}'.`,
+        violations,
+        metrics: {
+          winRate: evalResult.summary.winRateA,
+          baselineWinRate: evalResult.summary.winRateB,
+          overallScore: evalResult.summary.avgOverallScoreA,
+          baselineOverallScore: evalResult.summary.avgOverallScoreB,
+          accuracyScore: evalResult.summary.categoryScoresA.accuracy,
+          baselineAccuracyScore: evalResult.summary.categoryScoresB.accuracy,
+          avgLatencyMs: evalResult.summary.avgLatencyMsA,
+          baselineLatencyMs: evalResult.summary.avgLatencyMsB,
+        },
+      });
+    }
+
+    return {
+      passed,
+      deploymentApproved: passed,
+      candidateModel: dto.candidateModel,
+      baselineModel: dto.baselineModel,
+      suiteId: dto.benchmarkSuiteId,
+      suiteName: evalResult.suiteName,
+      evaluatedAt: evalResult.createdAt,
+      metrics: {
+        winRate: evalResult.summary.winRateA,
+        baselineWinRate: evalResult.summary.winRateB,
+        overallScore: evalResult.summary.avgOverallScoreA,
+        baselineOverallScore: evalResult.summary.avgOverallScoreB,
+        accuracyScore: evalResult.summary.categoryScoresA.accuracy,
+        baselineAccuracyScore: evalResult.summary.categoryScoresB.accuracy,
+        avgLatencyMs: evalResult.summary.avgLatencyMsA,
+        baselineLatencyMs: evalResult.summary.avgLatencyMsB,
+      },
+      thresholds: {
+        minWinRate,
+        minOverallScore,
+        minAccuracyScore,
+        maxLatencyMs,
+      },
+      violations,
+      runId: evalResult.id,
+    };
+  }
+
+  detectModelDrift(modelId: string): ModelDriftReport {
+    const relevantRuns = this.runHistory
+      .filter((r) => r.modelA === modelId || r.modelB === modelId)
+      .slice()
+      .reverse();
+
+    if (relevantRuns.length < 2) {
+      const singleScore =
+        relevantRuns.length === 1
+          ? relevantRuns[0].modelA === modelId
+            ? relevantRuns[0].summary.avgOverallScoreA
+            : relevantRuns[0].summary.avgOverallScoreB
+          : 9.0;
+
+      return {
+        model: modelId,
+        driftDetected: false,
+        historicalRunsCount: relevantRuns.length,
+        baselineScore: singleScore,
+        currentScore: singleScore,
+        scoreDelta: 0,
+        scoreDeltaPct: 0,
+        baselineLatencyMs: 350,
+        currentLatencyMs: 350,
+        latencyDeltaMs: 0,
+        status: 'INSUFFICIENT_DATA',
+        recommendation: `Insufficient historical baseline. At least 2 evaluation runs required to compute drift for '${modelId}'.`,
+        evaluatedAt: new Date().toISOString(),
+      };
+    }
+
+    const scores: number[] = [];
+    const latencies: number[] = [];
+
+    for (const run of relevantRuns) {
+      if (run.modelA === modelId) {
+        scores.push(run.summary.avgOverallScoreA);
+        latencies.push(run.summary.avgLatencyMsA);
+      } else {
+        scores.push(run.summary.avgOverallScoreB);
+        latencies.push(run.summary.avgLatencyMsB);
+      }
+    }
+
+    const baselineScore = parseFloat(
+      (scores.slice(0, Math.max(1, scores.length - 1)).reduce((a, b) => a + b, 0) / Math.max(1, scores.length - 1)).toFixed(2)
+    );
+    const currentScore = scores[scores.length - 1];
+    const scoreDelta = parseFloat((currentScore - baselineScore).toFixed(2));
+    const scoreDeltaPct = parseFloat(((scoreDelta / (baselineScore || 1)) * 100).toFixed(1));
+
+    const baselineLatencyMs = Math.round(
+      latencies.slice(0, Math.max(1, latencies.length - 1)).reduce((a, b) => a + b, 0) / Math.max(1, latencies.length - 1)
+    );
+    const currentLatencyMs = latencies[latencies.length - 1];
+    const latencyDeltaMs = currentLatencyMs - baselineLatencyMs;
+
+    let status: 'STABLE' | 'DEGRADED' | 'IMPROVED' = 'STABLE';
+    let driftDetected = false;
+    let recommendation = `Model performance is stable within normal variance parameters (Delta: ${scoreDelta > 0 ? '+' : ''}${scoreDelta}).`;
+
+    if (scoreDelta < -0.5 || scoreDeltaPct < -5) {
+      status = 'DEGRADED';
+      driftDetected = true;
+      recommendation = `Drift warning: ${Math.abs(scoreDeltaPct)}% drop in composite quality score observed. Recommend inspecting alignment and fine-tuning checkpoints.`;
+    } else if (scoreDelta > 0.5 || scoreDeltaPct > 5) {
+      status = 'IMPROVED';
+      driftDetected = false;
+      recommendation = `Performance gains detected: +${scoreDeltaPct}% improvement over historical baseline. Safe for accelerated rollout.`;
+    }
+
+    return {
+      model: modelId,
+      driftDetected,
+      historicalRunsCount: relevantRuns.length,
+      baselineScore,
+      currentScore,
+      scoreDelta,
+      scoreDeltaPct,
+      baselineLatencyMs,
+      currentLatencyMs,
+      latencyDeltaMs,
+      status,
+      recommendation,
+      evaluatedAt: new Date().toISOString(),
+    };
+  }
+
+  exportAuditReport(runId: string, format: 'json' | 'csv' | 'markdown' = 'markdown'): AuditReportExport {
+    const run = this.getHistoryById(runId);
+    let content = '';
+
+    const winner =
+      run.summary.winsA > run.summary.winsB
+        ? run.modelA
+        : run.summary.winsB > run.summary.winsA
+        ? run.modelB
+        : 'TIE';
+
+    if (format === 'json') {
+      content = JSON.stringify(
+        {
+          auditReport: 'YOYO LLM-as-a-Judge Compliance Certificate',
+          runId: run.id,
+          evaluatedAt: run.createdAt,
+          suite: { id: run.suiteId, name: run.suiteName },
+          models: { candidateA: run.modelA, candidateB: run.modelB, referee: run.judgeModel },
+          verdict: { winner, summary: run.summary },
+          sampleAuditLedger: run.sampleResults,
+        },
+        null,
+        2
+      );
+    } else if (format === 'csv') {
+      const header = 'SampleID,SampleTitle,ModelA,LatencyA,TokensA,ScoreA,ModelB,LatencyB,TokensB,ScoreB,Winner,RefereeReasoning\n';
+      const rows = run.sampleResults
+        .map((s) => {
+          const sanitize = (str: string) => `"${(str || '').replace(/"/g, '""')}"`;
+          return [
+            s.sampleId,
+            sanitize(s.sampleTitle),
+            run.modelA,
+            s.responseA.latencyMs,
+            s.responseA.tokens,
+            s.judge.scoreA.overall,
+            run.modelB,
+            s.responseB.latencyMs,
+            s.responseB.tokens,
+            s.judge.scoreB.overall,
+            s.judge.winner,
+            sanitize(s.judge.reasoning),
+          ].join(',');
+        })
+        .join('\n');
+      content = header + rows;
+    } else {
+      content = `# YOYO LLM-as-a-Judge Formal Audit Certificate
+**Run Identifier:** \`${run.id}\`  
+**Evaluation Suite:** ${run.suiteName} (\`${run.suiteId}\`)  
+**Evaluated At:** ${run.createdAt}  
+**Referee Model:** \`${run.judgeModel}\`  
+
+---
+
+## Executive Summary
+- **Candidate Model A:** \`${run.modelA}\` — **${run.summary.winRateA}% Win Rate** (${run.summary.winsA}W - ${run.summary.winsB}L - ${run.summary.ties}T)
+- **Candidate Model B:** \`${run.modelB}\` — **${run.summary.winRateB}% Win Rate**
+- **Adjudicated Champion:** **\`${winner}\`**
+- **Composite Quality Score:** \`${run.modelA}\`: **${run.summary.avgOverallScoreA}/10** vs \`${run.modelB}\`: **${run.summary.avgOverallScoreB}/10**
+- **Average Latency:** \`${run.modelA}\`: ${run.summary.avgLatencyMsA}ms vs \`${run.modelB}\`: ${run.summary.avgLatencyMsB}ms
+
+## Criterion Scores Breakdown
+| Criterion | ${run.modelA} | ${run.modelB} | Delta |
+| :--- | :--- | :--- | :--- |
+| **Accuracy & Correctness** | ${run.summary.categoryScoresA.accuracy}/10 | ${run.summary.categoryScoresB.accuracy}/10 | ${(run.summary.categoryScoresA.accuracy - run.summary.categoryScoresB.accuracy).toFixed(1)} |
+| **Reasoning Depth** | ${run.summary.categoryScoresA.reasoning}/10 | ${run.summary.categoryScoresB.reasoning}/10 | ${(run.summary.categoryScoresA.reasoning - run.summary.categoryScoresB.reasoning).toFixed(1)} |
+| **Instruction Adherence** | ${run.summary.categoryScoresA.adherence}/10 | ${run.summary.categoryScoresB.adherence}/10 | ${(run.summary.categoryScoresA.adherence - run.summary.categoryScoresB.adherence).toFixed(1)} |
+
+## Sample Evaluation Details
+${run.sampleResults
+  .map(
+    (s, idx) => `### ${idx + 1}. ${s.sampleTitle} (\`${s.sampleId}\`)
+- **Prompt:** ${s.prompt}
+- **Verdict:** Winner is **\`${s.judge.winner}\`**
+- **Scores:** Model A: **${s.judge.scoreA.overall}/10** | Model B: **${s.judge.scoreB.overall}/10**
+- **Referee Rationale:** *"${s.judge.reasoning}"*
+`
+  )
+  .join('\n')}
+
+---
+*Certified by YOYO Cloud AI Platform Automated Governance Engine.*
+`;
+    }
+
+    const complianceHash = createHash('sha256').update(content).digest('hex');
+
+    return {
+      runId: run.id,
+      suiteId: run.suiteId,
+      suiteName: run.suiteName,
+      modelA: run.modelA,
+      modelB: run.modelB,
+      judgeModel: run.judgeModel,
+      winner,
+      evaluatedAt: run.createdAt,
+      exportFormat: format,
+      content,
+      complianceHash,
+    };
   }
 
   async runEvaluation(dto: RunEvaluationDto, userContext?: any): Promise<EvaluationRunResult> {

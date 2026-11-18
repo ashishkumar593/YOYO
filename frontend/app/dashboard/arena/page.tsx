@@ -34,6 +34,11 @@ import {
   History,
   Plus,
   ExternalLink,
+  ShieldAlert,
+  FileCode,
+  AlertTriangle,
+  TrendingDown,
+  Download,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/toast';
 
@@ -167,7 +172,9 @@ const DEFAULT_LEADERBOARD: LeaderboardEntry[] = [
 export default function ArenaPage() {
   const { toast } = useToast();
 
-  const [arenaMode, setArenaMode] = useState<'interactive' | 'automated_evals' | 'leaderboard_history'>('interactive');
+  const [arenaMode, setArenaMode] = useState<
+    'interactive' | 'automated_evals' | 'leaderboard_history' | 'quality_gates'
+  >('interactive');
   const [suitesList, setSuitesList] = useState<any[]>(DEFAULT_SUITES);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(DEFAULT_LEADERBOARD);
   const [evalHistory, setEvalHistory] = useState<any[]>([]);
@@ -182,6 +189,26 @@ export default function ArenaPage() {
   const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
   const [evalResult, setEvalResult] = useState<any | null>(null);
   const [expandedSampleId, setExpandedSampleId] = useState<string | null>(null);
+
+  // CI/CD Quality Gates & Regression State
+  const [gateCandidate, setGateCandidate] = useState<string>('llama-3.3-70b');
+  const [gateBaseline, setGateBaseline] = useState<string>('qwen-2.5-coder-32b');
+  const [gateSuiteId, setGateSuiteId] = useState<string>('coding_bench');
+  const [gateMinWinRate, setGateMinWinRate] = useState<number>(50);
+  const [gateMinScore, setGateMinScore] = useState<number>(7.0);
+  const [gateMinAccuracy, setGateMinAccuracy] = useState<number>(7.0);
+  const [gateMaxLatency, setGateMaxLatency] = useState<number>(3000);
+  const [isAssertingGate, setIsAssertingGate] = useState<boolean>(false);
+  const [gateResult, setGateResult] = useState<any | null>(null);
+
+  // Model Drift Radar State
+  const [driftModelId, setDriftModelId] = useState<string>('llama-3.3-70b');
+  const [isCheckingDrift, setIsCheckingDrift] = useState<boolean>(false);
+  const [driftReport, setDriftReport] = useState<any | null>(null);
+
+  // CI/CD Snippet Tabs & Audit Export State
+  const [activeSnippetTab, setActiveSnippetTab] = useState<'github_actions' | 'curl' | 'python' | 'typescript'>('github_actions');
+  const [isExportingAudit, setIsExportingAudit] = useState<boolean>(false);
 
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>(DEFAULT_MODELS);
   const [modelA, setModelA] = useState<string>('llama-3.3-70b');
@@ -424,6 +451,110 @@ export default function ArenaPage() {
       toast(err.message || 'Failed to synthesize test suite.', 'error');
     } finally {
       setIsGeneratingSuite(false);
+    }
+  };
+
+  const handleAssertQualityGate = async () => {
+    if (isAssertingGate) return;
+    setIsAssertingGate(true);
+    setGateResult(null);
+    try {
+      const token = localStorage.getItem('yoyo_access_token');
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.yoyo.ai';
+      const res = await fetch(`${apiBase}/v1/evaluations/assert`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          candidateModel: gateCandidate,
+          baselineModel: gateBaseline,
+          benchmarkSuiteId: gateSuiteId,
+          minWinRate: gateMinWinRate,
+          minOverallScore: gateMinScore,
+          minAccuracyScore: gateMinAccuracy,
+          maxLatencyMs: gateMaxLatency,
+          failOnThreshold: false,
+        }),
+      });
+
+      if (!res.ok) {
+        let errText = await res.text();
+        try {
+          const parsed = JSON.parse(errText);
+          errText = parsed.error?.message || parsed.message || errText;
+        } catch {}
+        throw new Error(errText || `Quality gate assertion failed: HTTP ${res.status}`);
+      }
+
+      const result = await res.json();
+      setGateResult(result);
+      if (result.passed) {
+        toast('Quality Gate PASSED! Candidate model approved for production deployment.', 'success');
+      } else {
+        toast(`Quality Gate FAILED with ${result.violations?.length || 0} threshold violations. Deployment blocked.`, 'error');
+      }
+    } catch (err: any) {
+      toast(err.message || 'Failed to assert quality gate.', 'error');
+    } finally {
+      setIsAssertingGate(false);
+    }
+  };
+
+  const handleCheckDrift = async (targetModel?: string) => {
+    const model = targetModel || driftModelId;
+    setIsCheckingDrift(true);
+    try {
+      const token = localStorage.getItem('yoyo_access_token');
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.yoyo.ai';
+      const res = await fetch(`${apiBase}/v1/evaluations/drift/${encodeURIComponent(model)}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+
+      if (!res.ok) {
+        let errText = await res.text();
+        try {
+          const parsed = JSON.parse(errText);
+          errText = parsed.error?.message || parsed.message || errText;
+        } catch {}
+        throw new Error(errText || `Failed to check drift: HTTP ${res.status}`);
+      }
+
+      const report = await res.json();
+      setDriftReport(report);
+      toast(`Model drift analysis completed for ${model}`, 'success');
+    } catch (err: any) {
+      toast(err.message || 'Failed to detect model drift.', 'error');
+    } finally {
+      setIsCheckingDrift(false);
+    }
+  };
+
+  const handleExportAudit = async (runId: string, format: 'markdown' | 'json' | 'csv' = 'markdown') => {
+    setIsExportingAudit(true);
+    try {
+      const token = localStorage.getItem('yoyo_access_token');
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || 'https://api.yoyo.ai';
+      const res = await fetch(`${apiBase}/v1/evaluations/history/${encodeURIComponent(runId)}/export?format=${format}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+
+      if (!res.ok) {
+        throw new Error(`Export failed: HTTP ${res.status}`);
+      }
+
+      const exportData = await res.json();
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(exportData.content);
+        toast(`Exported ${format.toUpperCase()} report & compliance hash copied to clipboard!`, 'success');
+      } else {
+        toast(`Exported ${format.toUpperCase()} report generated (Hash: ${exportData.complianceHash.substring(0, 10)}...)`, 'info');
+      }
+    } catch (err: any) {
+      toast(err.message || 'Failed to export audit report.', 'error');
+    } finally {
+      setIsExportingAudit(false);
     }
   };
 
@@ -728,6 +859,21 @@ export default function ArenaPage() {
           Global Leaderboard & Synthetic Suites
           <span className="px-1.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
             Elo
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setArenaMode('quality_gates')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+            arenaMode === 'quality_gates'
+              ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/40 shadow-sm'
+              : 'text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <ShieldAlert className="w-4 h-4" />
+          CI/CD Quality Gates & Regressions
+          <span className="px-1.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            CI/CD
           </span>
         </button>
       </div>
@@ -1723,6 +1869,659 @@ export default function ArenaPage() {
             </div>
           )}
         </div>
+      ) : arenaMode === 'quality_gates' ? (
+        /* CI/CD QUALITY GATES & REGRESSION ENGINE VIEW */
+        <div className="flex flex-col gap-6">
+          {/* Header Card */}
+          <div className="p-6 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl shadow-xl">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <ShieldAlert className="w-5 h-5 text-amber-400" />
+                  <h2 className="text-xl font-bold text-white tracking-tight">
+                    Pre-Deployment CI/CD Quality Gatekeeper & Regression Detector
+                  </h2>
+                </div>
+                <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
+                  Assert automated LLM-as-a-Judge thresholds against production baselines before deployment. Enforce hard-stop assertions on win rates, reasoning accuracy, and latency budgets in GitHub Actions, GitLab CI, or custom webhooks.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const el = document.getElementById('cicd-snippets-section');
+                    el?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                >
+                  <FileCode className="w-3.5 h-3.5 text-amber-400" />
+                  View CI/CD Snippets
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Configuration & Threshold Sliders */}
+          <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-amber-400" />
+                  Quality Gate Configuration & Threshold Constraints
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Specify candidate and baseline models, target benchmark suite, and pass/fail thresholds.
+                </p>
+              </div>
+            </div>
+
+            {/* Model & Suite Selectors */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-emerald-400 mb-1.5">
+                  Candidate Model (PR / Release Candidate)
+                </label>
+                <select
+                  value={gateCandidate}
+                  onChange={(e) => setGateCandidate(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                >
+                  {availableModels.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} {m.isAdapter ? '(Adapter)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-blue-400 mb-1.5">
+                  Baseline Model (Current Production Reference)
+                </label>
+                <select
+                  value={gateBaseline}
+                  onChange={(e) => setGateBaseline(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                >
+                  {availableModels.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name} {m.isAdapter ? '(Adapter)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-amber-400 mb-1.5">
+                  Benchmark Evaluation Suite
+                </label>
+                <select
+                  value={gateSuiteId}
+                  onChange={(e) => setGateSuiteId(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                >
+                  {suitesList.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.sampleCount || s.samples?.length || 3} tests)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Threshold Sliders Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+              {/* Min Win Rate */}
+              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-medium">Min Win Rate</span>
+                  <span className="text-amber-400 font-bold font-mono">{gateMinWinRate}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={gateMinWinRate}
+                  onChange={(e) => setGateMinWinRate(parseInt(e.target.value, 10))}
+                  className="w-full accent-amber-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                />
+                <span className="text-[10px] text-slate-500 block">
+                  Candidate must achieve at least {gateMinWinRate}% wins vs baseline
+                </span>
+              </div>
+
+              {/* Min Overall Score */}
+              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-medium">Min Overall Score</span>
+                  <span className="text-emerald-400 font-bold font-mono">{gateMinScore.toFixed(1)} / 10</span>
+                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={10}
+                  step={0.5}
+                  value={gateMinScore}
+                  onChange={(e) => setGateMinScore(parseFloat(e.target.value))}
+                  className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                />
+                <span className="text-[10px] text-slate-500 block">
+                  Absolute judge quality threshold (adherence, reasoning, tone)
+                </span>
+              </div>
+
+              {/* Min Accuracy Score */}
+              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-blue-400 font-medium">Min Accuracy Score</span>
+                  <span className="text-blue-400 font-bold font-mono">{gateMinAccuracy.toFixed(1)} / 10</span>
+                </div>
+                <input
+                  type="range"
+                  min={1}
+                  max={10}
+                  step={0.5}
+                  value={gateMinAccuracy}
+                  onChange={(e) => setGateMinAccuracy(parseFloat(e.target.value))}
+                  className="w-full accent-blue-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                />
+                <span className="text-[10px] text-slate-500 block">
+                  Rigorous correctness threshold on domain answers
+                </span>
+              </div>
+
+              {/* Max Latency */}
+              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-orange-400 font-medium">Max Avg Latency</span>
+                  <span className="text-orange-400 font-bold font-mono">{gateMaxLatency} ms</span>
+                </div>
+                <input
+                  type="range"
+                  min={200}
+                  max={8000}
+                  step={100}
+                  value={gateMaxLatency}
+                  onChange={(e) => setGateMaxLatency(parseInt(e.target.value, 10))}
+                  className="w-full accent-orange-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                />
+                <span className="text-[10px] text-slate-500 block">
+                  Latency budget ceiling before failing for slow responses
+                </span>
+              </div>
+            </div>
+
+            {/* Action Bar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+              <span className="text-xs text-slate-400">
+                In CI/CD environments, violations return HTTP 422 to automatically fail pull request checks.
+              </span>
+              <button
+                type="button"
+                onClick={handleAssertQualityGate}
+                disabled={isAssertingGate}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20 text-xs transition-all disabled:opacity-40"
+              >
+                {isAssertingGate ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Adjudicating Quality Gate Assertion...
+                  </>
+                ) : (
+                  <>
+                    <ShieldAlert className="w-4 h-4" />
+                    Assert CI/CD Quality Gate
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Live Gate Verdict Card */}
+          {gateResult && (
+            <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl space-y-5">
+              {/* Verdict Banner */}
+              <div
+                className={`p-4 rounded-xl border flex items-start justify-between gap-4 ${
+                  gateResult.passed
+                    ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-200'
+                    : 'bg-red-950/40 border-red-500/40 text-red-200'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  {gateResult.passed ? (
+                    <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertTriangle className="w-6 h-6 text-red-400 shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <h4 className="text-base font-bold tracking-tight">
+                      {gateResult.passed
+                        ? 'DEPLOYMENT APPROVED — QUALITY GATE PASSED'
+                        : 'DEPLOYMENT BLOCKED — QUALITY GATE VIOLATIONS'}
+                    </h4>
+                    <p className="text-xs mt-1 text-slate-300">
+                      {gateResult.passed
+                        ? `Candidate "${gateResult.metrics.candidateModel}" met or exceeded all required performance and regression thresholds against baseline "${gateResult.metrics.baselineModel}".`
+                        : `Candidate "${gateResult.metrics.candidateModel}" failed ${gateResult.violations?.length || 1} quality/regression constraints against baseline "${gateResult.metrics.baselineModel}". CI/CD release halted.`}
+                    </p>
+                  </div>
+                </div>
+                <div className="shrink-0 text-right">
+                  <span
+                    className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                      gateResult.passed
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        : 'bg-red-500/20 text-red-300 border border-red-500/30'
+                    }`}
+                  >
+                    {gateResult.passed ? 'PASSED' : 'FAILED'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Violations List (if any) */}
+              {gateResult.violations && gateResult.violations.length > 0 && (
+                <div className="p-4 bg-red-950/20 border border-red-500/30 rounded-xl space-y-2">
+                  <span className="text-xs font-bold text-red-400 uppercase tracking-wider block">
+                    Critical Quality Gate Violations ({gateResult.violations.length})
+                  </span>
+                  <div className="space-y-2">
+                    {gateResult.violations.map((v: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="p-2.5 bg-slate-950/80 rounded-lg border border-red-500/20 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2"
+                      >
+                        <div>
+                          <span className="font-semibold text-slate-200 capitalize">
+                            {v.metric.replace('_', ' ')}
+                          </span>
+                          <span className="text-slate-400 ml-2">{v.message}</span>
+                        </div>
+                        <div className="font-mono text-[11px] text-red-300 shrink-0">
+                          Actual: <strong>{v.actual}</strong> | Threshold: <strong>{v.threshold}</strong>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Metric Comparison KPI Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Win Rate */}
+                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
+                  <span className="text-xs text-slate-400 font-medium block mb-1">Win Rate vs Baseline</span>
+                  <div className="text-xl font-bold font-mono text-white">
+                    {gateResult.metrics.candidateWinRate}%
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500">Threshold: &gt;={gateResult.thresholds.minWinRate}%</span>
+                    <span
+                      className={`font-semibold ${
+                        gateResult.metrics.candidateWinRate >= gateResult.thresholds.minWinRate
+                          ? 'text-emerald-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {gateResult.metrics.candidateWinRate >= gateResult.thresholds.minWinRate ? 'Pass' : 'Fail'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Overall Score */}
+                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
+                  <span className="text-xs text-slate-400 font-medium block mb-1">Overall Judge Score</span>
+                  <div className="text-xl font-bold font-mono text-white">
+                    {gateResult.metrics.candidateOverallScore} <span className="text-xs text-slate-500 font-normal">/ 10</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500">Threshold: &gt;={gateResult.thresholds.minOverallScore}</span>
+                    <span
+                      className={`font-semibold ${
+                        gateResult.metrics.candidateOverallScore >= gateResult.thresholds.minOverallScore
+                          ? 'text-emerald-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {gateResult.metrics.candidateOverallScore >= gateResult.thresholds.minOverallScore ? 'Pass' : 'Fail'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Accuracy Score */}
+                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
+                  <span className="text-xs text-slate-400 font-medium block mb-1">Accuracy / Correctness</span>
+                  <div className="text-xl font-bold font-mono text-white">
+                    {gateResult.metrics.candidateAccuracyScore} <span className="text-xs text-slate-500 font-normal">/ 10</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500">Threshold: &gt;={gateResult.thresholds.minAccuracyScore}</span>
+                    <span
+                      className={`font-semibold ${
+                        gateResult.metrics.candidateAccuracyScore >= gateResult.thresholds.minAccuracyScore
+                          ? 'text-emerald-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {gateResult.metrics.candidateAccuracyScore >= gateResult.thresholds.minAccuracyScore ? 'Pass' : 'Fail'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Avg Latency */}
+                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
+                  <span className="text-xs text-slate-400 font-medium block mb-1">Candidate Avg Latency</span>
+                  <div className="text-xl font-bold font-mono text-white">
+                    {gateResult.metrics.candidateLatencyMs} <span className="text-xs text-slate-500 font-normal">ms</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-500">Budget: &lt;={gateResult.thresholds.maxLatencyMs}ms</span>
+                    <span
+                      className={`font-semibold ${
+                        gateResult.metrics.candidateLatencyMs <= gateResult.thresholds.maxLatencyMs
+                          ? 'text-emerald-400'
+                          : 'text-red-400'
+                      }`}
+                    >
+                      {gateResult.metrics.candidateLatencyMs <= gateResult.thresholds.maxLatencyMs ? 'Pass' : 'Fail'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Baseline Reference Footer */}
+              <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 gap-2">
+                <div>
+                  <span className="text-slate-500">Baseline Context: </span>
+                  <span className="text-blue-400 font-mono">{gateResult.metrics.baselineModel}</span>
+                  <span className="mx-2">•</span>
+                  <span>Score: {gateResult.metrics.baselineOverallScore}/10</span>
+                  <span className="mx-2">•</span>
+                  <span>Latency: {gateResult.metrics.baselineLatencyMs}ms</span>
+                </div>
+                <div className="font-mono text-[11px] text-slate-500 flex items-center gap-2">
+                  <span>Run ID: {gateResult.runId}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleExportAudit(gateResult.runId, 'markdown')}
+                    className="text-amber-400 hover:text-amber-300 underline font-sans text-xs ml-2"
+                  >
+                    Export Certificate
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Model Drift & Trajectory Radar Card */}
+          <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <TrendingDown className="w-4 h-4 text-amber-400" />
+                  Model Degradation & Trajectory Drift Radar
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Scan historical evaluation runs to identify quality regressions or latency inflation over time.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <select
+                  value={driftModelId}
+                  onChange={(e) => setDriftModelId(e.target.value)}
+                  className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                >
+                  {availableModels.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => handleCheckDrift()}
+                  disabled={isCheckingDrift}
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40"
+                >
+                  {isCheckingDrift ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                  Scan Trajectory
+                </button>
+              </div>
+            </div>
+
+            {driftReport && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+                    <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold block mb-1">
+                      Trajectory Status
+                    </span>
+                    <span
+                      className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                        driftReport.status === 'STABLE'
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                          : driftReport.status === 'DEGRADED'
+                          ? 'bg-red-500/20 text-red-300 border-red-500/30'
+                          : driftReport.status === 'ACCELERATED'
+                          ? 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                          : 'bg-slate-800 text-slate-400 border-slate-700'
+                      }`}
+                    >
+                      {driftReport.status}
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+                    <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold block mb-1">
+                      Quality Score Delta
+                    </span>
+                    <div className="text-base font-bold font-mono text-white">
+                      {driftReport.baselineScore} &rarr; {driftReport.currentScore}
+                      <span
+                        className={`text-xs ml-2 ${
+                          driftReport.scoreDelta >= 0 ? 'text-emerald-400' : 'text-red-400'
+                        }`}
+                      >
+                        ({driftReport.scoreDelta >= 0 ? '+' : ''}{driftReport.scoreDeltaPct}%)
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+                    <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold block mb-1">
+                      Latency Delta
+                    </span>
+                    <div className="text-base font-bold font-mono text-white">
+                      {driftReport.baselineLatencyMs}ms &rarr; {driftReport.currentLatencyMs}ms
+                      <span
+                        className={`text-xs ml-2 ${
+                          driftReport.latencyDeltaMs <= 0 ? 'text-emerald-400' : 'text-orange-400'
+                        }`}
+                      >
+                        ({driftReport.latencyDeltaMs <= 0 ? '' : '+'}{driftReport.latencyDeltaMs}ms)
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+                    <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold block mb-1">
+                      Drift Detected Flag
+                    </span>
+                    <div className="text-base font-bold font-mono">
+                      {driftReport.driftDetected ? (
+                        <span className="text-red-400 flex items-center gap-1">
+                          <AlertTriangle className="w-4 h-4" /> Yes
+                        </span>
+                      ) : (
+                        <span className="text-emerald-400 flex items-center gap-1">
+                          <Check className="w-4 h-4" /> None
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 text-xs flex items-start gap-2.5">
+                  <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-slate-300 italic leading-relaxed">
+                    &ldquo;{driftReport.recommendation}&rdquo;
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Exportable CI/CD Snippets Card */}
+          <div id="cicd-snippets-section" className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <FileCode className="w-4 h-4 text-amber-400" />
+                  Production CI/CD Automation Snippets
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Integrate these pre-configured assertions into your continuous deployment pipeline to halt builds on regressions.
+                </p>
+              </div>
+
+              {/* Snippet Tabs */}
+              <div className="flex items-center gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl text-xs">
+                {(['github_actions', 'curl', 'python', 'typescript'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveSnippetTab(tab)}
+                    className={`px-3 py-1.5 rounded-lg font-semibold capitalize transition-all ${
+                      activeSnippetTab === tab
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {tab === 'github_actions' ? 'GitHub Actions' : tab === 'curl' ? 'cURL CLI' : tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Code Block Container */}
+            <div className="relative">
+              <pre className="p-4 bg-slate-950 rounded-xl border border-slate-800 font-mono text-xs text-slate-300 overflow-x-auto leading-relaxed max-h-80">
+                {activeSnippetTab === 'github_actions' &&
+`name: Model Quality Gate
+on:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  assert-ai-gate:
+    name: Assert LLM Quality Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Model Quality and Regression Thresholds
+        run: |
+          curl -s -f -X POST "https://api.yoyo.ai/v1/evaluations/assert" \\
+            -H "Authorization: Bearer \${{ secrets.YOYO_API_KEY }}" \\
+            -H "Content-Type: application/json" \\
+            -d '{
+              "candidateModel": "${gateCandidate}",
+              "baselineModel": "${gateBaseline}",
+              "benchmarkSuiteId": "${gateSuiteId}",
+              "minWinRate": ${gateMinWinRate},
+              "minOverallScore": ${gateMinScore},
+              "minAccuracyScore": ${gateMinAccuracy},
+              "maxLatencyMs": ${gateMaxLatency},
+              "failOnThreshold": true
+            }'`}
+
+                {activeSnippetTab === 'curl' &&
+`curl -X POST "https://api.yoyo.ai/v1/evaluations/assert" \\
+  -H "Authorization: Bearer $YOYO_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "candidateModel": "${gateCandidate}",
+    "baselineModel": "${gateBaseline}",
+    "benchmarkSuiteId": "${gateSuiteId}",
+    "minWinRate": ${gateMinWinRate},
+    "minOverallScore": ${gateMinScore},
+    "minAccuracyScore": ${gateMinAccuracy},
+    "maxLatencyMs": ${gateMaxLatency},
+    "failOnThreshold": true
+  }'`}
+
+                {activeSnippetTab === 'python' &&
+`from yoyo import YOYOClient
+
+client = YOYOClient(api_key="your_yoyo_api_key")
+
+result = client.evaluations.assert_quality_gate(
+    candidate_model="${gateCandidate}",
+    baseline_model="${gateBaseline}",
+    benchmark_suite_id="${gateSuiteId}",
+    min_win_rate=${gateMinWinRate},
+    min_overall_score=${gateMinScore},
+    min_accuracy_score=${gateMinAccuracy},
+    max_latency_ms=${gateMaxLatency},
+    fail_on_threshold=True,
+)
+
+print(f"Deployment Approved: {result['deploymentApproved']}")
+if not result['passed']:
+    print(f"Violations: {result['violations']}")
+    raise SystemExit(1)`}
+
+                {activeSnippetTab === 'typescript' &&
+`import { YOYOClient } from '@yoyo/sdk';
+
+const client = new YOYOClient({ apiKey: process.env.YOYO_API_KEY });
+
+const result = await client.evaluations.assertQualityGate({
+  candidateModel: '${gateCandidate}',
+  baselineModel: '${gateBaseline}',
+  benchmarkSuiteId: '${gateSuiteId}',
+  minWinRate: ${gateMinWinRate},
+  minOverallScore: ${gateMinScore},
+  minAccuracyScore: ${gateMinAccuracy},
+  maxLatencyMs: ${gateMaxLatency},
+  failOnThreshold: true,
+});
+
+if (!result.passed) {
+  console.error('Quality gate failed:', result.violations);
+  process.exit(1);
+}
+console.log('Model approved for production deployment!');`}
+              </pre>
+
+              <button
+                type="button"
+                onClick={() => {
+                  let text = '';
+                  if (activeSnippetTab === 'github_actions') {
+                    text = `name: Model Quality Gate\non:\n  pull_request:\n    branches: [main, master]\n\njobs:\n  assert-ai-gate:\n    name: Assert LLM Quality Gate\n    runs-on: ubuntu-latest\n    steps:\n      - name: Verify Model Quality and Regression Thresholds\n        run: |\n          curl -s -f -X POST "https://api.yoyo.ai/v1/evaluations/assert" \\\n            -H "Authorization: Bearer \${{ secrets.YOYO_API_KEY }}" \\\n            -H "Content-Type: application/json" \\\n            -d '{\n              "candidateModel": "${gateCandidate}",\n              "baselineModel": "${gateBaseline}",\n              "benchmarkSuiteId": "${gateSuiteId}",\n              "minWinRate": ${gateMinWinRate},\n              "minOverallScore": ${gateMinScore},\n              "minAccuracyScore": ${gateMinAccuracy},\n              "maxLatencyMs": ${gateMaxLatency},\n              "failOnThreshold": true\n            }'`;
+                  } else if (activeSnippetTab === 'curl') {
+                    text = `curl -X POST "https://api.yoyo.ai/v1/evaluations/assert" \\\n  -H "Authorization: Bearer $YOYO_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "candidateModel": "${gateCandidate}",\n    "baselineModel": "${gateBaseline}",\n    "benchmarkSuiteId": "${gateSuiteId}",\n    "minWinRate": ${gateMinWinRate},\n    "minOverallScore": ${gateMinScore},\n    "minAccuracyScore": ${gateMinAccuracy},\n    "maxLatencyMs": ${gateMaxLatency},\n    "failOnThreshold": true\n  }'`;
+                  } else if (activeSnippetTab === 'python') {
+                    text = `from yoyo import YOYOClient\n\nclient = YOYOClient(api_key="your_yoyo_api_key")\n\nresult = client.evaluations.assert_quality_gate(\n    candidate_model="${gateCandidate}",\n    baseline_model="${gateBaseline}",\n    benchmark_suite_id="${gateSuiteId}",\n    min_win_rate=${gateMinWinRate},\n    min_overall_score=${gateMinScore},\n    min_accuracy_score=${gateMinAccuracy},\n    max_latency_ms=${gateMaxLatency},\n    fail_on_threshold=True,\n)\n\nprint(f"Deployment Approved: {result['deploymentApproved']}")\nif not result['passed']:\n    print(f"Violations: {result['violations']}")\n    raise SystemExit(1)`;
+                  } else {
+                    text = `import { YOYOClient } from '@yoyo/sdk';\n\nconst client = new YOYOClient({ apiKey: process.env.YOYO_API_KEY });\n\nconst result = await client.evaluations.assertQualityGate({\n  candidateModel: '${gateCandidate}',\n  baselineModel: '${gateBaseline}',\n  benchmarkSuiteId: '${gateSuiteId}',\n  minWinRate: ${gateMinWinRate},\n  minOverallScore: ${gateMinScore},\n  minAccuracyScore: ${gateMinAccuracy},\n  maxLatencyMs: ${gateMaxLatency},\n  failOnThreshold: true,\n});\n\nif (!result.passed) {\n  console.error('Quality gate failed:', result.violations);\n  process.exit(1);\n}\nconsole.log('Model approved for production deployment!');`;
+                  }
+                  if (navigator.clipboard) {
+                    navigator.clipboard.writeText(text);
+                    toast('Snippet copied to clipboard!', 'success');
+                  }
+                }}
+                className="absolute top-3 right-3 p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700 transition-colors shadow"
+                title="Copy snippet to clipboard"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
       ) : (
         /* GLOBAL LEADERBOARD & SYNTHETIC SUITES VIEW */
         <div className="flex flex-col gap-6">
@@ -2038,6 +2837,16 @@ export default function ArenaPage() {
                               className="px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30 transition-colors text-[11px] font-semibold"
                             >
                               Inspect Verdict
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleExportAudit(run.id, 'markdown')}
+                              disabled={isExportingAudit}
+                              className="ml-2 px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700 transition-colors text-[11px] font-semibold inline-flex items-center gap-1"
+                              title="Export Cryptographic Compliance Certificate (Markdown & SHA-256)"
+                            >
+                              <Download className="w-3 h-3" />
+                              Export
                             </button>
                           </td>
                         </tr>

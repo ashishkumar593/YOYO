@@ -85,9 +85,12 @@ if (
   typeof client.evaluations.getLeaderboard === 'function' &&
   typeof client.evaluations.getHistory === 'function' &&
   typeof client.evaluations.getHistoryById === 'function' &&
-  typeof client.evaluations.generateSuite === 'function'
+  typeof client.evaluations.generateSuite === 'function' &&
+  typeof client.evaluations.assertQualityGate === 'function' &&
+  typeof client.evaluations.detectDrift === 'function' &&
+  typeof client.evaluations.exportAuditReport === 'function'
 ) {
-  console.log('[OK] client.evaluations (listBenchmarks, getBenchmark, run, getLeaderboard, getHistory, getHistoryById, generateSuite) exist');
+  console.log('[OK] client.evaluations (benchmarks, run, leaderboard, history, generateSuite, assertQualityGate, detectDrift, exportAuditReport) exist');
 } else {
   throw new Error('client.evaluations methods missing');
 }

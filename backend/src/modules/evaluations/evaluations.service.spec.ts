@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { EvaluationsService } from './evaluations.service';
 import { InferenceService } from '../inference/inference.service';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 
 describe('EvaluationsService', () => {
   let service: EvaluationsService;
@@ -182,6 +182,90 @@ describe('EvaluationsService', () => {
       // Verify it was added to active suites
       const activeSuites = service.listBenchmarkSuites();
       expect(activeSuites.some((s) => s.id === suite.id)).toBe(true);
+    });
+  });
+
+  describe('assertQualityGate', () => {
+    it('should approve deployment when candidate meets all thresholds', async () => {
+      const gate = await service.assertQualityGate({
+        candidateModel: 'llama-3.3-70b',
+        baselineModel: 'qwen-2.5-coder-32b',
+        benchmarkSuiteId: 'coding_bench',
+        minWinRate: 50,
+        minOverallScore: 8.0,
+        minAccuracyScore: 7.0,
+        maxLatencyMs: 3000,
+      });
+
+      expect(gate.passed).toBe(true);
+      expect(gate.deploymentApproved).toBe(true);
+      expect(gate.violations).toHaveLength(0);
+      expect(gate.metrics.winRate).toBeGreaterThanOrEqual(50);
+    });
+
+    it('should detect violations and block deployment when below threshold', async () => {
+      const gate = await service.assertQualityGate({
+        candidateModel: 'llama-3.3-70b',
+        baselineModel: 'qwen-2.5-coder-32b',
+        benchmarkSuiteId: 'coding_bench',
+        minWinRate: 100, // Impossibly high threshold
+        minOverallScore: 9.9, // Higher than score 9.0
+        failOnThreshold: false,
+      });
+
+      expect(gate.passed).toBe(false);
+      expect(gate.deploymentApproved).toBe(false);
+      expect(gate.violations.length).toBeGreaterThan(0);
+    });
+
+    it('should throw UnprocessableEntityException when failOnThreshold is true and violations occur', async () => {
+      await expect(
+        service.assertQualityGate({
+          candidateModel: 'llama-3.3-70b',
+          baselineModel: 'qwen-2.5-coder-32b',
+          benchmarkSuiteId: 'coding_bench',
+          minWinRate: 100,
+          minOverallScore: 9.9,
+          failOnThreshold: true,
+        })
+      ).rejects.toThrow(UnprocessableEntityException);
+    });
+  });
+
+  describe('detectModelDrift', () => {
+    it('should return drift trajectory for model with historical runs', () => {
+      const drift = service.detectModelDrift('llama-3.3-70b');
+      expect(drift.model).toBe('llama-3.3-70b');
+      expect(drift.historicalRunsCount).toBeGreaterThanOrEqual(2);
+      expect(['STABLE', 'DEGRADED', 'IMPROVED']).toContain(drift.status);
+      expect(drift.recommendation).toBeDefined();
+    });
+
+    it('should return INSUFFICIENT_DATA for un-evaluated models', () => {
+      const drift = service.detectModelDrift('unseen-model-xyz');
+      expect(drift.status).toBe('INSUFFICIENT_DATA');
+      expect(drift.driftDetected).toBe(false);
+    });
+  });
+
+  describe('exportAuditReport', () => {
+    it('should generate markdown audit certificate with compliance hash', () => {
+      const history = service.getHistory();
+      const exportReport = service.exportAuditReport(history[0].id, 'markdown');
+
+      expect(exportReport.runId).toBe(history[0].id);
+      expect(exportReport.exportFormat).toBe('markdown');
+      expect(exportReport.content).toContain('YOYO LLM-as-a-Judge Formal Audit Certificate');
+      expect(exportReport.complianceHash).toHaveLength(64); // SHA-256
+    });
+
+    it('should generate JSON and CSV audit formats', () => {
+      const history = service.getHistory();
+      const jsonReport = service.exportAuditReport(history[0].id, 'json');
+      expect(JSON.parse(jsonReport.content).runId).toBe(history[0].id);
+
+      const csvReport = service.exportAuditReport(history[0].id, 'csv');
+      expect(csvReport.content).toContain('SampleID,SampleTitle,ModelA');
     });
   });
 });
