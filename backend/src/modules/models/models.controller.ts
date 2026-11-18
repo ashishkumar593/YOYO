@@ -37,18 +37,18 @@ export class ModelsController {
     return this.modelsService.listCatalog(includeInactive);
   }
 
-  // Super Admin: Create new model in platform catalog
+  // Admin: Create new model in platform catalog
   @Post('api/models')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN')
+  @Roles('SUPER_ADMIN', 'ADMIN')
   async createModel(@Body() body: CreateModelInput) {
     return this.modelsService.createModel(body);
   }
 
-  // Super Admin: Update model metadata or state
+  // Admin: Update model metadata or state
   @Patch('api/models/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN')
+  @Roles('SUPER_ADMIN', 'ADMIN')
   async updateModel(
     @Param('id') id: string,
     @Body() body: UpdateModelInput
@@ -56,10 +56,10 @@ export class ModelsController {
     return this.modelsService.updateModel(id, body);
   }
 
-  // Super Admin: Deactivate model
+  // Admin: Deactivate model
   @Delete('api/models/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('SUPER_ADMIN')
+  @Roles('SUPER_ADMIN', 'ADMIN')
   async deleteModel(@Param('id') id: string) {
     return this.modelsService.deleteModel(id);
   }

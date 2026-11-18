@@ -78,11 +78,14 @@ export class AdminController {
   @Get('users')
   async getUsers(
     @Query('page') page?: string,
-    @Query('limit') limit?: string
+    @Query('limit') limit?: string,
+    @Query('q') query?: string,
+    @Query('status') status?: string,
+    @Query('sortBy') sortBy?: string
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
-    const limitNum = limit ? parseInt(limit, 10) : 20;
-    return this.adminService.getUsers(pageNum, limitNum);
+    const limitNum = limit ? parseInt(limit, 10) : 25;
+    return this.adminService.getUsers(pageNum, limitNum, query, status, sortBy);
   }
 
   @Patch('users/:id/status')
@@ -99,6 +102,19 @@ export class AdminController {
     @Body('monthlyTokenLimit') limit: number
   ) {
     return this.adminService.updateUserQuota(id, limit);
+  }
+
+  @Post('users/:id/credit')
+  async setCredit(
+    @Param('id') id: string,
+    @Body('balanceUsd') balanceUsd: number
+  ) {
+    return this.adminService.updateUserCredit(id, balanceUsd);
+  }
+
+  @Post('users/:id/reset-usage')
+  async resetUsage(@Param('id') id: string) {
+    return this.adminService.resetUserUsage(id);
   }
 }
 

@@ -172,10 +172,41 @@ export class AdminService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
-  async getUsers(page = 1, limit = 20) {
+  async getUsers(
+    page = 1,
+    limit = 25,
+    search?: string,
+    statusFilter?: string,
+    sortBy = 'createdAt'
+  ) {
     const skip = (page - 1) * limit;
+    const whereClause: any = {};
+
+    if (statusFilter && statusFilter !== 'ALL') {
+      whereClause.status = statusFilter;
+    }
+
+    if (search && search.trim()) {
+      const q = search.trim();
+      whereClause.OR = [
+        { email: { contains: q, mode: 'insensitive' } },
+        { profile: { fullName: { contains: q, mode: 'insensitive' } } },
+        { profile: { companyName: { contains: q, mode: 'insensitive' } } },
+      ];
+    }
+
+    let orderBy: any = { createdAt: 'desc' };
+    if (sortBy === 'tokensUsed') {
+      orderBy = { quota: { currentMonthTokensUsed: 'desc' } };
+    } else if (sortBy === 'tokenLimit') {
+      orderBy = { quota: { monthlyTokenLimit: 'desc' } };
+    } else if (sortBy === 'email') {
+      orderBy = { email: 'asc' };
+    }
+
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({
+        where: whereClause,
         skip,
         take: limit,
         select: {
@@ -187,6 +218,7 @@ export class AdminService implements OnModuleInit, OnModuleDestroy {
           createdAt: true,
           profile: true,
           quota: true,
+          creditBalance: true,
           _count: {
             select: {
               apiKeys: true,
@@ -194,9 +226,9 @@ export class AdminService implements OnModuleInit, OnModuleDestroy {
             },
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy,
       }),
-      this.prisma.user.count(),
+      this.prisma.user.count({ where: whereClause }),
     ]);
 
     return {
@@ -209,6 +241,7 @@ export class AdminService implements OnModuleInit, OnModuleDestroy {
               currentMonthTokensUsed: Number(u.quota.currentMonthTokensUsed),
             }
           : null,
+        creditBalance: u.creditBalance ? Number(u.creditBalance.balanceUsd) : 0,
       })),
       total,
       page,
@@ -237,21 +270,63 @@ export class AdminService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
+  async updateUserCredit(userId: string, balanceUsd: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found.');
+
+    return this.prisma.creditBalance.upsert({
+      where: { userId },
+      update: { balanceUsd },
+      create: { userId, balanceUsd, currency: 'USD' },
+    });
+  }
+
+  async resetUserUsage(userId: string) {
+    const quota = await this.prisma.userQuota.findUnique({ where: { userId } });
+    if (!quota) throw new NotFoundException('User quota record not found.');
+
+    return this.prisma.userQuota.update({
+      where: { userId },
+      data: {
+        currentMonthTokensUsed: BigInt(0),
+        currentMonthRequestsUsed: 0,
+      },
+    });
+  }
+
   async getPlatformStats() {
-    const [totalUsers, totalRequests, totalTokensResult, activeKeys] = await Promise.all([
+    const [
+      totalUsers,
+      totalRequests,
+      totalTokensResult,
+      activeKeys,
+      activeModelsCount,
+      totalWorkersCount,
+      healthyWorkersCount,
+    ] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.apiRequest.count(),
       this.prisma.apiRequest.aggregate({
         _sum: { totalTokens: true },
       }),
       this.prisma.apiKey.count({ where: { isActive: true } }),
+      this.prisma.model.count({ where: { isActive: true } }),
+      this.prisma.modelWorker.count(),
+      this.prisma.modelWorker.count({ where: { status: 'ONLINE' } }),
     ]);
+
+    const totalTokens = totalTokensResult._sum.totalTokens || 0;
+    const estimatedRevenueUsd = Number(((Number(totalTokens) / 1000000) * 0.5).toFixed(2));
 
     return {
       totalUsers,
       totalRequests,
-      totalTokensConsumed: totalTokensResult._sum.totalTokens || 0,
+      totalTokensConsumed: totalTokens,
       activeApiKeys: activeKeys,
+      activeModelsCount,
+      totalWorkersCount,
+      healthyWorkersCount,
+      estimatedRevenueUsd,
     };
   }
 }

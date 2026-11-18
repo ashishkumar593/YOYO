@@ -54,6 +54,7 @@ describe('AdminService', () => {
           ...data,
         })),
         delete: jest.fn().mockResolvedValue({ id: 'w1' }),
+        count: jest.fn().mockResolvedValue(2),
       },
       model: {
         findUnique: jest.fn().mockImplementation(({ where }) => {
@@ -62,6 +63,7 @@ describe('AdminService', () => {
           }
           return Promise.resolve(null);
         }),
+        count: jest.fn().mockResolvedValue(6),
       },
       modelDeployment: {
         upsert: jest.fn().mockResolvedValue({
