@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiRequest } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/components/ui/toast';
@@ -65,16 +66,17 @@ export default function AdminDashboardPage() {
     loadAdminData();
   }, []);
 
+  const router = useRouter();
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
 
+  useEffect(() => {
+    if (!loading && user && !isAdmin) {
+      router.replace('/dashboard');
+    }
+  }, [user, isAdmin, loading, router]);
+
   if (!isAdmin) {
-    return (
-      <div className="p-16 text-center text-muted-foreground flex flex-col items-center justify-center space-y-3">
-        <ShieldAlert className="w-12 h-12 text-amber-400" />
-        <h2 className="text-xl font-bold text-foreground">Access Restricted</h2>
-        <p className="text-xs max-w-sm mt-1">Admin privileges required to supervise infrastructure nodes.</p>
-      </div>
-    );
+    return null;
   }
 
   const handleToggleStatus = async (targetUser: any) => {

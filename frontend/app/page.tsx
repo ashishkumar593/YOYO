@@ -828,8 +828,8 @@ for chunk in stream:
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard/admin" className="hover:text-cyan-400 transition-colors">
-                  Cluster Admin
+                <Link href="/dashboard/arena" className="hover:text-cyan-400 transition-colors">
+                  Model Arena
                 </Link>
               </li>
             </ul>
