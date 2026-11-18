@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 
-export default function SuperAdminPage() {
+export default function AdminDashboardPage() {
   const { user } = useAuth();
   const { success, error: toastError } = useToast();
   const [stats, setStats] = useState<any>(null);
@@ -65,12 +65,14 @@ export default function SuperAdminPage() {
     loadAdminData();
   }, []);
 
-  if (user?.role !== 'SUPER_ADMIN') {
+  const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+
+  if (!isAdmin) {
     return (
       <div className="p-16 text-center text-muted-foreground flex flex-col items-center justify-center space-y-3">
-        <ShieldAlert className="w-12 h-12 text-red-400" />
+        <ShieldAlert className="w-12 h-12 text-amber-400" />
         <h2 className="text-xl font-bold text-foreground">Access Restricted</h2>
-        <p className="text-xs max-w-sm mt-1">Super Admin privileges required to supervise infrastructure nodes.</p>
+        <p className="text-xs max-w-sm mt-1">Admin privileges required to supervise infrastructure nodes.</p>
       </div>
     );
   }
@@ -172,14 +174,14 @@ export default function SuperAdminPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
             <ShieldAlert className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h1 className="text-2xl font-bold tracking-tight">Super Admin Control Center</h1>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20 font-bold uppercase">
-                Cluster Superuser
+              <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold uppercase">
+                Cluster Operations
               </span>
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">

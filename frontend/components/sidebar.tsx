@@ -42,53 +42,45 @@ interface SidebarSection {
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
 
   const sections: SidebarSection[] = [
     {
-      group: 'Inference Engine',
+      group: 'Developer Dashboard',
       links: [
         { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
         { label: 'Model Catalog', href: '/dashboard/models', icon: Cpu },
         { label: 'Playground', href: '/dashboard/playground', icon: Terminal },
         { label: 'Model Arena', href: '/dashboard/arena', icon: Swords, badge: 'New' },
-        { label: 'Fine-Tuning', href: '/dashboard/fine-tuning', icon: Sparkles },
-        { label: 'Batch Inference', href: '/dashboard/batches', icon: Layers, badge: '50% Off' },
-      ],
-    },
-    {
-      group: 'Developer Suite',
-      links: [
         { label: 'API Keys', href: '/dashboard/keys', icon: Key },
         { label: 'Request Logs', href: '/dashboard/logs', icon: ListFilter },
         { label: 'Telemetry & Velocity', href: '/dashboard/analytics', icon: BarChart3 },
-      ],
-    },
-    {
-      group: 'Enterprise & Setup',
-      links: [
-        { label: 'Team & Workspaces', href: '/dashboard/team', icon: Users },
-        { label: 'Enterprise SSO', href: '/dashboard/settings?tab=sso', icon: ShieldCheck, badge: 'SAML' },
-        { label: 'Security & Audit Log', href: '/dashboard/security', icon: ShieldAlert },
-        { label: 'Billing & Ledger', href: '/dashboard/billing', icon: CreditCard },
-        { label: 'System Status', href: '/status', icon: Activity, live: true },
-        { label: 'API Documentation', href: '/docs', icon: BookOpen },
-        { label: 'Platform Settings', href: '/dashboard/settings', icon: Settings },
+        { label: 'Batch Inference', href: '/dashboard/batches', icon: Layers, badge: '50% Off' },
+        { label: 'Fine-Tuning', href: '/dashboard/fine-tuning', icon: Sparkles },
       ],
     },
   ];
 
-  if (user?.role === 'SUPER_ADMIN') {
+  if (isAdmin) {
     sections.push({
-      group: 'GPU Infrastructure',
+      group: 'Admin Dashboard',
       links: [
-        {
-          label: 'Super Admin Supervisor',
-          href: '/dashboard/admin',
-          icon: ShieldAlert,
-        },
+        { label: 'Cluster Supervisor', href: '/dashboard/admin', icon: ShieldAlert },
+        { label: 'Security & Audit Log', href: '/dashboard/security', icon: ShieldCheck },
+        { label: 'Team & Workspaces', href: '/dashboard/team', icon: Users },
+        { label: 'Billing & Quotas', href: '/dashboard/billing', icon: CreditCard },
       ],
     });
   }
+
+  sections.push({
+    group: 'Settings & Resources',
+    links: [
+      { label: 'Platform Settings', href: '/dashboard/settings', icon: Settings },
+      { label: 'API Documentation', href: '/docs', icon: BookOpen },
+      { label: 'System Status', href: '/status', icon: Activity, live: true },
+    ],
+  });
 
   return (
     <aside className="w-64 border-r border-border/80 bg-[#0A0C14]/90 backdrop-blur-xl flex flex-col h-screen sticky top-0 select-none">
@@ -160,7 +152,7 @@ export function Sidebar() {
             <span className="text-[10px] text-muted-foreground font-mono truncate">{user?.email}</span>
           </div>
           <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold bg-primary/10 text-primary border border-primary/20 shrink-0">
-            {user?.role === 'SUPER_ADMIN' ? 'ROOT' : 'DEV'}
+            {isAdmin ? 'ADMIN' : 'DEVELOPER'}
           </span>
         </div>
 

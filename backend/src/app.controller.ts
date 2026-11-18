@@ -65,22 +65,4 @@ export class AppController {
       memory: process.memoryUsage(),
     };
   }
-
-  @Get('metrics')
-  @Header('Content-Type', 'text/plain; version=0.0.4')
-  getMetrics() {
-    const mem = process.memoryUsage();
-    return `# HELP yoyo_process_uptime_seconds Process uptime in seconds
-# TYPE yoyo_process_uptime_seconds gauge
-yoyo_process_uptime_seconds ${process.uptime()}
-
-# HELP yoyo_process_memory_heap_used_bytes Heap memory used
-# TYPE yoyo_process_memory_heap_used_bytes gauge
-yoyo_process_memory_heap_used_bytes ${mem.heapUsed}
-
-# HELP yoyo_process_memory_rss_bytes Resident set size
-# TYPE yoyo_process_memory_rss_bytes gauge
-yoyo_process_memory_rss_bytes ${mem.rss}
-`;
-  }
 }

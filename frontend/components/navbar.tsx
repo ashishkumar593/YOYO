@@ -17,16 +17,20 @@ import {
 } from 'lucide-react';
 
 const ROUTE_TITLES: Record<string, string> = {
-  '/dashboard': 'Overview',
+  '/dashboard': 'Developer Dashboard',
   '/dashboard/models': 'Model Catalog',
   '/dashboard/playground': 'Playground',
+  '/dashboard/arena': 'Model Arena',
+  '/dashboard/fine-tuning': 'Fine-Tuning Studio',
   '/dashboard/batches': 'Batch Inference',
   '/dashboard/keys': 'API Keys',
   '/dashboard/logs': 'Request Logs',
   '/dashboard/analytics': 'Usage & Analytics',
+  '/dashboard/admin': 'Admin Dashboard',
+  '/dashboard/security': 'Security & Audit',
+  '/dashboard/team': 'Team & Workspaces',
   '/dashboard/billing': 'Billing & Ledger',
   '/dashboard/settings': 'Settings',
-  '/dashboard/admin': 'Super Admin Cluster',
 };
 
 export function Navbar() {

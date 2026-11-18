@@ -22,7 +22,12 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('User context missing or unauthenticated.');
     }
 
-    const hasRole = requiredRoles.includes(user.role);
+    const hasRole = requiredRoles.some((r) => {
+      if (r === 'ADMIN' || r === 'SUPER_ADMIN') {
+        return user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+      }
+      return user.role === r;
+    });
     if (!hasRole) {
       throw new ForbiddenException(`Access restricted to roles: ${requiredRoles.join(', ')}`);
     }

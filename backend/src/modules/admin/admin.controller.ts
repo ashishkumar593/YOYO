@@ -18,7 +18,7 @@ import { CircuitBreakerRegistry } from '../inference/resilience/circuit-breaker'
 
 @Controller('api/admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('SUPER_ADMIN')
+@Roles('SUPER_ADMIN', 'ADMIN')
 export class AdminController {
   constructor(private adminService: AdminService) {}
 

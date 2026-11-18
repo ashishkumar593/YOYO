@@ -107,7 +107,7 @@ for await (const chunk of stream) {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            <span>Platform Overview</span>
+            <span>Developer Dashboard</span>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
               Active Cluster
             </span>

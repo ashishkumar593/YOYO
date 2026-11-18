@@ -6,7 +6,7 @@ import { apiRequest } from './api';
 export interface User {
   id: string;
   email: string;
-  role: 'USER' | 'SUPER_ADMIN';
+  role: 'USER' | 'ADMIN' | 'SUPER_ADMIN' | 'DEVELOPER';
   status?: string;
   fullName?: string;
   createdAt?: string;
