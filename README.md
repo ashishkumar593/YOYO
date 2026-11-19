@@ -282,7 +282,17 @@ pnpm install
 pnpm db:push
 pnpm db:seed
 ```
-> **Default Super Admin**: `admin@yoyo.ai` | Password: `Admin@Yoyo2026!` (Configured with 100M tokens, $500 balance, and cluster supervisor credentials).
+> **Default Accounts & Access Credentials**:
+> - **Developer Account** (Standard Developer Dashboard):
+>   - **Email**: `dev@yoyo.ai`
+>   - **Password**: `Dev@Yoyo2026!`
+>   - **API Key**: `sk_live_yoyo_dev_2026_prod_access`
+>   - **Allocation**: 50,000,000 monthly tokens, \$150.00 credit balance, 300 RPM rate limit ceiling.
+> - **Admin Account** (100k Developer Control Center & Cluster Supervisor):
+>   - **Email**: `admin@yoyo.ai`
+>   - **Password**: `Admin@Yoyo2026!`
+>   - **API Key**: `sk_live_yoyo_dev_master_key_2026`
+>   - **Allocation**: 100,000,000 monthly tokens, \$500.00 credit balance, full GPU worker & tenant management.
 
 ### 3. Production Docker Compose Profiles
 ```bash

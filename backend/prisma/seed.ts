@@ -85,6 +85,71 @@ async function main() {
     console.log(`[SEED] Default Development Master API Key ready: ${defaultDevKey}`);
   }
 
+  // 1b. Seed Standard Developer User
+  const devEmail = 'dev@yoyo.ai';
+  const existingDev = await prisma.user.findUnique({ where: { email: devEmail } });
+
+  let devUser = existingDev;
+  if (!existingDev) {
+    const salt = await bcrypt.genSalt(12);
+    const passwordHash = await bcrypt.hash('Dev@Yoyo2026!', salt);
+
+    devUser = await prisma.user.create({
+      data: {
+        email: devEmail,
+        passwordHash,
+        role: UserRole.USER,
+        status: UserStatus.ACTIVE,
+        emailVerified: true,
+        profile: {
+          create: {
+            fullName: 'Lead AI Developer',
+            companyName: 'YOYO Developer Labs',
+          },
+        },
+        quota: {
+          create: {
+            monthlyTokenLimit: BigInt(50000000), // 50M tokens
+            monthlyRequestLimit: 100000,
+            resetsAt: new Date(Date.now() + 30 * 24 * 3600 * 1000),
+          },
+        },
+        creditBalance: {
+          create: {
+            balanceUsd: 150.0,
+            currency: 'USD',
+          },
+        },
+      },
+    });
+    console.log(`[SEED] Created default Developer account: ${devUser.email}`);
+  }
+
+  if (devUser) {
+    const devAccessKey = 'sk_live_yoyo_dev_2026_prod_access';
+    const devKeyHash = crypto.createHash('sha256').update(devAccessKey).digest('hex');
+    await prisma.apiKey.upsert({
+      where: { keyHash: devKeyHash },
+      update: {
+        isActive: true,
+        rateLimitRpm: 300,
+        rateLimitTpm: 300000,
+      },
+      create: {
+        userId: devUser.id,
+        name: 'Primary Developer Access Key',
+        keyPrefix: 'sk_live_yoyo_dev',
+        keyHash: devKeyHash,
+        maskedKey: 'sk_live_yoyo_dev...cess',
+        allowedModels: ['*'],
+        rateLimitRpm: 300,
+        rateLimitTpm: 300000,
+        isActive: true,
+      },
+    });
+    console.log(`[SEED] Default Developer API Key ready: ${devAccessKey}`);
+  }
+
   // 2. Create or update Default Cloud GPU Worker Nodes
   const worker1 = await prisma.modelWorker.upsert({
     where: { workerName: 'cloud-gpu-node-01' },
