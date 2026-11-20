@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # YOYO Cloud AI Platform — Local Docker LLM Runner & Model Provisioner
 # Runs Ollama in Docker, downloads local models (Llama 3.2, Qwen 2.5 Coder, DeepSeek R1),
 # and connects them directly to YOYO Gateway without requiring external OpenAI keys.

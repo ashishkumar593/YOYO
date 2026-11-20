@@ -84,7 +84,7 @@ export default function DashboardOverviewPage() {
   const [copiedModelId, setCopiedModelId] = useState<string | null>(null);
 
   // In-Dashboard Inference Tester
-  const [testModel, setTestModel] = useState('llama-3.3-70b');
+  const [testModel, setTestModel] = useState('llama3.2:1b');
   const [testSystemPrompt, setTestSystemPrompt] = useState('You are an ultra-fast, high-precision AI assistant powered by YOYO Cloud Gateway.');
   const [testUserPrompt, setTestUserPrompt] = useState('Explain the latency benefits of speculative decoding and vLLM continuous batching in 3 bullet points.');
   const [testTemperature, setTestTemperature] = useState(0.7);
@@ -931,10 +931,10 @@ print(response.choices[0].message.content)`;
                   ))}
                   {catalog.length === 0 && (
                     <>
+                      <option value="llama3.2:1b">Llama 3.2 1B Instruct (Local Docker)</option>
+                      <option value="qwen2.5-coder:1.5b">Qwen 2.5 Coder 1.5B (Local Docker)</option>
                       <option value="llama-3.3-70b">Llama 3.3 70B Instruct</option>
-                      <option value="deepseek-r1-distill">DeepSeek R1 Distill</option>
-                      <option value="qwen-2.5-coder-32b">Qwen 2.5 Coder 32B</option>
-                      <option value="mistral-large-2407">Mistral Large 2407</option>
+                      <option value="deepseek-r1-70b">DeepSeek R1 Distill</option>
                     </>
                   )}
                 </select>

@@ -161,7 +161,7 @@ const SYSTEM_PRESETS: Record<string, string> = {
 
 function PlaygroundInner() {
   const searchParams = useSearchParams();
-  const initialModel = searchParams.get('model') || 'llama-3.3-70b';
+  const initialModel = searchParams.get('model') || 'llama3.2:1b';
   const { success, error, info } = useToast();
 
   const [models, setModels] = useState<any[]>([]);
