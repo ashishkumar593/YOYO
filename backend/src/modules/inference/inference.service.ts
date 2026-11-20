@@ -626,6 +626,25 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     const deployments = await this.modelsService.findActiveWorkersForModel(baseLookupIdentifier);
 
     if (deployments.length === 0) {
+      // Check if local Ollama worker is reachable
+      const ollamaEndpoint = process.env.OLLAMA_WORKER_0_URL || 'http://localhost:11434';
+      try {
+        const health = await this.ollamaProvider.checkHealth(ollamaEndpoint);
+        if (health.isHealthy) {
+          this.logger.log(`Active local Ollama node detected at ${ollamaEndpoint}. Routing '${modelName}' directly.`);
+          return {
+            candidates: [
+              {
+                provider: this.ollamaProvider,
+                endpoint: ollamaEndpoint,
+                workerName: 'local-docker-ollama-node',
+              },
+            ],
+            model,
+          };
+        }
+      } catch {}
+
       if (process.env.NODE_ENV !== 'production') {
         this.logger.warn(
           `No active GPU worker found for '${modelName}'. Using developer mock fallback.`

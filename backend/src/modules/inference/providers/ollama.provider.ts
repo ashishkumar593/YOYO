@@ -18,11 +18,36 @@ export class OllamaProvider implements InferenceProviderInterface {
   readonly engineType = 'OLLAMA';
   private readonly logger = new Logger(OllamaProvider.name);
 
+  private async getAvailableOllamaModel(workerEndpoint: string, requestedModel: string): Promise<string> {
+    try {
+      const res = await fetch(`${workerEndpoint.replace(/\/$/, '')}/api/tags`, {
+        signal: AbortSignal.timeout(2000),
+      });
+      if (res.ok) {
+        const data: any = await res.json();
+        const models = (data.models || []).map((m: any) => m.name);
+        if (models.includes(requestedModel)) return requestedModel;
+        const prefixMatch = models.find(
+          (m: string) => m.startsWith(requestedModel) || requestedModel.startsWith(m.split(':')[0])
+        );
+        if (prefixMatch) return prefixMatch;
+        if (models.length > 0) {
+          this.logger.log(
+            `Requested model '${requestedModel}' not found in local Ollama. Routing to installed local model '${models[0]}'`
+          );
+          return models[0];
+        }
+      }
+    } catch {}
+    return requestedModel;
+  }
+
   async chatCompletion(
     workerEndpoint: string,
     request: ChatCompletionRequest
   ): Promise<ChatCompletionResponse> {
     const url = `${workerEndpoint.replace(/\/$/, '')}/api/chat`;
+    const targetModel = await this.getAvailableOllamaModel(workerEndpoint, request.model);
 
     let format: any = undefined;
     if (request.response_format?.type === 'json_object') {
@@ -33,7 +58,7 @@ export class OllamaProvider implements InferenceProviderInterface {
 
     // Map OpenAI request to Ollama format
     const ollamaPayload: any = {
-      model: request.model,
+      model: targetModel,
       messages: request.messages.map((m) => ({
         role: m.role,
         content: m.content,
@@ -110,6 +135,7 @@ export class OllamaProvider implements InferenceProviderInterface {
   ): AsyncIterable<ChatCompletionChunk> {
     const url = `${workerEndpoint.replace(/\/$/, '')}/api/chat`;
     const id = `chatcmpl-${Date.now()}`;
+    const targetModel = await this.getAvailableOllamaModel(workerEndpoint, request.model);
 
     let format: any = undefined;
     if (request.response_format?.type === 'json_object') {
@@ -119,7 +145,7 @@ export class OllamaProvider implements InferenceProviderInterface {
     }
 
     const ollamaPayload: any = {
-      model: request.model,
+      model: targetModel,
       messages: request.messages.map((m) => ({
         role: m.role,
         content: m.content,

@@ -111,30 +111,21 @@ services:
     networks:
       - yoyo-net
 
-  # 5. Optional Local GPU Inference Node (run with: docker compose --profile gpu up)
+  # 5. Local Docker Inference Worker Node (Ollama)
   ollama:
     image: ollama/ollama:latest
     container_name: yoyo-ollama
     restart: unless-stopped
-    profiles:
-      - gpu
-      - ollama
     ports:
       - "11434:11434"
     volumes:
-      - ollama_data:/root/.ollama
+      - ./data/ollama:/root/.ollama
     environment:
       - OLLAMA_KEEP_ALIVE=24h
       - OLLAMA_FLASH_ATTENTION=1
+      - OLLAMA_HOST=0.0.0.0
     networks:
       - yoyo-net
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
 
   # 5b. Optional CPU Inference Node (for machines without NVIDIA GPU - run with: docker compose --profile cpu up)
   ollama-cpu:
