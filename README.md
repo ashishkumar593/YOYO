@@ -34,7 +34,9 @@ flowchart TD
   - `/`: High-craft landing page, live interactive SSE console, token cost arbitrage calculator, model matrix, and developer footer.
   - `/docs`: Complete interactive API documentation, Batch 50% discount guide, Webhooks HMAC spec, and code samples.
   - `/status`: Real-time system health, 90-day uptime calendar, latency tables, and synthetic monitoring.
-  - `/dashboard`: Cockpit overview with token meters and active key monitors.
+  - `/dashboard`: Cockpit overview with token meters, active key monitors, and local Docker model engine manager with live SSE pull progress.
+  - `/dashboard/knowledge`: Local RAG & Document Knowledge Base powered by `nomic-embed-text:latest` (768-dim embeddings) with verified context excerpts and citation scoring.
+  - `/dashboard/tools`: Agentic Function Calling & Tools Workbench with autonomous multi-step execution loops (Calculator, Weather, Analytical DB Query, Web Search).
   - `/dashboard/models`: Foundation model catalog and dynamic LoRA adapter registry with live pricing tags.
   - `/dashboard/playground`: Full-featured SSE streaming playground with parameter tuning, tool calling, JSON schema mode, vision upload, and prefix cache savings badge.
   - `/dashboard/arena`: Dual-mode battle arena featuring interactive head-to-head testing and an automated LLM-as-a-Judge Evaluation Engine (standardized golden benchmark suites: coding, reasoning, safety; blind candidate adjudication; multi-criterion rubric scoring).
@@ -294,7 +296,20 @@ pnpm db:seed
 >   - **API Key**: `sk_live_yoyo_dev_master_key_2026`
 >   - **Allocation**: 100,000,000 monthly tokens, \$500.00 credit balance, full GPU worker & tenant management.
 
-### 3. Production Docker Compose Profiles
+### 3. One-Click Production Deployment (Caddy SSL + Local Docker LLM)
+Run the turnkey production deployment bundle with Caddy edge reverse proxy (HTTP/2, automated TLS, zero-buffering SSE streaming), PostgreSQL 16, Redis 7, local Ollama engine, and persistent model storage mounted to drive `F:\`:
+
+```powershell
+# Windows PowerShell:
+powershell -ExecutionPolicy Bypass -File scripts/deploy-prod.ps1
+```
+
+```bash
+# Linux / macOS / CI:
+bash scripts/deploy-prod.sh
+```
+
+### 4. Production Docker Compose Profiles
 ```bash
 # Profile A: Standard local mock development stack (Postgres + Redis + Backend + Frontend)
 docker compose up -d
@@ -315,7 +330,7 @@ All profiles include PostgreSQL 16 and Redis 7 with automatic startup readiness 
 
 ---
 
-### 4. Enterprise Kubernetes Cluster (HPA & Ingress)
+### 5. Enterprise Kubernetes Cluster (HPA & Ingress)
 ```bash
 # Declaratively apply all manifests via Kustomize
 kubectl apply -k k8s/
@@ -356,7 +371,7 @@ All prompts and completions are computed purely in volatile GPU VRAM and never p
 ## Verification & Testing Suite
 
 ### Unified One-Command Verification Runner
-Run all 6 verification stages across environment, compose profiles, backend Jest suites (23 suites, 184 tests), frontend typechecks, and both SDKs with colored scorecard reporting:
+Run all 6 verification stages across environment, compose profiles, backend Jest suites (25 suites, 203 tests), frontend typechecks, and both SDKs with colored scorecard reporting:
 
 ```powershell
 # Windows PowerShell:
