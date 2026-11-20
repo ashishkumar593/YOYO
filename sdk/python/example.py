@@ -36,7 +36,7 @@ def check_live_server(base_url: str) -> bool:
 def showcase_client_initialization():
     print_section("1. Client Initialization (Environment vs Explicit)")
     base_url = os.environ.get("YOYO_BASE_URL", "http://localhost:4000/v1")
-    api_key = os.environ.get("YOYO_API_KEY", "sk_live_demo_enterprise_key_2026")
+    api_key = os.environ.get("YOYO_API_KEY", "sk_live_yoyo_dev_2026_prod_access")
 
     client = Yoyo(api_key=api_key, base_url=base_url)
     print(f"[OK] Initialized Yoyo client:")
