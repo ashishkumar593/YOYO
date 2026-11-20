@@ -53,6 +53,8 @@ export function Sidebar() {
         { label: 'Model Catalog', href: '/dashboard/models', icon: Cpu },
         { label: 'Playground', href: '/dashboard/playground', icon: Terminal },
         { label: 'Model Arena', href: '/dashboard/arena', icon: Swords, badge: 'New' },
+        { label: 'Knowledge Base (RAG)', href: '/dashboard/knowledge', icon: BookOpen, badge: 'RAG' },
+        { label: 'Agentic Tools', href: '/dashboard/tools', icon: Sparkles, badge: 'Agent' },
         { label: 'API Keys', href: '/dashboard/keys', icon: Key },
         { label: 'Request Logs', href: '/dashboard/logs', icon: ListFilter },
         { label: 'Telemetry & Velocity', href: '/dashboard/analytics', icon: BarChart3 },

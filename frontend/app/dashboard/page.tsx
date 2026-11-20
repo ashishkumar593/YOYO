@@ -41,6 +41,7 @@ import {
   X,
   FileCode,
   Webhook,
+  Download,
 } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 
@@ -49,7 +50,7 @@ export default function DashboardOverviewPage() {
   const { success, error: toastError, info } = useToast();
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<'overview' | 'keys' | 'models' | 'integrations'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'keys' | 'models' | 'integrations' | 'local'>('overview');
 
   // Overview Data
   const [summary, setSummary] = useState<any>(null);
@@ -93,16 +94,26 @@ export default function DashboardOverviewPage() {
   const [testResult, setTestResult] = useState<any | null>(null);
   const [copiedResult, setCopiedResult] = useState(false);
 
+  // Local Docker Model Manager State
+  const [localStatus, setLocalStatus] = useState<any>(null);
+  const [localLoading, setLocalLoading] = useState(false);
+  const [pullModelTag, setPullModelTag] = useState('');
+  const [pulling, setPulling] = useState(false);
+  const [pullProgress, setPullProgress] = useState<{ status: string; percent?: number; total?: number; completed?: number } | null>(null);
+  const [deletingModel, setDeletingModel] = useState<string | null>(null);
+
   // Load Initial Overview & Telemetry
   const loadDashboardData = async () => {
     try {
-      const [sumData, reqsData, catalogData] = await Promise.all([
+      const [sumData, reqsData, catalogData, locData] = await Promise.all([
         apiRequest('/api/usage/summary').catch(() => null),
         apiRequest('/api/usage/requests?limit=10').catch(() => []),
         apiRequest('/api/models/catalog').catch(() => []),
+        apiRequest('/api/models/local/status').catch(() => null),
       ]);
       setSummary(sumData);
       setRecentRequests(reqsData || []);
+      if (locData) setLocalStatus(locData);
       if (catalogData && catalogData.length) {
         setCatalog(catalogData);
         if (!testModel && catalogData[0]?.apiIdentifier) {
@@ -113,6 +124,99 @@ export default function DashboardOverviewPage() {
       console.error('Error loading dashboard overview:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load Local Docker Status
+  const loadLocalStatus = async () => {
+    setLocalLoading(true);
+    try {
+      const data = await apiRequest('/api/models/local/status');
+      setLocalStatus(data);
+    } catch (err: any) {
+      console.error('Failed to load local model status:', err);
+    } finally {
+      setLocalLoading(false);
+    }
+  };
+
+  // Pull Local Model via SSE Stream
+  const handlePullModel = async (targetTag?: string) => {
+    const tag = (targetTag || pullModelTag).trim();
+    if (!tag) {
+      toastError('Please specify a model tag (e.g. phi3:mini, mistral:7b)');
+      return;
+    }
+    setPulling(true);
+    setPullProgress({ status: `Connecting to Docker daemon for ${tag}...`, percent: 0 });
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('yoyo_access_token') : null;
+      const res = await fetch('http://localhost:4000/api/models/local/pull', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ model: tag }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error ${res.status}`);
+      }
+
+      if (!res.body) {
+        throw new Error('No readable stream returned');
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.slice(6).trim();
+            if (jsonStr === '[DONE]') break;
+            try {
+              const parsed = JSON.parse(jsonStr);
+              if (parsed.error) {
+                throw new Error(parsed.error);
+              }
+              setPullProgress(parsed);
+            } catch {}
+          }
+        }
+      }
+
+      success(`Model '${tag}' pulled and registered in YOYO!`);
+      setPullModelTag('');
+      await Promise.all([loadLocalStatus(), loadModels()]);
+    } catch (err: any) {
+      toastError(err.message || 'Failed to pull local model');
+    } finally {
+      setPulling(false);
+      setPullProgress(null);
+    }
+  };
+
+  // Delete Local Model from Docker Container
+  const handleDeleteModel = async (tag: string) => {
+    if (!confirm(`Are you sure you want to delete local model '${tag}' from disk?`)) return;
+    setDeletingModel(tag);
+    try {
+      await apiRequest(`/api/models/local/${encodeURIComponent(tag)}`, { method: 'DELETE' });
+      success(`Model '${tag}' deleted.`);
+      await Promise.all([loadLocalStatus(), loadModels()]);
+    } catch (err: any) {
+      toastError(err.message || 'Failed to delete local model');
+    } finally {
+      setDeletingModel(null);
     }
   };
 
@@ -477,6 +581,24 @@ print(response.choices[0].message.content)`;
         >
           <Layers className="w-3.5 h-3.5 text-cyan-400" />
           <span>Workloads & SDKs</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab('local');
+            loadLocalStatus();
+          }}
+          className={`flex items-center space-x-2 px-4 py-2.5 rounded-t-xl text-xs font-semibold transition-all border-b-2 whitespace-nowrap ${
+            activeTab === 'local'
+              ? 'border-primary text-white bg-primary/10'
+              : 'border-transparent text-muted-foreground hover:text-white hover:bg-muted/40'
+          }`}
+        >
+          <Server className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Local Docker Engine</span>
+          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            {localStatus?.installedModels?.length ?? 4}
+          </span>
         </button>
       </div>
 
@@ -1353,6 +1475,259 @@ print(response.choices[0].message.content)`;
               </Link>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 5: LOCAL DOCKER ENGINE & MODEL PULLER                                 */}
+      {/* ========================================================================= */}
+      {activeTab === 'local' && (
+        <div className="space-y-6">
+          {/* Header & Status Card */}
+          <div className="p-6 rounded-2xl bg-[#090B12] border border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <Server className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-white flex items-center gap-2">
+                    <span>Local Docker AI Engine (Zero OpenAI Keys)</span>
+                    <span
+                      className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${
+                        localStatus?.online
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                          : 'bg-rose-500/10 text-rose-400 border-rose-500/30'
+                      }`}
+                    >
+                      {localStatus?.online ? 'CONTAINER HEALTHY' : 'OFFLINE'}
+                    </span>
+                  </h2>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    Endpoint: <span className="text-zinc-300">{localStatus?.endpoint || 'http://localhost:11434'}</span> •
+                    Weights Volume: <span className="text-cyan-400 font-bold">F:\My Project\YOYO\data\ollama</span> •
+                    Installed Models: <span className="text-white font-bold">{localStatus?.totalModels ?? 0}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 shrink-0">
+              <button
+                onClick={() => loadLocalStatus()}
+                disabled={localLoading}
+                className="px-3.5 py-2 rounded-xl bg-card border border-border hover:bg-muted text-xs font-semibold flex items-center space-x-1.5 text-foreground transition-all"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${localLoading ? 'animate-spin text-primary' : ''}`} />
+                <span>Refresh Status</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Pull New Model Interactive Box */}
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-card/90 to-card/40 border border-border/80 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Download className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-sm font-bold text-white">Pull & Register New Local Model</h3>
+              </div>
+              <span className="text-[11px] text-muted-foreground font-mono">
+                Pulls directly into Docker container mounted on drive F:\
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2.5">
+              <input
+                type="text"
+                placeholder="Enter Ollama model tag (e.g. phi3:mini, mistral:7b, tinyllama, starcoder2:3b)"
+                value={pullModelTag}
+                disabled={pulling}
+                onChange={(e) => setPullModelTag(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && !pulling && handlePullModel()}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-black/40 border border-border text-white text-xs font-mono focus:outline-none focus:border-cyan-400"
+              />
+              <button
+                onClick={() => handlePullModel()}
+                disabled={pulling || !pullModelTag.trim()}
+                className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-sm shadow-cyan-600/30 shrink-0"
+              >
+                {pulling ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Pulling Model...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Pull Model</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Quick Model Preset Pills */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <span className="text-[11px] text-muted-foreground font-mono">Popular Models:</span>
+              {[
+                { tag: 'llama3.2:3b', desc: 'Llama 3.2 3B' },
+                { tag: 'phi3:mini', desc: 'Phi-3 Mini 3.8B' },
+                { tag: 'tinyllama', desc: 'TinyLlama 1.1B' },
+                { tag: 'qwen2.5-coder:7b', desc: 'Qwen 2.5 Coder 7B' },
+                { tag: 'mistral:7b', desc: 'Mistral 7B' },
+                { tag: 'starcoder2:3b', desc: 'StarCoder2 3B' },
+              ].map((p) => (
+                <button
+                  key={p.tag}
+                  type="button"
+                  disabled={pulling}
+                  onClick={() => {
+                    setPullModelTag(p.tag);
+                    handlePullModel(p.tag);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-cyan-500/10 border border-white/[0.08] hover:border-cyan-500/30 text-[11px] font-mono text-zinc-300 hover:text-cyan-400 transition-all flex items-center space-x-1"
+                >
+                  <span>+</span>
+                  <span>{p.tag}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Live SSE Download Progress Meter */}
+            {pulling && pullProgress && (
+              <div className="p-4 rounded-xl bg-black/60 border border-cyan-500/30 space-y-2.5 animate-pulse">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <div className="flex items-center space-x-2 text-cyan-300">
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>{pullProgress.status}</span>
+                  </div>
+                  <span className="text-white font-bold">{pullProgress.percent ?? 0}%</span>
+                </div>
+                <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-cyan-500 to-emerald-400 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.max(5, pullProgress.percent || 10)}%` }}
+                  />
+                </div>
+                {pullProgress.total && pullProgress.completed && (
+                  <div className="flex justify-between text-[10px] font-mono text-zinc-400">
+                    <span>
+                      {Math.round(pullProgress.completed / (1024 * 1024))} MB /{' '}
+                      {Math.round(pullProgress.total / (1024 * 1024))} MB
+                    </span>
+                    <span>Saving to F:\My Project\YOYO\data\ollama</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Installed Models Grid */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-indigo-400" />
+                <span>Installed Models on Disk (F:\ Drive)</span>
+              </h3>
+              <span className="text-xs text-muted-foreground font-mono">
+                {localStatus?.installedModels?.length || 0} local weights ready
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {(localStatus?.installedModels || []).map((m: any) => (
+                <div
+                  key={m.name}
+                  className="p-5 rounded-2xl bg-card border border-border/80 flex flex-col justify-between space-y-4 hover:border-emerald-500/40 transition-all group"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="text-[10px] font-mono font-bold uppercase text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                        {m.family || 'LOCAL DOCKER'}
+                      </span>
+                      <span className="text-[11px] font-mono text-cyan-300 font-bold">
+                        {m.sizeMb} MB
+                      </span>
+                    </div>
+
+                    <h4 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors font-mono">
+                      {m.name}
+                    </h4>
+
+                    <div className="space-y-1 text-[11px] font-mono text-muted-foreground">
+                      <div>Parameters: <span className="text-white">{m.parameterSize || 'N/A'}</span></div>
+                      <div>Quantization: <span className="text-amber-400">{m.quantizationLevel || 'GGUF'}</span></div>
+                      {m.digest && <div>Digest: <span className="text-zinc-400">{m.digest}</span></div>}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-border/60 flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setTestModel(m.name);
+                        setActiveTab('models');
+                        info(`Selected ${m.name} for In-Dashboard API testing.`);
+                      }}
+                      className="flex-1 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center justify-center space-x-1 transition-all"
+                    >
+                      <Play className="w-3 h-3" />
+                      <span>Test</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteModel(m.name)}
+                      disabled={deletingModel === m.name}
+                      className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 transition-all"
+                      title="Delete local weights"
+                    >
+                      {deletingModel === m.name ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Running Models in Memory / VRAM */}
+          {localStatus?.runningModels && localStatus.runningModels.length > 0 && (
+            <div className="p-5 rounded-2xl bg-[#090B12] border border-border/80 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-amber-400">
+                  <Activity className="w-4 h-4" />
+                  <h4 className="text-xs font-bold uppercase tracking-wider font-mono">
+                    Active Models Resident in Memory / VRAM
+                  </h4>
+                </div>
+                <span className="text-[10px] font-mono text-muted-foreground">
+                  Kept alive in GPU memory for instantaneous zero-latency inference
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {localStatus.runningModels.map((rm: any) => (
+                  <div
+                    key={rm.name}
+                    className="p-3.5 rounded-xl bg-card/60 border border-border text-xs font-mono space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between text-white font-bold">
+                      <span>{rm.name}</span>
+                      <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                        HOT
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      Context: <span className="text-zinc-200">{rm.contextLength} tokens</span>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      Memory Allocated: <span className="text-cyan-400">{rm.sizeMb} MB</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

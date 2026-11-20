@@ -1,0 +1,47 @@
+{
+    admin off
+}
+
+# HTTP and HTTPS Edge Gateway for YOYO Cloud AI Platform
+:80, :443 {
+    # Compress non-SSE responses
+    encode gzip zstd
+
+    # Healthcheck bypass
+    handle /health {
+        reverse_proxy backend:4000
+    }
+
+    # API Edge Gateway (/v1/chat/completions, /v1/embeddings, /v1/models)
+    # flush_interval -1 ensures instantaneous, unbuffered Server-Sent Events (SSE) streaming
+    handle /v1/* {
+        reverse_proxy backend:4000 {
+            flush_interval -1
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Platform Management REST API
+    handle /api/* {
+        reverse_proxy backend:4000 {
+            flush_interval -1
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Next.js Management Frontend & Web Cockpit
+    handle {
+        reverse_proxy frontend:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+}

@@ -7,6 +7,8 @@ networks:
 volumes:
   pg_data:
   redis_data:
+  caddy_data:
+  caddy_config:
 
 services:
   # 1. PostgreSQL Database (Production Optimized)
@@ -54,7 +56,34 @@ services:
           cpus: '1.0'
           memory: 1024M
 
-  # 3. YOYO Backend Edge Gateway
+  # 3. Ollama Local LLM Engine (Persistent Drive F:\ Volume Mount)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: yoyo-ollama-prod
+    restart: always
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_NUM_PARALLEL=4
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./data/ollama:/root/.ollama
+    networks:
+      - yoyo-net
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # 4. YOYO Backend Edge Gateway
   backend:
     build:
       context: ./backend
@@ -66,6 +95,7 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://${POSTGRES_USER:-yoyo_admin}:${POSTGRES_PASSWORD:-yoyo_production_secret}@postgres:5432/${POSTGRES_DB:-yoyo_cloud}?schema=public
       REDIS_URL: redis://redis:6379
+      OLLAMA_WORKER_0_URL: http://ollama:11434
       JWT_SECRET: ${JWT_SECRET:-change-this-in-production-vault-secret}
       FEATURE_MOCK_INFERENCE: "false"
       FEATURE_WORKER_HEALTHCHECK: "true"
@@ -77,6 +107,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      ollama:
+        condition: service_started
     networks:
       - yoyo-net
     healthcheck:
@@ -90,7 +122,7 @@ services:
           cpus: '4.0'
           memory: 4096M
 
-  # 4. YOYO Frontend Management Platform
+  # 5. YOYO Frontend Management Platform
   frontend:
     build:
       context: ./frontend
@@ -111,3 +143,21 @@ services:
         limits:
           cpus: '2.0'
           memory: 2048M
+
+  # 6. Caddy Edge Reverse Proxy & Automated SSL
+  proxy:
+    image: caddy:2-alpine
+    container_name: yoyo-proxy-prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - yoyo-net
