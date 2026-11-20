@@ -29,8 +29,18 @@ def print_section(title: str):
 
 
 def check_live_server(base_url: str) -> bool:
-    """Check if explicit live test flag is set."""
-    return os.environ.get("YOYO_LIVE_TEST", "0") in ("1", "true", "True")
+    """Check if explicit live test flag is set or live gateway is reachable."""
+    flag = os.environ.get("YOYO_LIVE_TEST", "auto").lower()
+    if flag in ("0", "false", "off"):
+        return False
+    try:
+        import urllib.request
+        health_url = base_url.replace("/v1", "/health")
+        req = urllib.request.Request(health_url, headers={"User-Agent": "Yoyo-Python-SDK/1.0"})
+        with urllib.request.urlopen(req, timeout=1.5) as resp:
+            return resp.status == 200
+    except Exception:
+        return flag in ("1", "true", "on")
 
 
 def showcase_client_initialization():
@@ -72,7 +82,7 @@ def showcase_model_discovery(client: Yoyo, is_live: bool):
 def showcase_chat_completion(client: Yoyo, is_live: bool):
     print_section("3. Standard Chat Completion & Zero-Data Retention")
     params = {
-        "model": "llama-3.3-70b",
+        "model": "llama3.2:1b",
         "messages": [
             {"role": "system", "content": "You are YOYO AI, an enterprise-grade assistant."},
             {"role": "user", "content": "Explain prefix caching in one sentence."},
@@ -101,7 +111,7 @@ def showcase_streaming(client: Yoyo, is_live: bool):
     if is_live:
         try:
             stream = client.chat.completions.create(
-                model="llama-3.3-70b",
+                model="llama3.2:1b",
                 messages=[{"role": "user", "content": "Count from 1 to 3."}],
                 stream=True,
                 max_tokens=32,
@@ -187,6 +197,13 @@ def showcase_embeddings_and_rerank(client: Yoyo, is_live: bool):
     assert callable(client.embeddings.create)
     assert callable(client.rerank)
     assert callable(client.rerank.create)
+    if is_live:
+        try:
+            emb = client.embeddings.create(model="nomic-embed-text:latest", input=["YOYO Cloud AI Platform"])
+            vec_len = len(emb["data"][0]["embedding"])
+            print(f"[OK] Live embedding generated successfully ({vec_len}-dimensional vector).")
+        except Exception as e:
+            print(f"[WARN] Live embedding failed ({e}); falling back to documentation.")
     print("[OK] client.embeddings.create(model='nomic-embed-text', input=[...]) verified.")
     print("[OK] client.rerank(model='bge-reranker-large', query=..., documents=[...]) verified.")
 
