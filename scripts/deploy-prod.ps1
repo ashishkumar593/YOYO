@@ -62,15 +62,16 @@ Write-Host "`n[4/5] Pulling verified infrastructure images..." -ForegroundColor 
 docker compose -f docker-compose.prod.yml pull postgres redis ollama proxy
 
 # 5. Build and start production stack
-Write-Host "`n[5/5] Starting production stack with Caddy Reverse Proxy & SSL..." -ForegroundColor Yellow
+Write-Host "`n[5/5] Starting production stack with Caddy Reverse Proxy and SSL..." -ForegroundColor Yellow
 docker compose -f docker-compose.prod.yml up -d --build
 
 Write-Host "`n======================================================================" -ForegroundColor Green
 Write-Host "  YOYO PRODUCTION CLUSTER DEPLOYED SUCCESSFULLY!" -ForegroundColor Green
 Write-Host "======================================================================" -ForegroundColor Green
-Write-Host "  Edge Gateway & API: https://localhost/v1 or http://localhost/v1" -ForegroundColor Cyan
+Write-Host "  Edge Gateway and API: https://localhost/v1 or http://localhost/v1" -ForegroundColor Cyan
 Write-Host "  Developer Dashboard: http://localhost (via Caddy Reverse Proxy)" -ForegroundColor Cyan
 Write-Host "  Direct Backend Port: http://localhost:4000" -ForegroundColor Cyan
 Write-Host "  Direct Frontend Port: http://localhost:3000" -ForegroundColor Cyan
 Write-Host "  Local Ollama Engine: http://localhost:11434" -ForegroundColor Cyan
-Write-Host "======================================================================`n"
+Write-Host "======================================================================"
+Write-Host ""
