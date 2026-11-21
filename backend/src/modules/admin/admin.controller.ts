@@ -107,9 +107,30 @@ export class AdminController {
   @Post('users/:id/credit')
   async setCredit(
     @Param('id') id: string,
-    @Body('balanceUsd') balanceUsd: number
+    @Body() body: { balanceUsd: number; reason?: string; mode?: 'set' | 'adjust' }
   ) {
-    return this.adminService.updateUserCredit(id, balanceUsd);
+    return this.adminService.updateUserCredit(id, body.balanceUsd, {
+      reason: body.reason,
+      mode: body.mode,
+    });
+  }
+
+  @Get('users/:id/billing')
+  async getUserBilling(@Param('id') id: string) {
+    return this.adminService.getUserBillingDetails(id);
+  }
+
+  @Patch('users/:id/billing-settings')
+  async updateBillingSettings(
+    @Param('id') id: string,
+    @Body() body: { autoRecharge?: boolean; monthlyTokenLimit?: number; status?: UserStatus }
+  ) {
+    return this.adminService.updateBillingSettings(id, body);
+  }
+
+  @Get('billing/overview')
+  async getBillingOverview() {
+    return this.adminService.getBillingSummary();
   }
 
   @Post('users/:id/reset-usage')

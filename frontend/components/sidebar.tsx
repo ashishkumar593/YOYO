@@ -72,15 +72,16 @@ export function Sidebar() {
     },
   ];
 
-  // ADMIN DASHBOARD: strictly admin infrastructure and operations
+  // ADMIN DASHBOARD: strictly admin infrastructure, developer fleet, and billing
   const adminSections: SidebarSection[] = [
     {
-      group: 'Admin Dashboard',
+      group: 'Admin Operations',
       links: [
         { label: 'Cluster Supervisor', href: '/dashboard/admin', icon: ShieldAlert },
+        { label: 'Developer Directory', href: '/dashboard/admin?tab=developers', icon: Users, badge: '100k' },
+        { label: 'Developer Billing', href: '/dashboard/admin?tab=billing', icon: CreditCard, badge: 'Billing' },
         { label: 'Security & Audit Log', href: '/dashboard/security', icon: ShieldCheck },
         { label: 'Team & Workspaces', href: '/dashboard/team', icon: Users },
-        { label: 'Billing & Quotas', href: '/dashboard/billing', icon: CreditCard },
       ],
     },
     {

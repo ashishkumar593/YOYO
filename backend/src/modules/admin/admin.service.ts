@@ -270,15 +270,201 @@ export class AdminService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  async updateUserCredit(userId: string, balanceUsd: number) {
+  async updateUserCredit(
+    userId: string,
+    balanceUsd: number,
+    options?: { reason?: string; mode?: 'set' | 'adjust' }
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { creditBalance: true },
+    });
+    if (!user) throw new NotFoundException('User not found.');
+
+    const mode = options?.mode || 'set';
+    const currentBalance = user.creditBalance ? Number(user.creditBalance.balanceUsd) : 0;
+    const finalBalance = mode === 'adjust' ? currentBalance + balanceUsd : balanceUsd;
+    const delta = mode === 'adjust' ? balanceUsd : finalBalance - currentBalance;
+
+    const updated = await this.prisma.creditBalance.upsert({
+      where: { userId },
+      update: { balanceUsd: Math.max(0, finalBalance) },
+      create: { userId, balanceUsd: Math.max(0, finalBalance), currency: 'USD' },
+    });
+
+    if (delta !== 0 && this.prisma.billingTransaction?.create) {
+      await this.prisma.billingTransaction.create({
+        data: {
+          userId,
+          amountUsd: delta,
+          type: delta > 0 ? 'ADMIN_CREDIT_GRANT' : 'ADMIN_CREDIT_DEDUCTION',
+          description:
+            options?.reason ||
+            `Admin credit ${mode === 'adjust' ? (delta > 0 ? 'top-up' : 'deduction') : 'override'}`,
+        },
+      });
+    }
+
+    return updated;
+  }
+
+  async getUserBillingDetails(userId: string) {
+    const user: any = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        profile: true,
+        quota: true,
+        creditBalance: true,
+        apiKeys: {
+          select: {
+            id: true,
+            name: true,
+            maskedKey: true,
+            isActive: true,
+            budgetLimitUsd: true,
+            createdAt: true,
+            lastUsedAt: true,
+          },
+        },
+        billingTransactions: {
+          orderBy: { createdAt: 'desc' },
+          take: 20,
+        },
+      },
+    });
+
+    if (!user) throw new NotFoundException('Developer not found.');
+
+    const requestAgg = await this.prisma.apiRequest.aggregate({
+      where: { userId },
+      _count: true,
+      _sum: { totalTokens: true },
+    });
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      createdAt: user.createdAt,
+      profile: user.profile,
+      quota: user.quota
+        ? {
+            ...user.quota,
+            monthlyTokenLimit: Number(user.quota.monthlyTokenLimit),
+            currentMonthTokensUsed: Number(user.quota.currentMonthTokensUsed),
+          }
+        : null,
+      creditBalance: user.creditBalance
+        ? {
+            balanceUsd: Number(user.creditBalance.balanceUsd),
+            currency: user.creditBalance.currency,
+            autoRecharge: user.creditBalance.autoRecharge,
+            updatedAt: user.creditBalance.updatedAt,
+          }
+        : { balanceUsd: 0, currency: 'USD', autoRecharge: false },
+      apiKeys: user.apiKeys,
+      transactions: (user.billingTransactions || []).map((tx) => ({
+        id: tx.id,
+        amountUsd: Number(tx.amountUsd),
+        type: tx.type,
+        description: tx.description,
+        createdAt: tx.createdAt,
+      })),
+      usageSummary: {
+        totalRequests: requestAgg._count,
+        totalTokens: requestAgg._sum.totalTokens || 0,
+      },
+    };
+  }
+
+  async getBillingSummary() {
+    const [
+      totalDepositsAgg,
+      totalCreditsAgg,
+      totalUsersCount,
+      recentTransactions,
+      lowBalanceCount,
+    ] = await Promise.all([
+      this.prisma.billingTransaction.aggregate({
+        where: { amountUsd: { gt: 0 } },
+        _sum: { amountUsd: true },
+      }),
+      this.prisma.creditBalance.aggregate({
+        _sum: { balanceUsd: true },
+      }),
+      this.prisma.user.count(),
+      this.prisma.billingTransaction.findMany({
+        take: 20,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: { email: true, profile: { select: { fullName: true, companyName: true } } },
+          },
+        },
+      }),
+      this.prisma.creditBalance.count({
+        where: { balanceUsd: { lte: 5 } },
+      }),
+    ]);
+
+    const totalDeposited = totalDepositsAgg._sum.amountUsd ? Number(totalDepositsAgg._sum.amountUsd) : 0;
+    const totalCirculatingCredits = totalCreditsAgg._sum.balanceUsd ? Number(totalCreditsAgg._sum.balanceUsd) : 0;
+
+    return {
+      totalDepositedUsd: totalDeposited,
+      totalCirculatingCreditsUsd: totalCirculatingCredits,
+      totalDevelopers: totalUsersCount,
+      lowBalanceDevelopersCount: lowBalanceCount,
+      recentTransactions: (recentTransactions || []).map((tx) => ({
+        id: tx.id,
+        userId: tx.userId,
+        userEmail: tx.user?.email,
+        developerName: tx.user?.profile?.fullName || tx.user?.email?.split('@')[0],
+        company: tx.user?.profile?.companyName,
+        amountUsd: Number(tx.amountUsd),
+        type: tx.type,
+        description: tx.description,
+        createdAt: tx.createdAt,
+      })),
+    };
+  }
+
+  async updateBillingSettings(
+    userId: string,
+    data: { autoRecharge?: boolean; monthlyTokenLimit?: number; status?: UserStatus }
+  ) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found.');
 
-    return this.prisma.creditBalance.upsert({
-      where: { userId },
-      update: { balanceUsd },
-      create: { userId, balanceUsd, currency: 'USD' },
-    });
+    if (data.status) {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { status: data.status },
+      });
+    }
+
+    if (data.autoRecharge !== undefined) {
+      await this.prisma.creditBalance.upsert({
+        where: { userId },
+        update: { autoRecharge: data.autoRecharge },
+        create: { userId, balanceUsd: 10, currency: 'USD', autoRecharge: data.autoRecharge },
+      });
+    }
+
+    if (data.monthlyTokenLimit !== undefined) {
+      await this.prisma.userQuota.upsert({
+        where: { userId },
+        update: { monthlyTokenLimit: BigInt(data.monthlyTokenLimit) },
+        create: {
+          userId,
+          monthlyTokenLimit: BigInt(data.monthlyTokenLimit),
+          resetsAt: new Date(Date.now() + 30 * 86400000),
+        },
+      });
+    }
+
+    return this.getUserBillingDetails(userId);
   }
 
   async resetUserUsage(userId: string) {

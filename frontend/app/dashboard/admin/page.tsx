@@ -47,7 +47,18 @@ export default function AdminDashboardPage() {
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
 
   // Navigation tab inside Admin Dashboard
-  const [activeTab, setActiveTab] = useState<'overview' | 'developers' | 'models' | 'workers'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'developers' | 'billing' | 'models' | 'workers'>('overview');
+
+  // URL query param tab listener
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab && ['overview', 'developers', 'billing', 'models', 'workers'].includes(tab)) {
+        setActiveTab(tab as any);
+      }
+    }
+  }, []);
 
   // Stats & Fleet state
   const [stats, setStats] = useState<any>(null);
@@ -66,6 +77,19 @@ export default function AdminDashboardPage() {
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [sortBy, setSortBy] = useState<string>('createdAt');
   const [loadingUsers, setLoadingUsers] = useState<boolean>(false);
+
+  // Developer Billing & Comprehensive Dossier state
+  const [billingSummary, setBillingSummary] = useState<any>(null);
+  const [loadingBillingSummary, setLoadingBillingSummary] = useState<boolean>(false);
+  const [selectedBillingUser, setSelectedBillingUser] = useState<any | null>(null);
+  const [developerBillingDetails, setDeveloperBillingDetails] = useState<any | null>(null);
+  const [loadingBillingDetails, setLoadingBillingDetails] = useState<boolean>(false);
+  const [creditAdjustmentAmount, setCreditAdjustmentAmount] = useState<number>(50);
+  const [creditAdjustmentReason, setCreditAdjustmentReason] = useState<string>('Enterprise SLA Top-up');
+  const [creditAdjustmentMode, setCreditAdjustmentMode] = useState<'adjust' | 'set'>('adjust');
+  const [developerTokenLimitInput, setDeveloperTokenLimitInput] = useState<number>(50000000);
+  const [developerAutoRecharge, setDeveloperAutoRecharge] = useState<boolean>(false);
+  const [isSavingDeveloperBilling, setIsSavingDeveloperBilling] = useState<boolean>(false);
 
   // Modals for editing developer quotas and credits
   const [editingQuotaUser, setEditingQuotaUser] = useState<any | null>(null);
@@ -150,17 +174,103 @@ export default function AdminDashboardPage() {
     }
   }, [currentPage, pageSize, searchQuery, statusFilter, sortBy]);
 
+  const loadBillingSummary = useCallback(async () => {
+    setLoadingBillingSummary(true);
+    try {
+      const data = await apiRequest('/api/admin/billing/overview');
+      setBillingSummary(data);
+    } catch (err) {
+      console.error('Failed to load billing summary:', err);
+    } finally {
+      setLoadingBillingSummary(false);
+    }
+  }, []);
+
+  const openDeveloperBillingDrawer = async (dev: any) => {
+    setSelectedBillingUser(dev);
+    setLoadingBillingDetails(true);
+    setCreditAdjustmentAmount(50);
+    setCreditAdjustmentReason('Enterprise credit grant');
+    setCreditAdjustmentMode('adjust');
+    setDeveloperTokenLimitInput(dev.quota?.monthlyTokenLimit || 50000000);
+    setDeveloperAutoRecharge(false);
+    try {
+      const details = await apiRequest(`/api/admin/users/${dev.id}/billing`);
+      setDeveloperBillingDetails(details);
+      if (details?.quota?.monthlyTokenLimit) {
+        setDeveloperTokenLimitInput(details.quota.monthlyTokenLimit);
+      }
+      if (details?.creditBalance?.autoRecharge !== undefined) {
+        setDeveloperAutoRecharge(details.creditBalance.autoRecharge);
+      }
+    } catch (err: any) {
+      toastError(err.message || 'Failed to load developer billing dossier');
+    } finally {
+      setLoadingBillingDetails(false);
+    }
+  };
+
+  const handleApplyCreditAdjustment = async () => {
+    if (!selectedBillingUser) return;
+    setIsSavingDeveloperBilling(true);
+    try {
+      await apiRequest(`/api/admin/users/${selectedBillingUser.id}/credit`, {
+        method: 'POST',
+        body: JSON.stringify({
+          balanceUsd: creditAdjustmentAmount,
+          reason: creditAdjustmentReason,
+          mode: creditAdjustmentMode,
+        }),
+      });
+      success(`Updated credit balance for ${selectedBillingUser.email}.`);
+      await openDeveloperBillingDrawer(selectedBillingUser);
+      loadDevelopers();
+      loadGlobalStatsAndFleet();
+      loadBillingSummary();
+    } catch (err: any) {
+      toastError(err.message || 'Failed to update credit.');
+    } finally {
+      setIsSavingDeveloperBilling(false);
+    }
+  };
+
+  const handleSaveBillingSettings = async () => {
+    if (!selectedBillingUser) return;
+    setIsSavingDeveloperBilling(true);
+    try {
+      await apiRequest(`/api/admin/users/${selectedBillingUser.id}/billing-settings`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          autoRecharge: developerAutoRecharge,
+          monthlyTokenLimit: developerTokenLimitInput,
+        }),
+      });
+      success(`Updated billing settings & quota ceiling for ${selectedBillingUser.email}.`);
+      await openDeveloperBillingDrawer(selectedBillingUser);
+      loadDevelopers();
+      loadBillingSummary();
+    } catch (err: any) {
+      toastError(err.message || 'Failed to update billing settings.');
+    } finally {
+      setIsSavingDeveloperBilling(false);
+    }
+  };
+
   useEffect(() => {
     if (isAdmin) {
       loadGlobalStatsAndFleet();
+      loadBillingSummary();
     }
-  }, [isAdmin, loadGlobalStatsAndFleet]);
+  }, [isAdmin, loadGlobalStatsAndFleet, loadBillingSummary]);
 
   useEffect(() => {
-    if (isAdmin && (activeTab === 'developers' || activeTab === 'overview')) {
+    if (isAdmin && (activeTab === 'developers' || activeTab === 'overview' || activeTab === 'billing')) {
       loadDevelopers();
+      if (activeTab === 'billing' || activeTab === 'overview') {
+        loadBillingSummary();
+      }
     }
-  }, [isAdmin, activeTab, loadDevelopers]);
+  }, [isAdmin, activeTab, loadDevelopers, loadBillingSummary]);
 
   if (!isAdmin) {
     return null;
@@ -437,9 +547,25 @@ export default function AdminDashboardPage() {
           }`}
         >
           <Users className="w-4 h-4" />
-          <span>100k Developer Directory & Quotas</span>
+          <span>100k Developer Directory &amp; Quotas</span>
           <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-black/20 text-slate-900 border border-black/10">
             {usersTotal || stats?.totalUsers || 0}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('billing')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+            activeTab === 'billing'
+              ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <CreditCard className="w-4 h-4" />
+          <span>Billing &amp; Revenue</span>
+          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-black/20 text-slate-900 border border-black/10">
+            ${billingSummary?.totalCirculatingCreditsUsd ? billingSummary.totalCirculatingCreditsUsd.toFixed(0) : (stats?.estimatedRevenueUsd || 0)}
           </span>
         </button>
 
@@ -819,6 +945,17 @@ export default function AdminDashboardPage() {
 
                           <td className="py-3.5 px-4 text-right">
                             <div className="inline-flex items-center gap-1.5">
+                              {/* Open Developer Billing Dossier */}
+                              <button
+                                type="button"
+                                onClick={() => openDeveloperBillingDrawer(dev)}
+                                className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/20 text-[11px] font-semibold transition-colors flex items-center gap-1"
+                                title="Manage Developer Billing & Credits"
+                              >
+                                <DollarSign className="w-3 h-3" />
+                                <span>Billing</span>
+                              </button>
+
                               {/* Edit Token Limit */}
                               <button
                                 type="button"
@@ -903,6 +1040,348 @@ export default function AdminDashboardPage() {
                   Next <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* TAB: DEVELOPER BILLING & REVENUE OPERATIONS                    */}
+      {/* ============================================================== */}
+      {activeTab === 'billing' && (
+        <div className="space-y-6">
+          {/* Header Banner */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
+            <div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-emerald-400" />
+                Developer Billing &amp; Credit Reserves
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Oversee developer balances, inject enterprise credit grants, set monthly spend limits, and monitor live billing transactions across all 100k accounts.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  loadBillingSummary();
+                  loadDevelopers();
+                }}
+                className="px-3.5 py-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-semibold flex items-center gap-1.5 transition-colors border border-border/60"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Refresh Billing</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Metric KPIs */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 rounded-2xl bg-card/80 border border-border/80 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
+                  Circulating Credits
+                </span>
+                <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <DollarSign className="w-4 h-4" />
+                </span>
+              </div>
+              <div className="mt-2 text-2xl font-bold font-mono text-white">
+                ${(billingSummary?.totalCirculatingCreditsUsd ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <span className="text-[11px] text-muted-foreground mt-1 block">
+                Total balances across active developer wallets
+              </span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-card/80 border border-border/80 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
+                  Processed Deposits
+                </span>
+                <span className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  <CreditCard className="w-4 h-4" />
+                </span>
+              </div>
+              <div className="mt-2 text-2xl font-bold font-mono text-white">
+                ${(billingSummary?.totalDepositedUsd ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <span className="text-[11px] text-muted-foreground mt-1 block">
+                Total Stripe top-ups and enterprise deposits
+              </span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-card/80 border border-border/80 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
+                  Developer Tenants
+                </span>
+                <span className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                  <Users className="w-4 h-4" />
+                </span>
+              </div>
+              <div className="mt-2 text-2xl font-bold font-mono text-white">
+                {billingSummary?.totalDevelopers ?? usersTotal ?? 0}
+              </div>
+              <span className="text-[11px] text-muted-foreground mt-1 block">
+                Registered platform developers
+              </span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-card/80 border border-border/80 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
+                  Low Balance Alerts
+                </span>
+                <span className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                  <AlertTriangle className="w-4 h-4" />
+                </span>
+              </div>
+              <div className="mt-2 text-2xl font-bold font-mono text-rose-400">
+                {billingSummary?.lowBalanceDevelopersCount ?? 0}
+              </div>
+              <span className="text-[11px] text-muted-foreground mt-1 block">
+                Accounts with balance ≤ $5.00
+              </span>
+            </div>
+          </div>
+
+          {/* Developers Billing Ledger Table */}
+          <div className="rounded-2xl bg-card/80 border border-border/80 overflow-hidden shadow-sm">
+            <div className="p-4 border-b border-border/80 flex flex-col md:flex-row items-center justify-between gap-3 bg-card/50">
+              <div className="relative w-full md:w-80">
+                <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  placeholder="Filter developers by email or name..."
+                  className="w-full bg-background border border-border/80 rounded-xl pl-9 pr-4 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="ACTIVE">Active Accounts</option>
+                  <option value="SUSPENDED">Suspended Accounts</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-background text-muted-foreground uppercase tracking-wider text-[11px] font-mono border-b border-border/80">
+                  <tr>
+                    <th className="py-3 px-4">Developer Account</th>
+                    <th className="py-3 px-4">Current Balance ($ USD)</th>
+                    <th className="py-3 px-4">Auto-Recharge</th>
+                    <th className="py-3 px-4">Monthly Quota Consumption</th>
+                    <th className="py-3 px-4">API Keys</th>
+                    <th className="py-3 px-4 text-right">Billing Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {loadingUsers ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-muted-foreground font-mono">
+                        <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-emerald-400" />
+                        Loading billing registry...
+                      </td>
+                    </tr>
+                  ) : usersList.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-muted-foreground">
+                        No developer billing records match the query.
+                      </td>
+                    </tr>
+                  ) : (
+                    usersList.map((dev: any) => {
+                      const balance = Number(dev.creditBalance || 0);
+                      const isLow = balance <= 5;
+                      const limit = dev.quota?.monthlyTokenLimit || 5000000;
+                      const used = dev.quota?.currentMonthTokensUsed || 0;
+                      const percent = Math.min(100, Math.round((used / limit) * 100));
+
+                      return (
+                        <tr key={dev.id} className="hover:bg-muted/30 transition-colors">
+                          <td className="py-3.5 px-4">
+                            <div className="font-semibold text-foreground text-xs">
+                              {dev.profile?.fullName || dev.email.split('@')[0]}
+                            </div>
+                            <div className="font-mono text-muted-foreground text-[11px]">{dev.email}</div>
+                            {dev.profile?.companyName && (
+                              <span className="text-[10px] text-zinc-400 font-mono">
+                                {dev.profile.companyName}
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="py-3.5 px-4 font-mono">
+                            <span className={`text-sm font-bold ${isLow ? 'text-rose-400' : 'text-emerald-400'}`}>
+                              ${balance.toFixed(2)}
+                            </span>
+                            {isLow && (
+                              <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 font-sans font-bold">
+                                Low
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="py-3.5 px-4">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                                dev.creditBalance?.autoRecharge
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                  : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+                              }`}
+                            >
+                              {dev.creditBalance?.autoRecharge ? 'Enabled' : 'Disabled'}
+                            </span>
+                          </td>
+
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center justify-between text-[11px] font-mono mb-1">
+                              <span className="text-foreground font-semibold">
+                                {formatNumber(used)} / {formatNumber(limit)} tokens
+                              </span>
+                              <span className={percent > 90 ? 'text-red-400' : percent > 70 ? 'text-amber-400' : 'text-emerald-400'}>
+                                {percent}%
+                              </span>
+                            </div>
+                            <div className="w-full h-1.5 bg-background rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${
+                                  percent > 90 ? 'bg-red-500' : percent > 70 ? 'bg-amber-500' : 'bg-emerald-500'
+                                }`}
+                                style={{ width: `${percent}%` }}
+                              />
+                            </div>
+                          </td>
+
+                          <td className="py-3.5 px-4 font-mono text-muted-foreground text-xs">
+                            {dev._count?.apiKeys || 0} active
+                          </td>
+
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="inline-flex items-center gap-1.5">
+                              {/* Open Full Billing Dossier */}
+                              <button
+                                type="button"
+                                onClick={() => openDeveloperBillingDrawer(dev)}
+                                className="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-colors shadow-sm shadow-emerald-500/20 flex items-center gap-1"
+                              >
+                                <DollarSign className="w-3.5 h-3.5" />
+                                <span>Manage Billing</span>
+                              </button>
+
+                              {/* Toggle Active / Suspended */}
+                              <button
+                                type="button"
+                                onClick={() => handleToggleStatus(dev)}
+                                className={`p-1.5 rounded-lg transition-colors ${
+                                  dev.status === 'ACTIVE'
+                                    ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
+                                    : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                                }`}
+                                title={dev.status === 'ACTIVE' ? 'Suspend Account' : 'Activate Account'}
+                              >
+                                {dev.status === 'ACTIVE' ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Platform Billing Transactions Ledger */}
+          <div className="rounded-2xl bg-card/80 border border-border/80 overflow-hidden shadow-sm">
+            <div className="p-4 border-b border-border/80 flex items-center justify-between">
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                  <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                  Live Platform Billing Transactions &amp; Ledger
+                </h4>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Real-time log of deposits, automated usage debits, admin credits, and refunds.
+                </p>
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                {billingSummary?.recentTransactions?.length || 0} events
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-background text-muted-foreground uppercase tracking-wider text-[11px] font-mono border-b border-border/80">
+                  <tr>
+                    <th className="py-2.5 px-4">Transaction ID</th>
+                    <th className="py-2.5 px-4">Developer</th>
+                    <th className="py-2.5 px-4">Type</th>
+                    <th className="py-2.5 px-4">Amount</th>
+                    <th className="py-2.5 px-4">Description</th>
+                    <th className="py-2.5 px-4 text-right">Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {!billingSummary?.recentTransactions || billingSummary.recentTransactions.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-muted-foreground font-mono text-xs">
+                        No billing transactions logged yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    billingSummary.recentTransactions.map((tx: any) => (
+                      <tr key={tx.id} className="hover:bg-muted/20 transition-colors">
+                        <td className="py-2.5 px-4 font-mono text-[11px] text-muted-foreground">
+                          {tx.id.substring(0, 8)}...
+                        </td>
+                        <td className="py-2.5 px-4">
+                          <span className="font-semibold text-foreground text-xs">{tx.userEmail || tx.developerName}</span>
+                        </td>
+                        <td className="py-2.5 px-4 font-mono">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              tx.amountUsd >= 0
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            }`}
+                          >
+                            {tx.type}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-4 font-mono font-bold">
+                          <span className={tx.amountUsd >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                            {tx.amountUsd >= 0 ? `+$${tx.amountUsd.toFixed(2)}` : `-$${Math.abs(tx.amountUsd).toFixed(2)}`}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-4 text-muted-foreground text-xs">
+                          {tx.description || 'System transaction'}
+                        </td>
+                        <td className="py-2.5 px-4 text-right font-mono text-[11px] text-muted-foreground">
+                          {new Date(tx.createdAt).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -1644,6 +2123,290 @@ export default function AdminDashboardPage() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* MODAL 5: COMPREHENSIVE DEVELOPER BILLING DOSSIER              */}
+      {/* ============================================================== */}
+      {selectedBillingUser && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-3xl bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+            {/* Drawer Header */}
+            <div className="flex items-start justify-between border-b border-border/60 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-white text-base flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-emerald-400" />
+                    Developer Billing &amp; Quota Dossier
+                  </h3>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                      selectedBillingUser.status === 'ACTIVE'
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : 'bg-red-500/10 text-red-400 border-red-500/20'
+                    }`}
+                  >
+                    {selectedBillingUser.status}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground font-mono mt-1">
+                  Tenant: <span className="text-white font-semibold">{selectedBillingUser.email}</span> (ID: {selectedBillingUser.id})
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedBillingUser(null);
+                  setDeveloperBillingDetails(null);
+                }}
+                className="text-muted-foreground hover:text-white p-1 rounded-lg hover:bg-muted"
+              >
+                ✕
+              </button>
+            </div>
+
+            {loadingBillingDetails ? (
+              <div className="py-12 text-center text-muted-foreground font-mono text-xs">
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-400" />
+                Fetching real-time developer billing dossier...
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Stats Cards Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-3.5 rounded-xl bg-background border border-border/80">
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase">Credit Balance</span>
+                    <div className="mt-1 text-xl font-bold font-mono text-emerald-400">
+                      ${(developerBillingDetails?.creditBalance?.balanceUsd ?? Number(selectedBillingUser.creditBalance || 0)).toFixed(2)}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      Auto-Recharge: {developerBillingDetails?.creditBalance?.autoRecharge ? 'Active' : 'Off'}
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-background border border-border/80">
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase">Token Ceiling</span>
+                    <div className="mt-1 text-xl font-bold font-mono text-white">
+                      {formatNumber(developerBillingDetails?.quota?.monthlyTokenLimit ?? selectedBillingUser.quota?.monthlyTokenLimit ?? 5000000)}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      MTD Used: {formatNumber(developerBillingDetails?.quota?.currentMonthTokensUsed ?? selectedBillingUser.quota?.currentMonthTokensUsed ?? 0)}
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-background border border-border/80">
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase">Total Lifetime Requests</span>
+                    <div className="mt-1 text-xl font-bold font-mono text-white">
+                      {developerBillingDetails?.usageSummary?.totalRequests ?? selectedBillingUser._count?.apiRequests ?? 0}
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      Active Keys: {developerBillingDetails?.apiKeys?.length ?? selectedBillingUser._count?.apiKeys ?? 0}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Operations Section: Two-Column Form */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Action 1: Credit Balance Modification */}
+                  <div className="p-4 rounded-xl bg-background border border-border/80 space-y-3">
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+                      <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                      Adjust Credit Balance
+                    </h4>
+
+                    {/* Mode Toggle */}
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setCreditAdjustmentMode('adjust')}
+                        className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition-all ${
+                          creditAdjustmentMode === 'adjust'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40 font-bold'
+                            : 'bg-muted/40 text-muted-foreground border-transparent hover:text-white'
+                        }`}
+                      >
+                        Top-up / Deduct (+/-)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCreditAdjustmentMode('set')}
+                        className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition-all ${
+                          creditAdjustmentMode === 'set'
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40 font-bold'
+                            : 'bg-muted/40 text-muted-foreground border-transparent hover:text-white'
+                        }`}
+                      >
+                        Set Exact Balance
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                        {creditAdjustmentMode === 'adjust' ? 'Adjustment Amount ($ USD)' : 'New Balance ($ USD)'}
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={creditAdjustmentAmount}
+                        onChange={(e) => setCreditAdjustmentAmount(parseFloat(e.target.value) || 0)}
+                        className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
+
+                    {/* Quick Pills */}
+                    <div className="flex flex-wrap gap-1">
+                      {[25, 50, 100, 250, 500, 1000].map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setCreditAdjustmentAmount(v)}
+                          className="px-2 py-0.5 rounded text-[11px] font-mono bg-muted hover:bg-muted/80 text-foreground border border-border/60"
+                        >
+                          +${v}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                        Adjustment Reason / Audit Note
+                      </label>
+                      <input
+                        type="text"
+                        value={creditAdjustmentReason}
+                        onChange={(e) => setCreditAdjustmentReason(e.target.value)}
+                        placeholder="e.g. Enterprise pilot grant, Billing adjustment"
+                        className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isSavingDeveloperBilling}
+                      onClick={handleApplyCreditAdjustment}
+                      className="w-full py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 hover:bg-emerald-400 transition-colors disabled:opacity-40"
+                    >
+                      {isSavingDeveloperBilling ? 'Updating Credit...' : 'Apply Credit Adjustment'}
+                    </button>
+                  </div>
+
+                  {/* Action 2: Quota & Account Controls */}
+                  <div className="p-4 rounded-xl bg-background border border-border/80 space-y-3">
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+                      <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                      Token Quota &amp; Policy
+                    </h4>
+
+                    <div>
+                      <label className="block text-[11px] font-medium text-muted-foreground mb-1">
+                        Monthly Token Ceiling
+                      </label>
+                      <input
+                        type="number"
+                        step="1000000"
+                        value={developerTokenLimitInput}
+                        onChange={(e) => setDeveloperTokenLimitInput(parseInt(e.target.value, 10) || 0)}
+                        className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      />
+                    </div>
+
+                    {/* Presets */}
+                    <div className="flex flex-wrap gap-1">
+                      {[10000000, 50000000, 100000000, 500000000].map((v) => (
+                        <button
+                          key={v}
+                          type="button"
+                          onClick={() => setDeveloperTokenLimitInput(v)}
+                          className="px-2 py-0.5 rounded text-[11px] font-mono bg-muted hover:bg-muted/80 text-foreground border border-border/60"
+                        >
+                          {v >= 1000000000 ? `${v / 1000000000}B` : `${v / 1000000}M`}
+                        </button>
+                      ))}
+                    </div>
+
+                    <label className="flex items-center gap-2 cursor-pointer pt-1">
+                      <input
+                        type="checkbox"
+                        checked={developerAutoRecharge}
+                        onChange={(e) => setDeveloperAutoRecharge(e.target.checked)}
+                        className="rounded border-border text-emerald-500 focus:ring-emerald-500"
+                      />
+                      <span className="text-xs text-foreground font-medium">Enable Auto-Recharge on low balance</span>
+                    </label>
+
+                    <button
+                      type="button"
+                      disabled={isSavingDeveloperBilling}
+                      onClick={handleSaveBillingSettings}
+                      className="w-full py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 hover:bg-amber-400 transition-colors disabled:opacity-40"
+                    >
+                      {isSavingDeveloperBilling ? 'Saving Settings...' : 'Save Quota Settings'}
+                    </button>
+
+                    <div className="pt-2 border-t border-border/60 flex items-center justify-between">
+                      <span className="text-[11px] text-muted-foreground">Month-to-Date Token Counters:</span>
+                      <button
+                        type="button"
+                        onClick={() => handleResetUsage(selectedBillingUser)}
+                        className="px-2.5 py-1 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground hover:text-white text-[11px] font-semibold transition-colors flex items-center gap-1"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>Reset MTD Usage</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Developer Recent Billing Transactions Table */}
+                <div className="p-4 rounded-xl bg-background border border-border/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                      Transaction Ledger ({developerBillingDetails?.transactions?.length || 0})
+                    </h4>
+                  </div>
+
+                  <div className="max-h-48 overflow-y-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="text-[10px] font-mono text-muted-foreground uppercase border-b border-border/60">
+                        <tr>
+                          <th className="py-1.5 px-2">Type</th>
+                          <th className="py-1.5 px-2">Amount</th>
+                          <th className="py-1.5 px-2">Description</th>
+                          <th className="py-1.5 px-2 text-right">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/40">
+                        {!developerBillingDetails?.transactions || developerBillingDetails.transactions.length === 0 ? (
+                          <tr>
+                            <td colSpan={4} className="py-4 text-center text-muted-foreground font-mono text-xs">
+                              No prior transactions recorded for this developer.
+                            </td>
+                          </tr>
+                        ) : (
+                          developerBillingDetails.transactions.map((t: any) => (
+                            <tr key={t.id} className="text-[11px]">
+                              <td className="py-2 px-2 font-mono font-bold text-foreground">{t.type}</td>
+                              <td className="py-2 px-2 font-mono font-bold">
+                                <span className={t.amountUsd >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                                  {t.amountUsd >= 0 ? `+$${t.amountUsd.toFixed(2)}` : `-$${Math.abs(t.amountUsd).toFixed(2)}`}
+                                </span>
+                              </td>
+                              <td className="py-2 px-2 text-muted-foreground">{t.description || '-'}</td>
+                              <td className="py-2 px-2 text-right font-mono text-muted-foreground">
+                                {new Date(t.createdAt).toLocaleDateString()}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -114,10 +114,20 @@ describe('AdminService', () => {
       },
       apiRequest: {
         count: jest.fn().mockResolvedValue(100),
-        aggregate: jest.fn().mockResolvedValue({ _sum: { totalTokens: 500000 } }),
+        aggregate: jest.fn().mockResolvedValue({ _count: 100, _sum: { totalTokens: 500000 } }),
       },
       apiKey: {
         count: jest.fn().mockResolvedValue(5),
+      },
+      creditBalance: {
+        upsert: jest.fn().mockResolvedValue({ id: 'cb1', userId: 'u1', balanceUsd: 100 }),
+        aggregate: jest.fn().mockResolvedValue({ _sum: { balanceUsd: 1000 } }),
+        count: jest.fn().mockResolvedValue(0),
+      },
+      billingTransaction: {
+        create: jest.fn().mockResolvedValue({ id: 'bt1', amountUsd: 50 }),
+        aggregate: jest.fn().mockResolvedValue({ _sum: { amountUsd: 500 } }),
+        findMany: jest.fn().mockResolvedValue([]),
       },
     };
 
@@ -220,6 +230,46 @@ describe('AdminService', () => {
       await expect(service.updateUserQuota('u_missing', 10000)).rejects.toThrow(
         NotFoundException
       );
+    });
+  });
+
+  describe('updateUserCredit', () => {
+    it('should update credit balance and record transaction', async () => {
+      const updated = await service.updateUserCredit('u1', 50, {
+        reason: 'Enterprise SLA bonus',
+        mode: 'adjust',
+      });
+      expect(updated.balanceUsd).toBe(100);
+      expect(prismaService.creditBalance.upsert).toHaveBeenCalled();
+    });
+  });
+
+  describe('getUserBillingDetails', () => {
+    it('should return developer full billing profile', async () => {
+      prismaService.user.findUnique.mockResolvedValueOnce({
+        id: 'u1',
+        email: 'dev@yoyo.ai',
+        role: 'DEVELOPER',
+        status: UserStatus.ACTIVE,
+        profile: { fullName: 'Dev User' },
+        quota: { monthlyTokenLimit: BigInt(5000000), currentMonthTokensUsed: BigInt(1000) },
+        creditBalance: { balanceUsd: 100, currency: 'USD', autoRecharge: true },
+        apiKeys: [],
+        billingTransactions: [],
+      });
+      const billing = await service.getUserBillingDetails('u1');
+      expect(billing.email).toBe('dev@yoyo.ai');
+      expect(billing.creditBalance.balanceUsd).toBe(100);
+      expect(billing.quota?.monthlyTokenLimit).toBe(5000000);
+    });
+  });
+
+  describe('getBillingSummary', () => {
+    it('should aggregate platform-wide billing telemetry', async () => {
+      const summary = await service.getBillingSummary();
+      expect(summary.totalDepositedUsd).toBe(500);
+      expect(summary.totalCirculatingCreditsUsd).toBe(1000);
+      expect(summary.totalDevelopers).toBe(1);
     });
   });
 
