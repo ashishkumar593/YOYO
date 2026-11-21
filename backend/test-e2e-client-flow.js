@@ -383,7 +383,7 @@ async function testEndToEndDeveloperFlow() {
       Authorization: `Bearer ${plaintextKey}`,
     },
     body: JSON.stringify({
-      model: 'qwen-2.5-vl-72b',
+      model: 'moondream',
       messages: [
         {
           role: 'user',

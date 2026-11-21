@@ -35,9 +35,15 @@ export class OllamaProvider implements InferenceProviderInterface {
         const exactNormMatch = models.find((m) => norm(m) === normReq);
         if (exactNormMatch) return exactNormMatch;
 
-        // Family & specialization match (coder, qwen, llama, deepseek, embed)
+        // Family & specialization match (coder, qwen, llama, deepseek, embed, vision)
         const familyMatch = models.find((m) => {
           const normM = norm(m);
+          if (
+            (normReq.includes('vision') || normReq.includes('vl') || normReq.includes('moondream')) &&
+            (normM.includes('moondream') || normM.includes('vision') || normM.includes('llava'))
+          ) {
+            return true;
+          }
           if (normReq.includes('coder') && normM.includes('coder')) return true;
           if (normReq.includes('qwen') && normM.includes('qwen')) return true;
           if (normReq.includes('llama') && normM.includes('llama')) return true;

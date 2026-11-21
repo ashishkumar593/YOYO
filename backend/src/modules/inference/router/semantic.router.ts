@@ -21,7 +21,7 @@ export class SemanticRouter {
       Array.isArray(m.content) && m.content.some((p) => p.type === 'image_url')
     );
     if (hasImages) {
-      return 'llama-3.2-11b-vision';
+      return 'moondream';
     }
 
     // Combine user and system text

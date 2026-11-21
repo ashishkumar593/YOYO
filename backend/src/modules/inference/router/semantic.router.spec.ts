@@ -13,7 +13,7 @@ describe('SemanticRouter', () => {
       },
     ];
     const model = SemanticRouter.classifyQuery(messages, 'auto');
-    expect(model).toBe('llama-3.2-11b-vision');
+    expect(model).toBe('moondream');
   });
 
   it('should route code-heavy queries to coding model', () => {
