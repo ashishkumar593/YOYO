@@ -67,7 +67,7 @@ export default function AdminDashboardPage() {
   const [circuitBreakers, setCircuitBreakers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Developer (100k scale) Management state
+  // Developer Management state
   const [usersList, setUsersList] = useState<any[]>([]);
   const [usersTotal, setUsersTotal] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -498,12 +498,9 @@ export default function AdminDashboardPage() {
           <div>
             <div className="flex items-center space-x-2">
               <h1 className="text-2xl font-bold tracking-tight text-white">Admin Dashboard</h1>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold uppercase">
-                100k Developer Scale
-              </span>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Supervise platform tenants, allocate monthly token ceilings, configure model limits & pricing, and monitor cloud GPU clusters.
+              Supervise platform tenants, allocate monthly token ceilings, configure model limits &amp; pricing, and monitor cloud GPU clusters.
             </p>
           </div>
         </div>
@@ -547,7 +544,7 @@ export default function AdminDashboardPage() {
           }`}
         >
           <Users className="w-4 h-4" />
-          <span>100k Developer Directory &amp; Quotas</span>
+          <span>Developer Directory &amp; Quotas</span>
           <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-black/20 text-slate-900 border border-black/10">
             {usersTotal || stats?.totalUsers || 0}
           </span>
@@ -777,7 +774,7 @@ export default function AdminDashboardPage() {
       )}
 
       {/* ============================================================== */}
-      {/* TAB 2: 100K DEVELOPER DIRECTORY & QUOTA MANAGEMENT              */}
+      {/* TAB 2: DEVELOPER DIRECTORY & QUOTA MANAGEMENT                   */}
       {/* ============================================================== */}
       {activeTab === 'developers' && (
         <div className="space-y-5">
@@ -862,7 +859,7 @@ export default function AdminDashboardPage() {
                     <tr>
                       <td colSpan={6} className="py-12 text-center text-muted-foreground font-mono">
                         <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-amber-400" />
-                        Querying 100k developer ledger...
+                        Loading developer directory...
                       </td>
                     </tr>
                   ) : usersList.length === 0 ? (
@@ -1058,7 +1055,7 @@ export default function AdminDashboardPage() {
                 Developer Billing &amp; Credit Reserves
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
-                Oversee developer balances, inject enterprise credit grants, set monthly spend limits, and monitor live billing transactions across all 100k accounts.
+                Oversee developer balances, inject enterprise credit grants, set monthly spend limits, and monitor live billing transactions across accounts.
               </p>
             </div>
             <div className="flex items-center gap-2">

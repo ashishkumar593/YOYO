@@ -78,8 +78,8 @@ export function Sidebar() {
       group: 'Admin Operations',
       links: [
         { label: 'Cluster Supervisor', href: '/dashboard/admin', icon: ShieldAlert },
-        { label: 'Developer Directory', href: '/dashboard/admin?tab=developers', icon: Users, badge: '100k' },
-        { label: 'Developer Billing', href: '/dashboard/admin?tab=billing', icon: CreditCard, badge: 'Billing' },
+        { label: 'Developer Directory', href: '/dashboard/admin?tab=developers', icon: Users },
+        { label: 'Developer Billing', href: '/dashboard/admin?tab=billing', icon: CreditCard },
         { label: 'Security & Audit Log', href: '/dashboard/security', icon: ShieldCheck },
         { label: 'Team & Workspaces', href: '/dashboard/team', icon: Users },
       ],

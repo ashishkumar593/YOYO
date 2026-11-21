@@ -48,7 +48,7 @@ flowchart TD
   - `/dashboard/logs`: High-density live telemetry inspector with 5s auto-refresh polling, status/model filters, CSV/JSON export, and drawer replay.
   - `/dashboard/analytics`: Historical usage velocity charts, per-model token breakdown, and prompt cache savings telemetry.
   - `/dashboard/billing`: Credit balance top-ups, Stripe checkout integration, prefix caching arbitrage savings calculator, and ledger.
-  - `/admin & /dashboard/admin`: 100k Developer Directory, Developer Billing Operations ($ USD credit grants, auto-recharge, spend caps, monthly token ceilings, live transaction ledgers), Cloud GPU worker node supervisor, and model fleet pricing management.
+  - `/admin & /dashboard/admin`: Developer Directory, Developer Billing Operations ($ USD credit grants, auto-recharge, spend caps, monthly token ceilings, live transaction ledgers), Cloud GPU worker node supervisor, and model fleet pricing management.
   - `/dashboard/settings`: Profile management, Bcrypt 12 password updates, active sessions, HMAC Webhook endpoints, and Enterprise SSO (SAML 2.0 / OIDC).
 - **[`backend/`](./backend)**: High-throughput NestJS 11 + Fastify 5 API gateway, Prisma ORM, Redis sliding-window rate limiters, multi-worker dispatching, circuit breaker state machine (`CLOSED`/`OPEN`/`HALF_OPEN`), native `/metrics` Prometheus exporter, AI Safety Guardrails (`/v1/moderations`), Semantic Dynamic Router (`auto`), Prompt Prefix Caching (90% discount), and Automated LLM-as-a-Judge Evaluation Engine (`/v1/evaluations`).
 - **[`deploy/helm/yoyo/`](./deploy/helm/yoyo)**: Production Helm 3 chart with HorizontalPodAutoscaler (HPA), Ingress TLS cert-manager, ConfigMaps, and Prometheus ServiceMonitor.
@@ -290,7 +290,7 @@ pnpm db:seed
 >   - **Password**: `Dev@Yoyo2026!`
 >   - **API Key**: `sk_live_yoyo_dev_2026_prod_access`
 >   - **Allocation**: 50,000,000 monthly tokens, \$150.00 credit balance, 300 RPM rate limit ceiling.
-> - **Admin Account** (100k Developer Control Center & Cluster Supervisor):
+> - **Admin Account** (Developer Control Center & Cluster Supervisor):
 >   - **Email**: `admin@yoyo.ai`
 >   - **Password**: `Admin@Yoyo2026!`
 >   - **API Key**: `sk_live_yoyo_dev_master_key_2026`

@@ -1786,7 +1786,7 @@ console.log('Embedding length:', response.data[0].embedding.length);
                 </div>
                 <h1 className="text-3xl font-black text-white">Semantic Reranker</h1>
                 <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
-                  Two-stage retrieval reranking using state-of-the-art cross-encoders (<code className="text-zinc-200">bge-reranker-large</code>). Improves search and RAG relevance by up to 35% over vector cosine similarity alone.
+                  Two-stage retrieval reranking using deep cross-encoders (<code className="text-zinc-200">bge-reranker-large</code>). Improves search and RAG relevance by up to 35% over vector cosine similarity alone.
                 </p>
               </div>
 
