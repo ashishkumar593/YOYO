@@ -585,6 +585,17 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
       where: { apiIdentifier: modelName },
     });
 
+    if (!model) {
+      model = await this.prisma.model.findFirst({
+        where: {
+          OR: [
+            { apiIdentifier: `${modelName}:latest` },
+            { apiIdentifier: modelName.replace(/:latest$/, '') },
+          ],
+        },
+      });
+    }
+
     let activeAdapter: any = null;
     if (!model) {
       activeAdapter = await (this.prisma as any).modelAdapter?.findUnique?.({

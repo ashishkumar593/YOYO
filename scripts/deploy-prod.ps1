@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # YOYO Cloud AI Platform — One-Click Production Deployment Script (PowerShell)
 # Orchestrates Postgres, Redis, Local Ollama Docker Engine, Gateway, Frontend & Caddy
 # ==============================================================================

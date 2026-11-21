@@ -16,6 +16,7 @@ describe('InferenceService', () => {
     prismaService = {
       model: {
         findUnique: jest.fn(),
+        findFirst: jest.fn().mockResolvedValue(null),
       },
       modelWorker: {
         findMany: jest.fn().mockResolvedValue([]),

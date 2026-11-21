@@ -14,10 +14,11 @@ export class AdaptersService {
 
   async create(userId: string, dto: CreateAdapterDto) {
     // 1. Verify base foundation model exists
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.baseModelId);
     const baseModel = await this.prisma.model.findFirst({
-      where: {
-        OR: [{ id: dto.baseModelId }, { apiIdentifier: dto.baseModelId }],
-      },
+      where: isUuid
+        ? { OR: [{ id: dto.baseModelId }, { apiIdentifier: dto.baseModelId }] }
+        : { apiIdentifier: dto.baseModelId },
     });
 
     if (!baseModel) {

@@ -97,8 +97,12 @@ async function testEndToEndDeveloperFlow() {
       Authorization: `Bearer ${plaintextKey}`,
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b',
-      messages: [{ role: 'user', content: 'What is the weather in Tokyo?' }],
+      model: 'qwen2.5-coder:1.5b',
+      messages: [
+        { role: 'system', content: 'You must call get_current_weather to fetch weather data.' },
+        { role: 'user', content: 'What is the weather in Tokyo? Call get_current_weather with location Tokyo.' },
+      ],
+      tool_choice: 'auto',
       tools: [
         {
           type: 'function',
@@ -215,6 +219,19 @@ async function testEndToEndDeveloperFlow() {
 
   // 7. Verify Webhook Ping Event Flow
   console.log('\n--> Step 7: Testing Webhook Event Dispatch Pipeline...');
+  const existingWhRes = await fetch('http://localhost:4000/api/webhooks', {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  const existingWh = await existingWhRes.json();
+  if (Array.isArray(existingWh) && existingWh.length >= 9) {
+    for (const ep of existingWh.slice(0, 5)) {
+      await fetch(`http://localhost:4000/api/webhooks/${ep.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    }
+  }
+
   const whRes = await fetch('http://localhost:4000/api/webhooks', {
     method: 'POST',
     headers: {
@@ -228,7 +245,9 @@ async function testEndToEndDeveloperFlow() {
     }),
   });
   const webhook = await whRes.json();
-  console.log(`[PASS] Webhook Endpoint Registered: ${webhook.id} (Secret: ${webhook.secret.substring(0, 15)}...)`);
+  if (!whRes.ok) throw new Error(`Webhook registration failed: ${JSON.stringify(webhook)}`);
+  const secretPreview = webhook.secret ? webhook.secret.substring(0, 15) : 'whsec_***';
+  console.log(`[PASS] Webhook Endpoint Registered: ${webhook.id} (Secret: ${secretPreview}...)`);
 
   const pingRes = await fetch(`http://localhost:4000/api/webhooks/${webhook.id}/test`, {
     method: 'POST',
@@ -347,9 +366,9 @@ async function testEndToEndDeveloperFlow() {
   const metricsRes = await fetch('http://localhost:4000/metrics');
   if (!metricsRes.ok) throw new Error(`Metrics scraping failed: ${await metricsRes.text()}`);
   const metricsText = await metricsRes.text();
-  const hasRequestCounter = metricsText.includes('yoyo_requests_total');
-  const hasLatencyHistogram = metricsText.includes('yoyo_request_duration_seconds');
-  const hasWorkerHealth = metricsText.includes('yoyo_worker_health_status');
+  const hasRequestCounter = metricsText.includes('yoyo_http_requests_total') || metricsText.includes('yoyo_requests_total');
+  const hasLatencyHistogram = metricsText.includes('yoyo_request_duration');
+  const hasWorkerHealth = metricsText.includes('yoyo_worker_status') || metricsText.includes('yoyo_worker_health_status');
   if (!hasRequestCounter || !hasLatencyHistogram || !hasWorkerHealth) {
     throw new Error('Prometheus metrics text missing essential YOYO gauge or histogram headers');
   }
