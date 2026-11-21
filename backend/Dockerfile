@@ -1,6 +1,8 @@
 # Multi-stage production build for YOYO Backend
 FROM node:20-alpine AS builder
 
+RUN apk add --no-cache openssl libc6-compat
+
 WORKDIR /app
 
 RUN npm install -g pnpm@12.15.0
@@ -15,6 +17,8 @@ RUN pnpm build
 
 # Runner stage
 FROM node:20-alpine AS runner
+
+RUN apk add --no-cache openssl libc6-compat
 
 WORKDIR /app
 
