@@ -681,11 +681,11 @@ print(response.choices[0].message.content)`;
                 </span>
               </div>
 
-              <div className="flex items-center gap-1 bg-black/40 p-1 rounded-lg border border-white/[0.06] text-xs font-mono">
+              <div className="flex items-center gap-1 bg-zinc-100 dark:bg-black/40 p-1 rounded-lg border border-zinc-200 dark:border-white/[0.06] text-xs font-mono">
                 <button
                   onClick={() => setActiveTabCode('curl')}
                   className={`px-2.5 py-1 rounded text-[11px] transition-colors ${
-                    activeTabCode === 'curl' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-foreground'
+                    activeTabCode === 'curl' ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-semibold' : 'text-zinc-600 dark:text-zinc-400 hover:text-foreground'
                   }`}
                 >
                   cURL
@@ -693,7 +693,7 @@ print(response.choices[0].message.content)`;
                 <button
                   onClick={() => setActiveTabCode('python')}
                   className={`px-2.5 py-1 rounded text-[11px] transition-colors ${
-                    activeTabCode === 'python' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-foreground'
+                    activeTabCode === 'python' ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-semibold' : 'text-zinc-600 dark:text-zinc-400 hover:text-foreground'
                   }`}
                 >
                   Python SDK
@@ -701,7 +701,7 @@ print(response.choices[0].message.content)`;
                 <button
                   onClick={() => setActiveTabCode('ts')}
                   className={`px-2.5 py-1 rounded text-[11px] transition-colors ${
-                    activeTabCode === 'ts' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-foreground'
+                    activeTabCode === 'ts' ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-semibold' : 'text-zinc-600 dark:text-zinc-400 hover:text-foreground'
                   }`}
                 >
                   TypeScript
@@ -709,7 +709,7 @@ print(response.choices[0].message.content)`;
                 <button
                   onClick={() => setActiveTabCode('openai')}
                   className={`px-2.5 py-1 rounded text-[11px] transition-colors ${
-                    activeTabCode === 'openai' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-foreground'
+                    activeTabCode === 'openai' ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-semibold' : 'text-zinc-600 dark:text-zinc-400 hover:text-foreground'
                   }`}
                 >
                   OpenAI Drop-In
@@ -717,7 +717,7 @@ print(response.choices[0].message.content)`;
               </div>
             </div>
 
-            <div className="relative rounded-xl bg-black/60 p-3.5 border border-white/[0.06] overflow-x-auto">
+            <div className="relative rounded-xl bg-zinc-900 dark:bg-black/60 p-3.5 border border-zinc-200 dark:border-white/[0.06] shadow-sm overflow-x-auto">
               <pre className="font-mono text-xs text-zinc-300 leading-relaxed">
                 {getActiveCode()}
               </pre>
@@ -895,7 +895,7 @@ print(response.choices[0].message.content)`;
               <p className="text-xs text-emerald-200/80">
                 Please copy your API key now. For your security, this full key secret will <strong>never be shown again</strong>.
               </p>
-              <div className="flex items-center gap-2 bg-black/60 p-2.5 rounded-xl border border-emerald-500/30 font-mono text-xs text-emerald-300">
+              <div className="flex items-center gap-2 bg-emerald-500/10 dark:bg-black/60 p-2.5 rounded-xl border border-emerald-500/30 font-mono text-xs text-emerald-700 dark:text-emerald-300">
                 <span className="flex-1 select-all break-all">{createdSecret}</span>
                 <button
                   onClick={() => copyApiKey(createdSecret)}
@@ -1044,7 +1044,7 @@ print(response.choices[0].message.content)`;
                 <select
                   value={testModel}
                   onChange={(e) => setTestModel(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl bg-black/60 border border-border text-xs font-mono text-cyan-300 focus:outline-none focus:border-primary"
+                  className="px-3 py-1.5 rounded-xl bg-background border border-border text-xs font-mono text-cyan-600 dark:text-cyan-300 focus:outline-none focus:border-primary"
                 >
                   {catalog.map((m) => (
                     <option key={m.id || m.apiIdentifier} value={m.apiIdentifier}>
@@ -1075,7 +1075,7 @@ print(response.choices[0].message.content)`;
                     value={testSystemPrompt}
                     onChange={(e) => setTestSystemPrompt(e.target.value)}
                     rows={2}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-border text-xs text-zinc-200 focus:outline-none focus:border-primary font-mono"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:border-primary font-mono"
                     placeholder="Set system persona or guardrail constraints..."
                   />
                 </div>
@@ -1118,17 +1118,17 @@ print(response.choices[0].message.content)`;
               </div>
 
               {/* Right Column: Parameters Sliders */}
-              <div className="p-4 rounded-xl bg-black/40 border border-border/70 space-y-4 flex flex-col justify-between">
+              <div className="p-4 rounded-xl bg-muted/40 dark:bg-black/40 border border-border space-y-4 flex flex-col justify-between">
                 <div className="space-y-4">
-                  <div className="text-xs font-semibold text-zinc-300 font-mono flex items-center space-x-1.5">
-                    <Sliders className="w-3.5 h-3.5 text-cyan-400" />
+                  <div className="text-xs font-semibold text-foreground font-mono flex items-center space-x-1.5">
+                    <Sliders className="w-3.5 h-3.5 text-cyan-500 dark:text-cyan-400" />
                     <span>Inference Parameters</span>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between text-xs font-mono mb-1">
                       <span className="text-muted-foreground">Temperature:</span>
-                      <span className="text-cyan-300 font-bold">{testTemperature.toFixed(2)}</span>
+                      <span className="text-cyan-600 dark:text-cyan-300 font-bold">{testTemperature.toFixed(2)}</span>
                     </div>
                     <input
                       type="range"
@@ -1137,7 +1137,7 @@ print(response.choices[0].message.content)`;
                       step="0.05"
                       value={testTemperature}
                       onChange={(e) => setTestTemperature(parseFloat(e.target.value))}
-                      className="w-full accent-cyan-400 h-1.5 bg-muted rounded-lg"
+                      className="w-full accent-cyan-500 dark:accent-cyan-400 h-1.5 bg-muted rounded-lg"
                     />
                     <div className="flex justify-between text-[10px] text-zinc-500 font-mono mt-0.5">
                       <span>0.0 (Deterministic)</span>
@@ -1148,7 +1148,7 @@ print(response.choices[0].message.content)`;
                   <div>
                     <div className="flex items-center justify-between text-xs font-mono mb-1">
                       <span className="text-muted-foreground">Max Tokens:</span>
-                      <span className="text-cyan-300 font-bold">{testMaxTokens}</span>
+                      <span className="text-cyan-600 dark:text-cyan-300 font-bold">{testMaxTokens}</span>
                     </div>
                     <input
                       type="range"
@@ -1157,7 +1157,7 @@ print(response.choices[0].message.content)`;
                       step="64"
                       value={testMaxTokens}
                       onChange={(e) => setTestMaxTokens(parseInt(e.target.value, 10))}
-                      className="w-full accent-cyan-400 h-1.5 bg-muted rounded-lg"
+                      className="w-full accent-cyan-500 dark:accent-cyan-400 h-1.5 bg-muted rounded-lg"
                     />
                     <div className="flex justify-between text-[10px] text-zinc-500 font-mono mt-0.5">
                       <span>64</span>
@@ -1166,8 +1166,8 @@ print(response.choices[0].message.content)`;
                   </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-card/60 border border-border/60 text-[11px] font-mono text-zinc-400 space-y-1">
-                  <div className="text-zinc-300 font-semibold">Active Engine Config</div>
+                <div className="p-3 rounded-lg bg-card/60 border border-border/60 text-[11px] font-mono text-muted-foreground space-y-1">
+                  <div className="text-foreground font-semibold">Active Engine Config</div>
                   <div>Endpoint: /v1/chat/completions</div>
                   <div>Speculative Decoding: Enabled</div>
                   <div>Zero Retention: Active</div>
@@ -1177,7 +1177,7 @@ print(response.choices[0].message.content)`;
 
             {/* Test Execution Output Banner */}
             {testResult && (
-              <div className="p-4 rounded-xl bg-black/60 border border-emerald-500/30 space-y-3 mt-4">
+              <div className="p-4 rounded-xl bg-emerald-500/5 dark:bg-black/60 border border-emerald-500/30 space-y-3 mt-4">
                 <div className="flex items-center justify-between flex-wrap gap-2 text-xs font-mono border-b border-border/60 pb-2">
                   <div className="flex items-center space-x-3">
                     <span className="text-emerald-400 font-bold flex items-center space-x-1">
@@ -1281,7 +1281,7 @@ print(response.choices[0].message.content)`;
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 font-mono text-[11px] text-zinc-300 bg-black/40 px-2.5 py-1.5 rounded-lg border border-border/60">
+                    <div className="flex items-center gap-1.5 font-mono text-[11px] text-foreground bg-muted/50 dark:bg-black/40 px-2.5 py-1.5 rounded-lg border border-border/60">
                       <span className="flex-1 truncate select-all">{m.apiIdentifier}</span>
                       <button
                         onClick={() => copyModelId(m.apiIdentifier)}
@@ -1377,7 +1377,7 @@ print(response.choices[0].message.content)`;
                 </div>
               </div>
 
-              <div className="rounded-xl bg-black/60 p-3.5 border border-white/[0.06] font-mono text-xs text-zinc-300 leading-relaxed overflow-x-auto">
+              <div className="rounded-xl bg-zinc-900 dark:bg-black/60 p-3.5 border border-zinc-200 dark:border-white/[0.06] font-mono text-xs text-zinc-300 leading-relaxed overflow-x-auto shadow-sm">
                 <div className="text-zinc-500"># Python standard library</div>
                 <div>from openai import OpenAI</div>
                 <div className="mt-1">client = OpenAI(</div>
@@ -1386,7 +1386,7 @@ print(response.choices[0].message.content)`;
                 <div>)</div>
               </div>
 
-              <p className="text-xs text-zinc-400">
+              <p className="text-xs text-muted-foreground">
                 Supports chat completions, streaming SSE chunks, tool calling, embeddings, and JSON schema constraints.
               </p>
             </div>
@@ -1594,9 +1594,9 @@ print(response.choices[0].message.content)`;
 
             {/* Live SSE Download Progress Meter */}
             {pulling && pullProgress && (
-              <div className="p-4 rounded-xl bg-black/60 border border-cyan-500/30 space-y-2.5 animate-pulse">
+              <div className="p-4 rounded-xl bg-cyan-500/5 dark:bg-black/60 border border-cyan-500/30 space-y-2.5 animate-pulse">
                 <div className="flex items-center justify-between text-xs font-mono">
-                  <div className="flex items-center space-x-2 text-cyan-300">
+                  <div className="flex items-center space-x-2 text-cyan-600 dark:text-cyan-300">
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                     <span>{pullProgress.status}</span>
                   </div>
@@ -1827,13 +1827,13 @@ print(response.choices[0].message.content)`;
                 </div>
 
                 {modelScopeMode === 'restricted' && (
-                  <div className="p-2.5 rounded-xl bg-black/40 border border-border max-h-32 overflow-y-auto space-y-1.5">
+                  <div className="p-2.5 rounded-xl bg-muted/40 dark:bg-black/40 border border-border max-h-32 overflow-y-auto space-y-1.5">
                     {catalog.map((m) => {
                       const isSelected = selectedKeyModels.includes(m.apiIdentifier);
                       return (
                         <label
                           key={m.id || m.apiIdentifier}
-                          className="flex items-center space-x-2 text-xs font-mono text-zinc-300 hover:text-foreground cursor-pointer"
+                          className="flex items-center space-x-2 text-xs font-mono text-muted-foreground hover:text-foreground cursor-pointer"
                         >
                           <input
                             type="checkbox"

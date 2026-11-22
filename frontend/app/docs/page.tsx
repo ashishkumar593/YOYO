@@ -277,7 +277,7 @@ print(completion.choices[0].message.content)`
         <aside className="w-64 border-r border-zinc-200 dark:border-white/[0.08] p-6 hidden md:block shrink-0 sticky top-[57px] h-[calc(100vh-57px)] overflow-y-auto bg-white/40 dark:bg-transparent transition-colors duration-200">
           <div className="space-y-6 text-xs">
             <div>
-              <span className="text-[11px] font-semibold text-zinc-400 block mb-2">Getting Started</span>
+              <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block mb-2">Getting Started</span>
               <ul className="space-y-1.5 text-zinc-400">
                 <li>
                   <button
@@ -303,7 +303,7 @@ print(completion.choices[0].message.content)`
             </div>
 
             <div>
-              <span className="text-[11px] font-semibold text-zinc-400 block mb-2">SDKs & Integrations</span>
+              <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block mb-2">SDKs & Integrations</span>
               <ul className="space-y-1.5 text-zinc-400">
                 <li>
                   <button
@@ -339,7 +339,7 @@ print(completion.choices[0].message.content)`
             </div>
 
             <div>
-              <span className="text-[11px] font-semibold text-zinc-400 block mb-2">Inference Endpoints</span>
+              <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block mb-2">Inference Endpoints</span>
               <ul className="space-y-1.5 text-zinc-400">
                 <li>
                   <button
@@ -395,7 +395,7 @@ print(completion.choices[0].message.content)`
             </div>
 
             <div>
-              <span className="text-[11px] font-semibold text-zinc-400 block mb-2">Asynchronous & Events</span>
+              <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block mb-2">Asynchronous & Events</span>
               <ul className="space-y-1.5 text-zinc-400">
                 <li>
                   <button
@@ -421,7 +421,7 @@ print(completion.choices[0].message.content)`
             </div>
 
             <div>
-              <span className="text-[11px] font-semibold text-zinc-400 block mb-2">Platform Guidelines</span>
+              <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block mb-2">Platform Guidelines</span>
               <ul className="space-y-1.5 text-zinc-400">
                 <li>
                   <button
@@ -543,15 +543,15 @@ for chunk in response:
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] font-mono text-xs text-zinc-300">
-                <span className="text-zinc-500">Authorization: </span>
-                <span className="text-cyan-400 font-bold">Bearer sk_live_your_secret_api_key</span>
+              <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-zinc-50 dark:bg-[#0A0B10] font-mono text-xs text-zinc-700 dark:text-zinc-300 shadow-sm">
+                <span className="text-zinc-500 dark:text-zinc-400">Authorization: </span>
+                <span className="text-cyan-600 dark:text-cyan-400 font-bold">Bearer sk_live_your_secret_api_key</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
+                <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm space-y-2">
                   <h4 className="text-sm font-semibold text-zinc-950 dark:text-white flex items-center space-x-2">
-                    <Shield className="w-4 h-4 text-cyan-400" />
+                    <Shield className="w-4 h-4 text-cyan-500 dark:text-cyan-400" />
                     <span>SHA-256 Key Hashing</span>
                   </h4>
                   <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
@@ -559,13 +559,13 @@ for chunk in response:
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
+                <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm space-y-2">
                   <h4 className="text-sm font-semibold text-zinc-950 dark:text-white flex items-center space-x-2">
-                    <Zap className="w-4 h-4 text-amber-400" />
+                    <Zap className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                     <span>Instant Key Revocation</span>
                   </h4>
                   <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                    If an API key is leaked or compromised, revoke it immediately from the <Link href="/dashboard/keys" className="text-cyan-400 underline">API Keys Dashboard</Link>. Revocation takes effect instantly across all edge nodes.
+                    If an API key is leaked or compromised, revoke it immediately from the <Link href="/dashboard/keys" className="text-cyan-600 dark:text-cyan-400 underline font-medium">API Keys Dashboard</Link>. Revocation takes effect instantly across all edge nodes.
                   </p>
                 </div>
               </div>
@@ -790,13 +790,13 @@ console.log('Embedding vector length:', result.data[0].embedding.length);
               </div>
 
               {/* Tabs */}
-              <div className="flex border-b border-white/[0.08] space-x-4 text-xs font-mono overflow-x-auto">
+              <div className="flex border-b border-zinc-200 dark:border-white/[0.08] space-x-4 text-xs font-mono overflow-x-auto">
                 {(['langchain', 'llamaindex', 'litellm', 'cursor', 'instructor'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setIntegrationTab(tab)}
                     className={`pb-3 font-medium transition-all whitespace-nowrap relative ${
-                      integrationTab === tab ? 'text-cyan-400' : 'text-zinc-500 hover:text-zinc-300'
+                      integrationTab === tab ? 'text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
                     }`}
                   >
                     {tab === 'langchain' && 'LangChain / LangGraph'}
@@ -804,7 +804,7 @@ console.log('Embedding vector length:', result.data[0].embedding.length);
                     {tab === 'litellm' && 'LiteLLM'}
                     {tab === 'cursor' && 'Cursor IDE'}
                     {tab === 'instructor' && 'Instructor (Pydantic)'}
-                    {integrationTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-400" />}
+                    {integrationTab === tab && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-cyan-500 dark:bg-cyan-400" />}
                   </button>
                 ))}
               </div>
@@ -812,8 +812,8 @@ console.log('Embedding vector length:', result.data[0].embedding.length);
               {/* LangChain */}
               {integrationTab === 'langchain' && (
                 <div className="space-y-4">
-                  <p className="text-xs text-zinc-400">
-                    Use <code className="text-cyan-400 font-mono">ChatOpenAI</code> from <code className="text-zinc-800 dark:text-zinc-200 font-mono">langchain_openai</code>, pointing <code className="text-zinc-800 dark:text-zinc-200 font-mono">base_url</code> to <code className="text-cyan-400 font-mono">https://api.yoyo.ai/v1</code>:
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    Use <code className="text-cyan-600 dark:text-cyan-400 font-mono font-semibold">ChatOpenAI</code> from <code className="text-zinc-800 dark:text-zinc-200 font-mono">langchain_openai</code>, pointing <code className="text-zinc-800 dark:text-zinc-200 font-mono">base_url</code> to <code className="text-cyan-600 dark:text-cyan-400 font-mono font-semibold">https://api.yoyo.ai/v1</code>:
                   </p>
                   <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                     <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
@@ -851,8 +851,8 @@ print(response.content)`}</code>
               {/* LlamaIndex */}
               {integrationTab === 'llamaindex' && (
                 <div className="space-y-4">
-                  <p className="text-xs text-zinc-400">
-                    Use <code className="text-cyan-400 font-mono">OpenAI</code> from <code className="text-zinc-800 dark:text-zinc-200 font-mono">llama_index.llms.openai</code>:
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    Use <code className="text-cyan-600 dark:text-cyan-400 font-mono font-semibold">OpenAI</code> from <code className="text-zinc-800 dark:text-zinc-200 font-mono">llama_index.llms.openai</code>:
                   </p>
                   <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                     <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
@@ -884,8 +884,8 @@ print(response.text)`}</code>
               {/* LiteLLM */}
               {integrationTab === 'litellm' && (
                 <div className="space-y-4">
-                  <p className="text-xs text-zinc-400">
-                    Route requests through <code className="text-cyan-400 font-mono">litellm</code> using prefix <code className="text-zinc-800 dark:text-zinc-200 font-mono">openai/&lt;model&gt;</code> and YOYO's <code className="text-zinc-800 dark:text-zinc-200 font-mono">api_base</code>:
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    Route requests through <code className="text-cyan-600 dark:text-cyan-400 font-mono font-semibold">litellm</code> using prefix <code className="text-zinc-800 dark:text-zinc-200 font-mono">openai/&lt;model&gt;</code> and YOYO's <code className="text-zinc-800 dark:text-zinc-200 font-mono">api_base</code>:
                   </p>
                   <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                     <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
@@ -919,27 +919,27 @@ print(response.choices[0].message.content)`}</code>
                   <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     Configure Cursor IDE or VS Code Continue extension to use your private YOYO cloud models for coding assistance, completions, and edits:
                   </p>
-                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-6 space-y-4">
+                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#090A10] shadow-sm p-6 space-y-4">
                     <div className="space-y-2 text-xs font-mono">
                       <div className="flex items-center space-x-2">
-                        <span className="w-4 h-4 rounded bg-cyan-400/20 text-cyan-400 font-bold flex items-center justify-center text-[10px]">1</span>
-                        <span className="text-white font-bold">Open Cursor Settings &rarr; Models</span>
+                        <span className="w-4 h-4 rounded bg-cyan-400/20 text-cyan-600 dark:text-cyan-400 font-bold flex items-center justify-center text-[10px]">1</span>
+                        <span className="text-zinc-950 dark:text-white font-bold">Open Cursor Settings &rarr; Models</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="w-4 h-4 rounded bg-cyan-400/20 text-cyan-400 font-bold flex items-center justify-center text-[10px]">2</span>
-                        <span className="text-zinc-300">Enable <strong>OpenAI API Key</strong> toggle</span>
+                        <span className="w-4 h-4 rounded bg-cyan-400/20 text-cyan-600 dark:text-cyan-400 font-bold flex items-center justify-center text-[10px]">2</span>
+                        <span className="text-zinc-700 dark:text-zinc-300">Enable <strong>OpenAI API Key</strong> toggle</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="w-4 h-4 rounded bg-cyan-400/20 text-cyan-400 font-bold flex items-center justify-center text-[10px]">3</span>
-                        <span className="text-zinc-300">Set <strong>Override OpenAI Base URL</strong>:</span>
-                        <code className="text-cyan-400 bg-white/[0.06] px-2 py-0.5 rounded">https://api.yoyo.ai/v1</code>
+                        <span className="w-4 h-4 rounded bg-cyan-400/20 text-cyan-600 dark:text-cyan-400 font-bold flex items-center justify-center text-[10px]">3</span>
+                        <span className="text-zinc-700 dark:text-zinc-300">Set <strong>Override OpenAI Base URL</strong>:</span>
+                        <code className="text-cyan-700 dark:text-cyan-400 bg-zinc-100 dark:bg-white/[0.06] border border-zinc-200 dark:border-white/[0.08] px-2 py-0.5 rounded">https://api.yoyo.ai/v1</code>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="w-4 h-4 rounded bg-cyan-400/20 text-cyan-400 font-bold flex items-center justify-center text-[10px]">4</span>
-                        <span className="text-zinc-300">Add Model Names:</span>
-                        <span className="text-purple-400">qwen-2.5-coder-32b</span>
-                        <span className="text-zinc-600">,</span>
-                        <span className="text-purple-400">llama-3.3-70b</span>
+                        <span className="w-4 h-4 rounded bg-cyan-400/20 text-cyan-600 dark:text-cyan-400 font-bold flex items-center justify-center text-[10px]">4</span>
+                        <span className="text-zinc-700 dark:text-zinc-300">Add Model Names:</span>
+                        <span className="text-purple-600 dark:text-purple-400 font-semibold">qwen-2.5-coder-32b</span>
+                        <span className="text-zinc-400 dark:text-zinc-600">,</span>
+                        <span className="text-purple-600 dark:text-purple-400 font-semibold">llama-3.3-70b</span>
                       </div>
                     </div>
                   </div>
@@ -949,8 +949,8 @@ print(response.choices[0].message.content)`}</code>
               {/* Instructor */}
               {integrationTab === 'instructor' && (
                 <div className="space-y-4">
-                  <p className="text-xs text-zinc-400">
-                    Extract strongly-typed JSON data matching Pydantic schemas using <code className="text-cyan-400 font-mono">instructor</code>:
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                    Extract strongly-typed JSON data matching Pydantic schemas using <code className="text-cyan-600 dark:text-cyan-400 font-mono font-semibold">instructor</code>:
                   </p>
                   <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                     <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
@@ -1010,30 +1010,30 @@ print(report.model_dump_json(indent=2))`}</code>
 
               {/* Hardware & Dispatch Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
-                  <div className="flex items-center space-x-2 text-cyan-400">
+                <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm space-y-2">
+                  <div className="flex items-center space-x-2 text-cyan-600 dark:text-cyan-400">
                     <Cpu className="w-4 h-4" />
-                    <span className="text-xs font-semibold text-zinc-200">H100 SXM5 Clusters</span>
+                    <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">H100 SXM5 Clusters</span>
                   </div>
                   <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     3.35 TB/s HBM3 memory bandwidth with 4th Gen Tensor Cores delivering sub-25ms Time-to-First-Token (TTFT) on 70B models.
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
-                  <div className="flex items-center space-x-2 text-purple-400">
+                <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm space-y-2">
+                  <div className="flex items-center space-x-2 text-purple-600 dark:text-purple-400">
                     <Zap className="w-4 h-4" />
-                    <span className="text-xs font-semibold text-zinc-200">PagedAttention</span>
+                    <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">PagedAttention</span>
                   </div>
                   <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     vLLM continuous batching and virtual memory allocation prevent KV cache memory fragmentation, achieving 100% compute utilization.
                   </p>
                 </div>
 
-                <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
-                  <div className="flex items-center space-x-2 text-emerald-400">
+                <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm space-y-2">
+                  <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400">
                     <Server className="w-4 h-4" />
-                    <span className="text-xs font-semibold text-zinc-200">Least-Connections</span>
+                    <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">Least-Connections</span>
                   </div>
                   <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     Dynamic dispatch routes queries to the worker with the fewest active streams. Instant automatic failover re-routes dropped connections in &lt;50ms.
@@ -1166,20 +1166,20 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
 
                 {/* HPA & Ingress Architectural Callouts */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
-                    <div className="flex items-center space-x-2 text-emerald-400">
+                  <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm space-y-2">
+                    <div className="flex items-center space-x-2 text-emerald-600 dark:text-emerald-400">
                       <Zap className="w-4 h-4" />
-                      <span className="text-xs font-semibold text-zinc-200">Horizontal Pod Autoscaler (HPA)</span>
+                      <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">Horizontal Pod Autoscaler (HPA)</span>
                     </div>
                     <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                      Monitors real-time API Gateway load. Scales between <span className="text-emerald-400 font-bold">3 and 25 replicas</span> dynamically when average CPU exceeds <span className="text-zinc-200 font-mono">70%</span> or average Memory exceeds <span className="text-zinc-200 font-mono">80%</span>.
+                      Monitors real-time API Gateway load. Scales between <span className="text-emerald-600 dark:text-emerald-400 font-bold">3 and 25 replicas</span> dynamically when average CPU exceeds <span className="text-zinc-800 dark:text-zinc-200 font-mono">70%</span> or average Memory exceeds <span className="text-zinc-800 dark:text-zinc-200 font-mono">80%</span>.
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
-                    <div className="flex items-center space-x-2 text-cyan-400">
+                  <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm space-y-2">
+                    <div className="flex items-center space-x-2 text-cyan-600 dark:text-cyan-400">
                       <Shield className="w-4 h-4" />
-                      <span className="text-xs font-semibold text-zinc-200">Zero-Latency SSE Ingress Configuration</span>
+                      <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">Zero-Latency SSE Ingress Configuration</span>
                     </div>
                     <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                       Configured with <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">proxy-buffering: &quot;off&quot;</code> and <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">proxy-read-timeout: &quot;3600&quot;</code> to eliminate intermediary NGINX socket buffers, guaranteeing instantaneous token stream delivery to clients.
@@ -1188,43 +1188,43 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                 </div>
               </div>
 
-              {/* Docker Compose Multi-Profile Profiles */}
-              <div className="space-y-4 pt-4 border-t border-white/[0.08]">
-                <div className="flex items-center space-x-2 text-cyan-400">
+              {/* Docker Compose Multi-Profile Engine */}
+              <div className="space-y-4 pt-4 border-t border-zinc-200 dark:border-white/[0.08]">
+                <div className="flex items-center space-x-2 text-cyan-600 dark:text-cyan-400">
                   <Server className="w-5 h-5" />
                   <h3 className="text-lg font-bold text-zinc-950 dark:text-white">Docker Compose Multi-Profile Engine</h3>
                 </div>
-                <p className="text-zinc-400 text-sm leading-relaxed">
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm leading-relaxed">
                   Run the platform locally or on self-hosted GPU instances using official Docker Compose profiles tailored for your hardware capabilities:
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
-                    <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">1. CPU / Mock Mode</span>
+                  <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm space-y-2">
+                    <span className="text-xs font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">1. CPU / Mock Mode</span>
                     <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                       Spawns PostgreSQL, Redis, Backend, and Frontend. Instant boot with simulated foundation model tokens.
                     </p>
-                    <code className="text-[11px] block text-zinc-300 bg-white/[0.04] p-2 rounded font-mono">
+                    <code className="text-[11px] block text-zinc-800 dark:text-zinc-300 bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/[0.04] p-2 rounded font-mono">
                       docker compose up -d
                     </code>
                   </div>
 
-                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
-                    <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">2. Ollama GPU Profile</span>
+                  <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm space-y-2">
+                    <span className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">2. Ollama GPU Profile</span>
                     <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                       Mounts local NVIDIA GPUs with container passthrough and initializes Ollama foundation model workers.
                     </p>
-                    <code className="text-[11px] block text-zinc-300 bg-white/[0.04] p-2 rounded font-mono">
+                    <code className="text-[11px] block text-zinc-800 dark:text-zinc-300 bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/[0.04] p-2 rounded font-mono">
                       docker compose --profile ollama up -d
                     </code>
                   </div>
 
-                  <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
-                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">3. vLLM High-Throughput</span>
+                  <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm space-y-2">
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">3. vLLM High-Throughput</span>
                     <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                       High-throughput continuous batching and PagedAttention with Qwen and Llama foundation models on NVIDIA GPUs.
                     </p>
-                    <code className="text-[11px] block text-zinc-300 bg-white/[0.04] p-2 rounded font-mono">
+                    <code className="text-[11px] block text-zinc-800 dark:text-zinc-300 bg-zinc-100 dark:bg-white/[0.04] border border-zinc-200 dark:border-white/[0.04] p-2 rounded font-mono">
                       docker compose --profile vllm up -d
                     </code>
                   </div>
@@ -1337,14 +1337,14 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                 </div>
 
                 {/* Configuration Controls Bar */}
-                <div className="p-4 rounded-2xl bg-[#0A0B10] border border-white/[0.08] grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-mono">
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#0A0B10] border border-zinc-200 dark:border-white/[0.08] shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-mono">
                   {/* Model */}
                   <div className="space-y-1.5">
-                    <label className="text-zinc-400 text-xs font-medium">Foundation Model</label>
+                    <label className="text-zinc-700 dark:text-zinc-400 text-xs font-medium">Foundation Model</label>
                     <select
                       value={genModel}
                       onChange={(e) => setGenModel(e.target.value)}
-                      className="w-full bg-[#12141D] text-white border border-white/[0.1] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-cyan-400"
+                      className="w-full bg-zinc-50 dark:bg-[#12141D] text-zinc-900 dark:text-white border border-zinc-200 dark:border-white/[0.1] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-cyan-400"
                     >
                       <option value="llama-3.3-70b">Llama 3.3 70B (General)</option>
                       <option value="qwen-2.5-coder-32b">Qwen 2.5 Coder 32B (Coding)</option>
@@ -1356,9 +1356,9 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
 
                   {/* Temperature */}
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs text-zinc-400 font-medium">
+                    <div className="flex items-center justify-between text-xs text-zinc-700 dark:text-zinc-400 font-medium">
                       <span>Temperature</span>
-                      <span className="text-cyan-400 font-bold">{genTemp}</span>
+                      <span className="text-cyan-600 dark:text-cyan-400 font-bold">{genTemp}</span>
                     </div>
                     <input
                       type="range"
@@ -1367,15 +1367,15 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                       step="0.05"
                       value={genTemp}
                       onChange={(e) => setGenTemp(parseFloat(e.target.value))}
-                      className="w-full accent-cyan-400 cursor-pointer"
+                      className="w-full accent-cyan-500 dark:accent-cyan-400 cursor-pointer"
                     />
                   </div>
 
                   {/* Max Tokens */}
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs text-zinc-400 font-medium">
+                    <div className="flex items-center justify-between text-xs text-zinc-700 dark:text-zinc-400 font-medium">
                       <span>Max Tokens</span>
-                      <span className="text-purple-400 font-bold">{genMaxTokens}</span>
+                      <span className="text-purple-600 dark:text-purple-400 font-bold">{genMaxTokens}</span>
                     </div>
                     <input
                       type="range"
@@ -1384,7 +1384,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                       step="128"
                       value={genMaxTokens}
                       onChange={(e) => setGenMaxTokens(parseInt(e.target.value, 10))}
-                      className="w-full accent-cyan-400 cursor-pointer"
+                      className="w-full accent-cyan-500 dark:accent-cyan-400 cursor-pointer"
                     />
                   </div>
 
@@ -1395,9 +1395,9 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                         type="checkbox"
                         checked={genStream}
                         onChange={(e) => setGenStream(e.target.checked)}
-                        className="rounded border-zinc-700 text-cyan-500 focus:ring-0 w-3.5 h-3.5 accent-cyan-400"
+                        className="rounded border-zinc-300 dark:border-zinc-700 text-cyan-500 focus:ring-0 w-3.5 h-3.5 accent-cyan-500 dark:accent-cyan-400"
                       />
-                      <span className="text-zinc-300 text-xs">SSE Stream</span>
+                      <span className="text-zinc-700 dark:text-zinc-300 text-xs">SSE Stream</span>
                     </label>
 
                     <label className="flex items-center space-x-2 cursor-pointer select-none">
@@ -1405,15 +1405,15 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                         type="checkbox"
                         checked={genJsonMode}
                         onChange={(e) => setGenJsonMode(e.target.checked)}
-                        className="rounded border-zinc-700 text-cyan-500 focus:ring-0 w-3.5 h-3.5 accent-cyan-400"
+                        className="rounded border-zinc-300 dark:border-zinc-700 text-cyan-500 focus:ring-0 w-3.5 h-3.5 accent-cyan-500 dark:accent-cyan-400"
                       />
-                      <span className="text-zinc-300 text-xs">JSON Mode</span>
+                      <span className="text-zinc-700 dark:text-zinc-300 text-xs">JSON Mode</span>
                     </label>
                   </div>
                 </div>
 
                 {/* Generated Code Window */}
-                <div className="rounded-2xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                <div className="rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-[#0A0B10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between">
                     <div className="flex items-center space-x-2 overflow-x-auto">
                       {[
@@ -1477,24 +1477,24 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
               </div>
 
               {/* Execution Flow Diagram */}
-              <div className="p-5 rounded-2xl bg-[#0A0B10] border border-white/[0.08] space-y-4 font-mono text-xs">
-                <span className="text-xs font-semibold text-zinc-400 block">Agentic Tool Loop Flow</span>
+              <div className="p-5 rounded-2xl bg-white dark:bg-[#0A0B10] border border-zinc-200 dark:border-white/[0.08] shadow-sm space-y-4 font-mono text-xs">
+                <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-400 block">Agentic Tool Loop Flow</span>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-center">
-                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                    <span className="text-cyan-400 font-bold block mb-1">1. Define Tools</span>
-                    <p className="text-[11px] text-zinc-400 font-sans">Provide function declarations & JSON schemas in <code className="text-zinc-800 dark:text-zinc-200 font-mono">tools</code></p>
+                  <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06]">
+                    <span className="text-cyan-600 dark:text-cyan-400 font-bold block mb-1">1. Define Tools</span>
+                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans">Provide function declarations & JSON schemas in <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1 py-0.5 rounded font-mono">tools</code></p>
                   </div>
-                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                    <span className="text-purple-400 font-bold block mb-1">2. Model Decision</span>
-                    <p className="text-[11px] text-zinc-400 font-sans">Model outputs structured <code className="text-zinc-800 dark:text-zinc-200 font-mono">tool_calls</code> payload</p>
+                  <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06]">
+                    <span className="text-purple-600 dark:text-purple-400 font-bold block mb-1">2. Model Decision</span>
+                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans">Model outputs structured <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1 py-0.5 rounded font-mono">tool_calls</code> payload</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                    <span className="text-amber-400 font-bold block mb-1">3. Execute Tool</span>
-                    <p className="text-[11px] text-zinc-400 font-sans">Your app runs the function with model arguments</p>
+                  <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06]">
+                    <span className="text-amber-600 dark:text-amber-400 font-bold block mb-1">3. Execute Tool</span>
+                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans">Your app runs the function with model arguments</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                    <span className="text-emerald-400 font-bold block mb-1">4. Synthesize</span>
-                    <p className="text-[11px] text-zinc-400 font-sans">Feed tool result back to model for final answer</p>
+                  <div className="p-3 rounded-xl bg-zinc-50 dark:bg-white/[0.03] border border-zinc-200 dark:border-white/[0.06]">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold block mb-1">4. Synthesize</span>
+                    <p className="text-[11px] text-zinc-600 dark:text-zinc-400 font-sans">Feed tool result back to model for final answer</p>
                   </div>
                 </div>
               </div>
@@ -1502,7 +1502,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
               {/* Tool Calling Code Example */}
               <div className="space-y-3">
                 <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Complete Working Example</h3>
-                <div className="rounded-2xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                <div className="rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-[#0A0B10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between">
                     <span className="text-xs font-mono text-zinc-400 font-bold">Python SDK: Tool Calling Loop</span>
                     <button
@@ -1660,16 +1660,16 @@ if msg.tool_calls:
 
               {/* Best Practices for Tool Calling with Open Models */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
-                  <h4 className="text-xs font-semibold text-cyan-400">Recommended Models for Tool Use</h4>
-                  <p className="text-xs text-zinc-400 leading-relaxed font-sans">
-                    For high reliability, use <strong className="text-white font-mono">qwen-2.5-coder-32b</strong> or <strong className="text-white font-mono">llama-3.3-70b</strong>. These models have been specifically instruction-tuned on function calling benchmarks (Berkeley Function-Calling Leaderboard).
+                <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm space-y-2">
+                  <h4 className="text-xs font-semibold text-cyan-600 dark:text-cyan-400">Recommended Models for Tool Use</h4>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
+                    For high reliability, use <strong className="text-zinc-950 dark:text-white font-mono">qwen-2.5-coder-32b</strong> or <strong className="text-zinc-950 dark:text-white font-mono">llama-3.3-70b</strong>. These models have been specifically instruction-tuned on function calling benchmarks (Berkeley Function-Calling Leaderboard).
                   </p>
                 </div>
-                <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
-                  <h4 className="text-xs font-semibold text-purple-400">Strict Schema Validation</h4>
-                  <p className="text-xs text-zinc-400 leading-relaxed font-sans">
-                    Always include <code className="text-zinc-800 dark:text-zinc-200 font-mono">"required"</code> array and detailed field <code className="text-zinc-800 dark:text-zinc-200 font-mono">"description"</code> properties in your JSON schema to prevent hallucinated parameter keys.
+                <div className="p-4 rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm space-y-2">
+                  <h4 className="text-xs font-semibold text-purple-600 dark:text-purple-400">Strict Schema Validation</h4>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-sans">
+                    Always include <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">"required"</code> array and detailed field <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">"description"</code> properties in your JSON schema to prevent hallucinated parameter keys.
                   </p>
                 </div>
               </div>
@@ -2178,7 +2178,7 @@ response.results.forEach((res) => {
               {/* Wire Protocol Response Example */}
               <div className="space-y-3">
                 <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Wire Protocol Response JSON</h3>
-                <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] font-mono text-xs text-zinc-300 overflow-x-auto">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4 font-mono text-xs text-zinc-300 overflow-x-auto">
                   <pre>
                     <code>{`{
   "object": "list",
@@ -2240,10 +2240,10 @@ response.results.forEach((res) => {
               {/* JSONL Format Guide */}
               <div className="space-y-3">
                 <h3 className="text-base font-semibold text-zinc-950 dark:text-white">1. Prepare your JSONL File</h3>
-                <p className="text-xs text-zinc-400">
-                  Each line in the file must be a JSON object containing a <code className="text-cyan-400">custom_id</code>, HTTP method, target URL, and inference body.
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  Each line in the file must be a JSON object containing a <code className="text-cyan-600 dark:text-cyan-400 font-mono font-semibold">custom_id</code>, HTTP method, target URL, and inference body.
                 </p>
-                <div className="relative rounded-xl border border-white/[0.08] bg-[#0A0B10] p-4 font-mono text-xs overflow-x-auto text-zinc-300">
+                <div className="relative rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4 font-mono text-xs overflow-x-auto text-zinc-300">
                   <pre><code>{`{"custom_id": "eval-001", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "llama-3.3-70b", "messages": [{"role": "user", "content": "Explain general relativity."}]}}
 {"custom_id": "eval-002", "method": "POST", "url": "/v1/chat/completions", "body": {"model": "qwen-2.5-coder-32b", "messages": [{"role": "user", "content": "Write an async LRU cache in Rust."}]}}`}</code></pre>
                 </div>
@@ -2374,15 +2374,15 @@ curl https://api.yoyo.ai/v1/batches \\
               </div>
 
               {/* Signature Spec */}
-              <div className="p-5 rounded-2xl border border-white/[0.08] bg-[#0A0B10] space-y-3">
+              <div className="p-5 rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm space-y-3">
                 <h3 className="text-base font-semibold text-zinc-950 dark:text-white">HMAC-SHA256 Signature Header</h3>
-                <p className="text-xs text-zinc-400">
-                  Every outgoing webhook request includes a <code className="text-cyan-400">X-Yoyo-Signature</code> header in the format:
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                  Every outgoing webhook request includes a <code className="text-cyan-600 dark:text-cyan-400 font-semibold">X-Yoyo-Signature</code> header in the format:
                 </p>
-                <div className="p-3 rounded-lg bg-[#0D0F16] border border-white/[0.06] font-mono text-xs text-cyan-300">
+                <div className="p-3 rounded-lg bg-zinc-100 dark:bg-[#0D0F16] border border-zinc-200 dark:border-white/[0.06] font-mono text-xs text-cyan-700 dark:text-cyan-300">
                   X-Yoyo-Signature: t=1730000000,v1=9b82c7d9e4a1f...
                 </div>
-                <p className="text-xs text-zinc-400">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
                   The signature is computed over <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">{"${t}.${rawRequestBody}"}</code> using your endpoint secret (<code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">whsec_...</code>).
                 </p>
               </div>
@@ -2559,7 +2559,7 @@ export function verifyYoyoSignature(rawBody: string | Buffer, sigHeader: string,
               {/* Standard Error Response Schema */}
               <div className="space-y-3">
                 <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Error Response Payload</h3>
-                <p className="text-xs text-zinc-400">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400">
                   All 4xx and 5xx responses emit standard OpenAI wire-protocol error objects:
                 </p>
                 <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4 text-xs font-mono text-zinc-300 overflow-x-auto">

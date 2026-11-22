@@ -7,14 +7,14 @@ import { YoyoLogo } from '@/components/ui/logo';
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-[#07080C] text-zinc-100 flex flex-col font-sans selection:bg-cyan-500/30">
-      <header className="border-b border-white/[0.08] bg-[#0A0B10]/90 backdrop-blur-md px-6 lg:px-12 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-cyan-500/30">
+      <header className="border-b border-border bg-background/90 backdrop-blur-md px-6 lg:px-12 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center">
           <YoyoLogo size={28} showText={true} />
         </Link>
         <Link
           href="/"
-          className="text-xs font-mono text-zinc-400 hover:text-foreground transition-colors flex items-center space-x-1"
+          className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors flex items-center space-x-1"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Home</span>
@@ -23,16 +23,16 @@ export default function TermsPage() {
 
       <main className="flex-1 max-w-4xl mx-auto px-6 py-12 space-y-8">
         <div>
-          <span className="text-xs font-mono text-cyan-400 uppercase tracking-widest">Legal & Governance</span>
+          <span className="text-xs font-mono text-cyan-600 dark:text-cyan-400 uppercase tracking-widest font-semibold">Legal & Governance</span>
           <h1 className="text-3xl font-black text-foreground mt-1">Terms of Service</h1>
-          <p className="text-zinc-400 text-xs font-mono mt-1">Last updated: October 2026</p>
+          <p className="text-muted-foreground text-xs font-mono mt-1">Last updated: October 2026</p>
         </div>
 
-        <div className="space-y-6 text-sm text-zinc-300 leading-relaxed font-normal border-t border-white/[0.08] pt-6">
+        <div className="space-y-6 text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed font-normal border-t border-border pt-6">
           <section className="space-y-2">
             <h2 className="text-base font-bold text-foreground font-mono uppercase tracking-wider">1. API Access & Provisioning</h2>
             <p>
-              By generating an API key or using YOYO API services, you agree to access foundation model inference endpoints in compliance with applicable law and ethical safety standards. You are solely responsible for maintaining the confidentiality of your <code className="text-cyan-400 font-mono">sk_live_...</code> API keys and all activity conducted through them.
+              By generating an API key or using YOYO API services, you agree to access foundation model inference endpoints in compliance with applicable law and ethical safety standards. You are solely responsible for maintaining the confidentiality of your <code className="text-cyan-600 dark:text-cyan-400 font-mono font-semibold">sk_live_...</code> API keys and all activity conducted through them.
             </p>
           </section>
 
