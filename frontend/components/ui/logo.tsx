@@ -8,7 +8,7 @@ interface LogoProps {
 
 export function YoyoLogo({ className = '', size = 32, showText = true }: LogoProps) {
   return (
-    <div className={`inline-flex items-center gap-2.5 select-none ${className}`}>
+    <div className={`inline-flex items-center gap-2.5 select-none text-foreground ${className}`}>
       {/* Precision Geometric YOYO Glyph */}
       <div 
         className="relative flex items-center justify-center shrink-0"
@@ -18,7 +18,7 @@ export function YoyoLogo({ className = '', size = 32, showText = true }: LogoPro
           viewBox="0 0 48 48"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full drop-shadow-[0_0_12px_rgba(59,130,246,0.5)]"
+          className="w-full h-full drop-shadow-[0_0_12px_rgba(59,130,246,0.35)] dark:drop-shadow-[0_0_14px_rgba(59,130,246,0.6)]"
         >
           <defs>
             <linearGradient id="yoyo-gradient-a" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
@@ -33,7 +33,7 @@ export function YoyoLogo({ className = '', size = 32, showText = true }: LogoPro
           </defs>
 
           {/* Outer Calibration Ring */}
-          <circle cx="24" cy="24" r="22" stroke="currentColor" strokeOpacity="0.12" strokeWidth="1" strokeDasharray="3 3" />
+          <circle cx="24" cy="24" r="22" stroke="currentColor" strokeOpacity="0.2" strokeWidth="1" strokeDasharray="3 3" />
 
           {/* Outer Yo-Yo Torque Path */}
           <path
@@ -62,8 +62,8 @@ export function YoyoLogo({ className = '', size = 32, showText = true }: LogoPro
       </div>
 
       {showText && (
-        <span className="font-mono text-xl font-black tracking-tight text-white">
-          YO<span className="text-cyan-400">YO</span>
+        <span className="font-mono text-xl font-black tracking-tight text-foreground">
+          YO<span className="text-cyan-600 dark:text-cyan-400">YO</span>
         </span>
       )}
     </div>
