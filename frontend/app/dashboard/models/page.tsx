@@ -704,9 +704,9 @@ export default function ModelsPage() {
 
       {/* Floating Compare Action Bar */}
       {selectedForCompare.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-950/90 border border-cyan-500/30 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-4 animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-card/95 border border-primary/30 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-4 animate-in fade-in slide-in-from-bottom-4">
           <div className="flex items-center space-x-2 text-xs">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-cyan-500 dark:bg-cyan-400 animate-pulse" />
             <span className="font-mono font-bold text-foreground">
               {selectedForCompare.length} / 3 Selected for Comparison
             </span>
@@ -714,14 +714,14 @@ export default function ModelsPage() {
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setShowCompareModal(true)}
-              className="px-4 py-1.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-semibold text-xs transition-all shadow-md shadow-cyan-500/20 flex items-center space-x-1.5"
+              className="px-4 py-1.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 dark:bg-cyan-400 dark:hover:bg-cyan-300 text-white dark:text-black font-semibold text-xs transition-all shadow-md shadow-cyan-500/20 flex items-center space-x-1.5"
             >
               <ArrowLeftRight className="w-3.5 h-3.5" />
               <span>Compare Models</span>
             </button>
             <button
               onClick={() => setSelectedForCompare([])}
-              className="text-xs text-zinc-400 hover:text-foreground px-2 py-1"
+              className="text-xs text-muted-foreground hover:text-foreground px-2 py-1"
             >
               Clear
             </button>
@@ -731,23 +731,23 @@ export default function ModelsPage() {
 
       {/* Side-by-Side Model Comparison Modal */}
       {showCompareModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-5xl bg-[#0C0E14] border border-white/[0.1] rounded-3xl shadow-2xl p-6 space-y-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-5xl bg-card border border-border rounded-3xl shadow-2xl p-6 space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-border pb-4">
               <div className="flex items-center space-x-3">
-                <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-500 dark:text-cyan-400">
                   <ArrowLeftRight className="w-4 h-4" />
                 </div>
                 <div>
                   <h3 className="font-bold text-base text-foreground">Side-by-Side Model Comparison</h3>
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs text-muted-foreground">
                     Compare technical parameters, pricing per million tokens, and cloud infrastructure requirements.
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowCompareModal(false)}
-                className="p-2 rounded-xl text-zinc-400 hover:text-foreground hover:bg-white/[0.05] transition-all"
+                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -760,27 +760,27 @@ export default function ModelsPage() {
                 .map((m) => (
                   <div
                     key={m.id}
-                    className="p-5 rounded-2xl bg-zinc-900/60 border border-white/[0.08] flex flex-col justify-between space-y-5"
+                    className="p-5 rounded-2xl bg-muted/40 border border-border flex flex-col justify-between space-y-5"
                   >
                     <div>
                       {/* Badge & Name */}
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
                           {m.providerFamily}
                         </span>
-                        <span className="text-[10px] font-mono text-zinc-400 uppercase bg-zinc-800 px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-mono text-muted-foreground uppercase bg-muted px-2 py-0.5 rounded-full border border-border/60">
                           {m.category}
                         </span>
                       </div>
                       <h4 className="text-base font-bold text-foreground tracking-tight">{m.name}</h4>
-                      <code className="text-[11px] font-mono text-zinc-400 block mt-1 break-all">
+                      <code className="text-[11px] font-mono text-muted-foreground block mt-1 break-all">
                         {m.apiIdentifier}
                       </code>
 
                       {/* Specs Matrix */}
                       <div className="mt-5 space-y-3 text-xs">
-                        <div className="flex items-center justify-between py-1.5 border-b border-white/[0.05]">
-                          <span className="text-zinc-400">Context Window</span>
+                        <div className="flex items-center justify-between py-1.5 border-b border-border/60">
+                          <span className="text-muted-foreground">Context Window</span>
                           <span className="font-mono font-bold text-foreground">
                             {m.defaultContextWindow >= 1000
                               ? `${(m.defaultContextWindow / 1024).toFixed(0)}k (${m.defaultContextWindow.toLocaleString()} tokens)`
@@ -788,54 +788,54 @@ export default function ModelsPage() {
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between py-1.5 border-b border-white/[0.05]">
-                          <span className="text-zinc-400">Precision</span>
-                          <span className="font-mono font-semibold text-purple-400">
+                        <div className="flex items-center justify-between py-1.5 border-b border-border/60">
+                          <span className="text-muted-foreground">Precision</span>
+                          <span className="font-mono font-semibold text-purple-600 dark:text-purple-400">
                             {m.versions?.[0]?.quantizationLevel || 'FP16'}
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between py-1.5 border-b border-white/[0.05]">
-                          <span className="text-zinc-400">Cloud GPU Hardware</span>
-                          <span className="font-mono text-xs text-amber-400">
+                        <div className="flex items-center justify-between py-1.5 border-b border-border/60">
+                          <span className="text-muted-foreground">Cloud GPU Hardware</span>
+                          <span className="font-mono text-xs text-amber-600 dark:text-amber-400">
                             {m.defaultContextWindow > 65000 ? 'NVIDIA H100 SXM5 80GB' : 'NVIDIA A100 80GB'}
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between py-1.5 border-b border-white/[0.05]">
-                          <span className="text-zinc-400">Input / 1M Tokens</span>
-                          <span className="font-mono font-bold text-emerald-400">
+                        <div className="flex items-center justify-between py-1.5 border-b border-border/60">
+                          <span className="text-muted-foreground">Input / 1M Tokens</span>
+                          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
                             ${m.pricing?.inputCostPerMillion?.toFixed(2) || '0.20'}
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between py-1.5 border-b border-white/[0.05]">
-                          <span className="text-zinc-400">Output / 1M Tokens</span>
-                          <span className="font-mono font-bold text-emerald-400">
+                        <div className="flex items-center justify-between py-1.5 border-b border-border/60">
+                          <span className="text-muted-foreground">Output / 1M Tokens</span>
+                          <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
                             ${m.pricing?.outputCostPerMillion?.toFixed(2) || '0.40'}
                           </span>
                         </div>
 
                         <div className="py-2">
-                          <span className="text-zinc-500 text-[11px] block mb-1">Architecture & Description</span>
-                          <p className="text-[11px] text-zinc-300 leading-relaxed">
+                          <span className="text-muted-foreground text-[11px] block mb-1">Architecture & Description</span>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">
                             {m.description || 'Optimized foundation weights for enterprise cloud deployment.'}
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-white/[0.05] flex items-center space-x-2">
+                    <div className="pt-3 border-t border-border/60 flex items-center space-x-2">
                       <Link
                         href={`/dashboard/playground?model=${encodeURIComponent(m.apiIdentifier)}`}
-                        className="flex-1 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-cyan-500/20"
+                        className="flex-1 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 dark:bg-cyan-400 dark:hover:bg-cyan-300 text-white dark:text-black font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all shadow-md shadow-cyan-500/20"
                       >
                         <Terminal className="w-3.5 h-3.5" />
                         <span>Launch in Playground</span>
                       </Link>
                       <button
                         onClick={() => toggleCompare(m.id)}
-                        className="p-2.5 rounded-xl bg-zinc-800 text-zinc-400 hover:text-foreground transition-all"
+                        className="p-2.5 rounded-xl bg-muted text-muted-foreground hover:text-foreground transition-all border border-border"
                         title="Remove from comparison"
                       >
                         <X className="w-3.5 h-3.5" />

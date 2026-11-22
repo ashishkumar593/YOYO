@@ -315,7 +315,7 @@ export default function KnowledgePage() {
 
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center space-x-1.5 text-[11px] text-muted-foreground font-mono">
-                  <span>Press <kbd className="px-1.5 py-0.5 rounded bg-muted text-white text-[10px]">Ctrl+Enter</kbd> to search</span>
+                  <span>Press <kbd className="px-1.5 py-0.5 rounded bg-muted text-foreground text-[10px]">Ctrl+Enter</kbd> to search</span>
                 </div>
 
                 <button
@@ -358,19 +358,19 @@ export default function KnowledgePage() {
             {/* Answer Display */}
             {result && (
               <div className="pt-4 border-t border-border/60 space-y-4 animate-in fade-in duration-300">
-                <div className="p-5 rounded-2xl bg-[#090B12] border border-cyan-500/30 space-y-3">
+                <div className="p-5 rounded-2xl bg-card border border-cyan-500/30 space-y-3">
                   <div className="flex items-center justify-between text-xs font-mono">
                     <span className="text-cyan-400 font-bold flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>Grounded Synthesized Answer</span>
                     </span>
-                    <span className="text-zinc-400 text-[11px]">
-                      Model: <span className="text-white font-semibold">{result.model}</span> • Latency:{' '}
+                    <span className="text-muted-foreground text-[11px]">
+                      Model: <span className="text-foreground font-semibold">{result.model}</span> • Latency:{' '}
                       <span className="text-emerald-400 font-semibold">{result.latencyMs}ms</span>
                     </span>
                   </div>
 
-                  <div className="text-xs text-zinc-100 leading-relaxed font-sans whitespace-pre-wrap">
+                  <div className="text-xs text-foreground leading-relaxed font-sans whitespace-pre-wrap">
                     {result.answer}
                   </div>
                 </div>
@@ -425,7 +425,7 @@ export default function KnowledgePage() {
       {/* Modal: Upload Document */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-[#0B0D17] border border-border rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl">
+          <div className="bg-card border border-border rounded-2xl max-w-xl w-full p-6 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
               <div className="flex items-center space-x-2">
                 <BookOpen className="w-4 h-4 text-cyan-400" />

@@ -459,7 +459,7 @@ print(completion.choices[0].message.content)`
                   <span>Obtain an API Key</span>
                 </h3>
                 <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                  Log in to your developer console, navigate to <Link href="/dashboard/keys" className="text-cyan-400 underline">API Keys</Link>, and click <strong>Create New Key</strong>. You will receive a secret key in the format <code className="text-zinc-200 bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">sk_live_...</code>.
+                  Log in to your developer console, navigate to <Link href="/dashboard/keys" className="text-cyan-400 underline">API Keys</Link>, and click <strong>Create New Key</strong>. You will receive a secret key in the format <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-200/60 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">sk_live_...</code>.
                 </p>
               </div>
 
@@ -470,7 +470,7 @@ print(completion.choices[0].message.content)`
                   <span>Direct OpenAI Drop-In (Python)</span>
                 </h3>
                 
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                     <span>Python Example (openai SDK)</span>
                     <button
@@ -480,7 +480,7 @@ print(completion.choices[0].message.content)`
                       {copiedCode === 'qs-python' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
                   </div>
-                  <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
+                  <pre className="p-4 text-xs font-mono text-zinc-200 leading-relaxed overflow-x-auto">
                     <code>{`from openai import OpenAI
 
 client = OpenAI(
@@ -507,7 +507,7 @@ for chunk in response:
                   <span>cURL Command Line Request</span>
                 </h3>
 
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                     <span>cURL (POSIX / Bash)</span>
                     <button
@@ -517,7 +517,7 @@ for chunk in response:
                       {copiedCode === 'qs-curl' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
                   </div>
-                  <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
+                  <pre className="p-4 text-xs font-mono text-zinc-200 leading-relaxed overflow-x-auto">
                     <code>{`curl https://api.yoyo.ai/v1/chat/completions \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer sk_live_your_actual_key_here" \\
@@ -539,7 +539,7 @@ for chunk in response:
                 <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Security & Authentication</span>
                 <h1 className="text-3xl font-black text-zinc-950 dark:text-white mt-1">Authentication</h1>
                 <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
-                  Every request made to YOYO endpoints must include an API key in the HTTP <code className="text-zinc-200 font-mono">Authorization</code> header as a Bearer token.
+                  Every request made to YOYO endpoints must include an API key in the HTTP <code className="text-zinc-800 dark:text-zinc-200 font-mono">Authorization</code> header as a Bearer token.
                 </p>
               </div>
 
@@ -550,7 +550,7 @@ for chunk in response:
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
-                  <h4 className="text-sm font-semibold text-white flex items-center space-x-2">
+                  <h4 className="text-sm font-semibold text-zinc-950 dark:text-white flex items-center space-x-2">
                     <Shield className="w-4 h-4 text-cyan-400" />
                     <span>SHA-256 Key Hashing</span>
                   </h4>
@@ -560,7 +560,7 @@ for chunk in response:
                 </div>
 
                 <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
-                  <h4 className="text-sm font-semibold text-white flex items-center space-x-2">
+                  <h4 className="text-sm font-semibold text-zinc-950 dark:text-white flex items-center space-x-2">
                     <Zap className="w-4 h-4 text-amber-400" />
                     <span>Instant Key Revocation</span>
                   </h4>
@@ -609,8 +609,8 @@ for chunk in response:
                 <div className="space-y-6">
                   {/* Installation */}
                   <div className="space-y-2">
-                    <span className="text-xs font-semibold text-zinc-300">1. Installation</span>
-                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4 flex items-center justify-between font-mono text-xs">
+                    <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">1. Installation</span>
+                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4 flex items-center justify-between font-mono text-xs">
                       <span className="text-emerald-400">pip install yoyo-ai</span>
                       <button onClick={() => copy('pip install yoyo-ai', 'pip-install')} className="text-zinc-400 hover:text-white">
                         {copiedCode === 'pip-install' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -620,8 +620,8 @@ for chunk in response:
 
                   {/* Synchronous & Streaming */}
                   <div className="space-y-2">
-                    <span className="text-xs font-semibold text-zinc-300">2. Synchronous Streaming Client</span>
-                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                    <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">2. Synchronous Streaming Client</span>
+                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                       <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                         <span>Python (Synchronous)</span>
                         <button
@@ -631,7 +631,7 @@ for chunk in response:
                           {copiedCode === 'py-sync' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       </div>
-                      <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
+                      <pre className="p-4 text-xs font-mono text-zinc-200 leading-relaxed overflow-x-auto">
                         <code>{`from yoyo import Yoyo, YoyoError
 
 client = Yoyo(api_key="sk_live_your_key_here")
@@ -660,8 +660,8 @@ except YoyoError as e:
 
                   {/* Asynchronous FastAPI */}
                   <div className="space-y-2">
-                    <span className="text-xs font-semibold text-zinc-300">3. Asynchronous Client (FastAPI / asyncio)</span>
-                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                    <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">3. Asynchronous Client (FastAPI / asyncio)</span>
+                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                       <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                         <span>Python (AsyncYoyo)</span>
                         <button
@@ -671,7 +671,7 @@ except YoyoError as e:
                           {copiedCode === 'py-async' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       </div>
-                      <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
+                      <pre className="p-4 text-xs font-mono text-zinc-200 leading-relaxed overflow-x-auto">
                         <code>{`import asyncio
 from yoyo import AsyncYoyo
 
@@ -696,8 +696,8 @@ asyncio.run(run_async_inference())`}</code>
                 <div className="space-y-6">
                   {/* Installation */}
                   <div className="space-y-2">
-                    <span className="text-xs font-semibold text-zinc-300">1. Installation</span>
-                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4 flex items-center justify-between font-mono text-xs">
+                    <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">1. Installation</span>
+                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4 flex items-center justify-between font-mono text-xs">
                       <span className="text-cyan-400">npm install @yoyo-ai/sdk</span>
                       <button onClick={() => copy('npm install @yoyo-ai/sdk', 'npm-install')} className="text-zinc-400 hover:text-white">
                         {copiedCode === 'npm-install' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -707,8 +707,8 @@ asyncio.run(run_async_inference())`}</code>
 
                   {/* Streaming In Node/Next.js */}
                   <div className="space-y-2">
-                    <span className="text-xs font-semibold text-zinc-300">2. High-Throughput Async Streaming</span>
-                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                    <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">2. High-Throughput Async Streaming</span>
+                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                       <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                         <span>TypeScript / Node.js</span>
                         <button
@@ -718,7 +718,7 @@ asyncio.run(run_async_inference())`}</code>
                           {copiedCode === 'ts-stream' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       </div>
-                      <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
+                      <pre className="p-4 text-xs font-mono text-zinc-200 leading-relaxed overflow-x-auto">
                         <code>{`import { Yoyo } from '@yoyo-ai/sdk';
 
 const client = new Yoyo({
@@ -747,8 +747,8 @@ main().catch(console.error);`}</code>
 
                   {/* Embeddings in TS */}
                   <div className="space-y-2">
-                    <span className="text-xs font-semibold text-zinc-300">3. Vector Embeddings Generation</span>
-                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                    <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-200">3. Vector Embeddings Generation</span>
+                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                       <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                         <span>TypeScript (Embeddings)</span>
                         <button
@@ -758,7 +758,7 @@ main().catch(console.error);`}</code>
                           {copiedCode === 'ts-embed' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                         </button>
                       </div>
-                      <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
+                      <pre className="p-4 text-xs font-mono text-zinc-200 leading-relaxed overflow-x-auto">
                         <code>{`import { Yoyo } from '@yoyo-ai/sdk';
 
 const client = new Yoyo({ apiKey: 'sk_live_...' });
@@ -813,9 +813,9 @@ console.log('Embedding vector length:', result.data[0].embedding.length);
               {integrationTab === 'langchain' && (
                 <div className="space-y-4">
                   <p className="text-xs text-zinc-400">
-                    Use <code className="text-cyan-400 font-mono">ChatOpenAI</code> from <code className="text-zinc-200 font-mono">langchain_openai</code>, pointing <code className="text-zinc-200 font-mono">base_url</code> to <code className="text-cyan-400 font-mono">https://api.yoyo.ai/v1</code>:
+                    Use <code className="text-cyan-400 font-mono">ChatOpenAI</code> from <code className="text-zinc-800 dark:text-zinc-200 font-mono">langchain_openai</code>, pointing <code className="text-zinc-800 dark:text-zinc-200 font-mono">base_url</code> to <code className="text-cyan-400 font-mono">https://api.yoyo.ai/v1</code>:
                   </p>
-                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                     <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                       <span>Python (LangChain)</span>
                       <button
@@ -825,7 +825,7 @@ console.log('Embedding vector length:', result.data[0].embedding.length);
                         {copiedCode === 'lc-code' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
-                    <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
+                    <pre className="p-4 text-xs font-mono text-zinc-200 leading-relaxed overflow-x-auto">
                       <code>{`from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 
@@ -852,9 +852,9 @@ print(response.content)`}</code>
               {integrationTab === 'llamaindex' && (
                 <div className="space-y-4">
                   <p className="text-xs text-zinc-400">
-                    Use <code className="text-cyan-400 font-mono">OpenAI</code> from <code className="text-zinc-200 font-mono">llama_index.llms.openai</code>:
+                    Use <code className="text-cyan-400 font-mono">OpenAI</code> from <code className="text-zinc-800 dark:text-zinc-200 font-mono">llama_index.llms.openai</code>:
                   </p>
-                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                     <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                       <span>Python (LlamaIndex)</span>
                       <button
@@ -864,7 +864,7 @@ print(response.content)`}</code>
                         {copiedCode === 'li-code' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
-                    <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
+                    <pre className="p-4 text-xs font-mono text-zinc-200 leading-relaxed overflow-x-auto">
                       <code>{`from llama_index.llms.openai import OpenAI
 
 llm = OpenAI(
@@ -885,9 +885,9 @@ print(response.text)`}</code>
               {integrationTab === 'litellm' && (
                 <div className="space-y-4">
                   <p className="text-xs text-zinc-400">
-                    Route requests through <code className="text-cyan-400 font-mono">litellm</code> using prefix <code className="text-zinc-200 font-mono">openai/&lt;model&gt;</code> and YOYO's <code className="text-zinc-200 font-mono">api_base</code>:
+                    Route requests through <code className="text-cyan-400 font-mono">litellm</code> using prefix <code className="text-zinc-800 dark:text-zinc-200 font-mono">openai/&lt;model&gt;</code> and YOYO's <code className="text-zinc-800 dark:text-zinc-200 font-mono">api_base</code>:
                   </p>
-                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                     <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                       <span>Python (LiteLLM)</span>
                       <button
@@ -897,7 +897,7 @@ print(response.text)`}</code>
                         {copiedCode === 'lite-code' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
-                    <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
+                    <pre className="p-4 text-xs font-mono text-zinc-200 leading-relaxed overflow-x-auto">
                       <code>{`import litellm
 
 response = litellm.completion(
@@ -919,7 +919,7 @@ print(response.choices[0].message.content)`}</code>
                   <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     Configure Cursor IDE or VS Code Continue extension to use your private YOYO cloud models for coding assistance, completions, and edits:
                   </p>
-                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-6 space-y-4">
+                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-6 space-y-4">
                     <div className="space-y-2 text-xs font-mono">
                       <div className="flex items-center space-x-2">
                         <span className="w-4 h-4 rounded bg-cyan-400/20 text-cyan-400 font-bold flex items-center justify-center text-[10px]">1</span>
@@ -952,7 +952,7 @@ print(response.choices[0].message.content)`}</code>
                   <p className="text-xs text-zinc-400">
                     Extract strongly-typed JSON data matching Pydantic schemas using <code className="text-cyan-400 font-mono">instructor</code>:
                   </p>
-                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                     <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                       <span>Python (Instructor + Pydantic)</span>
                       <button
@@ -962,7 +962,7 @@ print(response.choices[0].message.content)`}</code>
                         {copiedCode === 'inst-code' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
                     </div>
-                    <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
+                    <pre className="p-4 text-xs font-mono text-zinc-200 leading-relaxed overflow-x-auto">
                       <code>{`import instructor
 from openai import OpenAI
 from pydantic import BaseModel, Field
@@ -1043,36 +1043,36 @@ print(report.model_dump_json(indent=2))`}</code>
 
               {/* SLA Table */}
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-white">Service Level Agreements (SLA)</h3>
-                <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-[#0A0B10]">
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Service Level Agreements (SLA)</h3>
+                <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm">
                   <table className="w-full text-left text-xs font-mono">
-                    <thead className="bg-[#0D0F16] border-b border-white/[0.06] text-zinc-400 text-xs font-medium">
+                    <thead className="bg-zinc-50 dark:bg-[#0D0F16] border-b border-zinc-200 dark:border-white/[0.06] text-zinc-600 dark:text-zinc-400 text-xs font-semibold">
                       <tr>
                         <th className="py-2.5 px-4">Metric</th>
                         <th className="py-2.5 px-4">Target SLA</th>
                         <th className="py-2.5 px-4">Description</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/[0.04] text-zinc-300">
+                    <tbody className="divide-y divide-zinc-200 dark:divide-white/[0.04] text-zinc-700 dark:text-zinc-300">
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">API Gateway Uptime</td>
-                        <td className="py-3 px-4 text-emerald-400 font-bold">99.99%</td>
-                        <td className="py-3 px-4 text-zinc-400">Dual-redundant Traefik ingress with multi-region DNS failover.</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">API Gateway Uptime</td>
+                        <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">99.99%</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Dual-redundant Traefik ingress with multi-region DNS failover.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">Cold Start Latency</td>
-                        <td className="py-3 px-4 text-emerald-400 font-bold">0 ms</td>
-                        <td className="py-3 px-4 text-zinc-400">Models remain pre-warmed in high-bandwidth GPU VRAM continuously.</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">Cold Start Latency</td>
+                        <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">0 ms</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Models remain pre-warmed in high-bandwidth GPU VRAM continuously.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">Node Failover Time</td>
-                        <td className="py-3 px-4 text-emerald-400 font-bold">&lt; 50 ms</td>
-                        <td className="py-3 px-4 text-zinc-400">Automatic secondary cluster dispatch upon upstream worker timeout.</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">Node Failover Time</td>
+                        <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">&lt; 50 ms</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Automatic secondary cluster dispatch upon upstream worker timeout.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">Time-to-First-Token (TTFT)</td>
-                        <td className="py-3 px-4 text-emerald-400 font-bold">&lt; 25 ms</td>
-                        <td className="py-3 px-4 text-zinc-400">vLLM chunked prefill running on dedicated H100 SXM5 GPUs.</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">Time-to-First-Token (TTFT)</td>
+                        <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">&lt; 25 ms</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">vLLM chunked prefill running on dedicated H100 SXM5 GPUs.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1083,13 +1083,13 @@ print(report.model_dump_json(indent=2))`}</code>
               <div className="space-y-4 pt-4 border-t border-white/[0.08]">
                 <div className="flex items-center space-x-2 text-cyan-400">
                   <Workflow className="w-5 h-5" />
-                  <h3 className="text-lg font-bold text-white">Kubernetes Production Orchestration (`k8s/`)</h3>
+                  <h3 className="text-lg font-bold text-zinc-950 dark:text-white">Kubernetes Production Orchestration (`k8s/`)</h3>
                 </div>
                 <p className="text-zinc-400 text-sm leading-relaxed">
-                  The YOYO cloud inference platform provides enterprise Kubernetes manifests managed via Kustomize in the <code className="text-zinc-200">k8s/</code> directory. Deploy the entire stack to any CNCF-certified cluster (EKS, GKE, AKS, or on-prem bare-metal) with a single declarative command:
+                  The YOYO cloud inference platform provides enterprise Kubernetes manifests managed via Kustomize in the <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">k8s/</code> directory. Deploy the entire stack to any CNCF-certified cluster (EKS, GKE, AKS, or on-prem bare-metal) with a single declarative command:
                 </p>
 
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                     <span>Declarative Kustomize Deployment</span>
                     <button
@@ -1099,7 +1099,7 @@ print(report.model_dump_json(indent=2))`}</code>
                       {copiedCode === 'k8s-deploy' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     </button>
                   </div>
-                  <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto">
+                  <pre className="p-4 text-xs font-mono text-zinc-200 leading-relaxed overflow-x-auto">
                     <code>{`# 1. Apply all resources declaratively via Kustomize
 kubectl apply -k k8s/
 
@@ -1110,55 +1110,55 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                 </div>
 
                 {/* Manifest Inventory Grid */}
-                <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-[#0A0B10]">
+                <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm">
                   <table className="w-full text-left text-xs font-mono">
-                    <thead className="bg-[#0D0F16] border-b border-white/[0.06] text-zinc-400 text-xs font-medium">
+                    <thead className="bg-zinc-50 dark:bg-[#0D0F16] border-b border-zinc-200 dark:border-white/[0.06] text-zinc-600 dark:text-zinc-400 text-xs font-semibold">
                       <tr>
                         <th className="py-2.5 px-4">Manifest</th>
                         <th className="py-2.5 px-4">Kubernetes Kind</th>
                         <th className="py-2.5 px-4">Purpose & Specifications</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/[0.04] text-zinc-300">
+                    <tbody className="divide-y divide-zinc-200 dark:divide-white/[0.04] text-zinc-700 dark:text-zinc-300">
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">00-namespace.yaml</td>
-                        <td className="py-3 px-4 text-purple-400">Namespace</td>
-                        <td className="py-3 px-4 text-zinc-400">Isolated <code className="text-zinc-200">yoyo-system</code> namespace with multi-tenant RBAC policies.</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">00-namespace.yaml</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">Namespace</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Isolated <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">yoyo-system</code> namespace with multi-tenant RBAC policies.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">01-configmap.yaml</td>
-                        <td className="py-3 px-4 text-purple-400">ConfigMap</td>
-                        <td className="py-3 px-4 text-zinc-400">Environment configuration, Redis URLs, feature flags, and endpoint URLs.</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">01-configmap.yaml</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">ConfigMap</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Environment configuration, Redis URLs, feature flags, and endpoint URLs.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">02-secret.yaml</td>
-                        <td className="py-3 px-4 text-purple-400">Secret</td>
-                        <td className="py-3 px-4 text-zinc-400">Database credentials, JWT secret keys, and Stripe billing API keys.</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">02-secret.yaml</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">Secret</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Database credentials, JWT secret keys, and Stripe billing API keys.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">03-postgres.yaml</td>
-                        <td className="py-3 px-4 text-purple-400">Deployment + Service</td>
-                        <td className="py-3 px-4 text-zinc-400">PostgreSQL 16 Alpine state storage with PersistentVolumeClaim and pg_isready health checks.</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">03-postgres.yaml</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">Deployment + Service</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">PostgreSQL 16 Alpine state storage with PersistentVolumeClaim and pg_isready health checks.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">04-redis.yaml</td>
-                        <td className="py-3 px-4 text-purple-400">Deployment + Service</td>
-                        <td className="py-3 px-4 text-zinc-400">Redis 7 Alpine token-bucket rate limiter with in-memory persistence and health probes.</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">04-redis.yaml</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">Deployment + Service</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Redis 7 Alpine token-bucket rate limiter with in-memory persistence and health probes.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">05-backend.yaml</td>
-                        <td className="py-3 px-4 text-purple-400">Deployment + HPA</td>
-                        <td className="py-3 px-4 text-zinc-400">Fastify 5 Gateway with rolling update (<code className="text-zinc-200">maxSurge: 1</code>, <code className="text-zinc-200">maxUnavailable: 0</code>) and HPA (3–25 pods).</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">05-backend.yaml</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">Deployment + HPA</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Fastify 5 Gateway with rolling update (<code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">maxSurge: 1</code>, <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">maxUnavailable: 0</code>) and HPA (3–25 pods).</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">06-frontend.yaml</td>
-                        <td className="py-3 px-4 text-purple-400">Deployment + Service</td>
-                        <td className="py-3 px-4 text-zinc-400">Next.js 15 developer cockpit with health probes on port 3000.</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">06-frontend.yaml</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">Deployment + Service</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Next.js 15 developer cockpit with health probes on port 3000.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">07-ingress.yaml</td>
-                        <td className="py-3 px-4 text-purple-400">Ingress</td>
-                        <td className="py-3 px-4 text-zinc-400">NGINX edge routing with Let's Encrypt automated TLS, 1-hour SSE streaming timeouts, and proxy buffering disabled.</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">07-ingress.yaml</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">Ingress</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">NGINX edge routing with Let's Encrypt automated TLS, 1-hour SSE streaming timeouts, and proxy buffering disabled.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1182,7 +1182,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                       <span className="text-xs font-semibold text-zinc-200">Zero-Latency SSE Ingress Configuration</span>
                     </div>
                     <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                      Configured with <code className="text-zinc-200">proxy-buffering: &quot;off&quot;</code> and <code className="text-zinc-200">proxy-read-timeout: &quot;3600&quot;</code> to eliminate intermediary NGINX socket buffers, guaranteeing instantaneous token stream delivery to clients.
+                      Configured with <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">proxy-buffering: &quot;off&quot;</code> and <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">proxy-read-timeout: &quot;3600&quot;</code> to eliminate intermediary NGINX socket buffers, guaranteeing instantaneous token stream delivery to clients.
                     </p>
                   </div>
                 </div>
@@ -1192,7 +1192,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
               <div className="space-y-4 pt-4 border-t border-white/[0.08]">
                 <div className="flex items-center space-x-2 text-cyan-400">
                   <Server className="w-5 h-5" />
-                  <h3 className="text-lg font-bold text-white">Docker Compose Multi-Profile Engine</h3>
+                  <h3 className="text-lg font-bold text-zinc-950 dark:text-white">Docker Compose Multi-Profile Engine</h3>
                 </div>
                 <p className="text-zinc-400 text-sm leading-relaxed">
                   Run the platform locally or on self-hosted GPU instances using official Docker Compose profiles tailored for your hardware capabilities:
@@ -1241,7 +1241,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                   <span>POST</span>
                   <span>/v1/chat/completions</span>
                 </div>
-                <h1 className="text-3xl font-black text-white">Chat Completions</h1>
+                <h1 className="text-3xl font-black text-zinc-950 dark:text-white">Chat Completions</h1>
                 <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   Generate streaming or non-streaming responses from hosted foundation models with full OpenAI wire-protocol parity.
                 </p>
@@ -1249,10 +1249,10 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
 
               {/* Parameters Table */}
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-white">Request Body Parameters</h3>
-                <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-[#0A0B10]">
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Request Body Parameters</h3>
+                <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm">
                   <table className="w-full text-left text-xs font-mono">
-                    <thead className="bg-[#0D0F16] border-b border-white/[0.06] text-zinc-400 text-xs font-medium">
+                    <thead className="bg-zinc-50 dark:bg-[#0D0F16] border-b border-zinc-200 dark:border-white/[0.06] text-zinc-600 dark:text-zinc-400 text-xs font-semibold">
                       <tr>
                         <th className="py-2.5 px-4">Parameter</th>
                         <th className="py-2.5 px-4">Type</th>
@@ -1260,54 +1260,54 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                         <th className="py-2.5 px-4">Description</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/[0.04] text-zinc-300">
+                    <tbody className="divide-y divide-zinc-200 dark:divide-white/[0.04] text-zinc-700 dark:text-zinc-300">
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">model</td>
-                        <td className="py-3 px-4 text-purple-400">string</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">model</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">string</td>
                         <td className="py-3 px-4 text-emerald-400">Required</td>
-                        <td className="py-3 px-4 text-zinc-400">Target model identifier (e.g. <code className="text-zinc-200">llama-3.3-70b</code>, <code className="text-zinc-200">qwen-2.5-coder-32b</code>, <code className="text-zinc-200">deepseek-r1-70b</code>).</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Target model identifier (e.g. <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">llama-3.3-70b</code>, <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">qwen-2.5-coder-32b</code>, <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">deepseek-r1-70b</code>).</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">messages</td>
-                        <td className="py-3 px-4 text-purple-400">array</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">messages</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">array</td>
                         <td className="py-3 px-4 text-emerald-400">Required</td>
-                        <td className="py-3 px-4 text-zinc-400">List of messages with role (<code className="text-zinc-200">system</code>, <code className="text-zinc-200">user</code>, <code className="text-zinc-200">assistant</code>) and content.</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">List of messages with role (<code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">system</code>, <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">user</code>, <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">assistant</code>) and content.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">stream</td>
-                        <td className="py-3 px-4 text-purple-400">boolean</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">stream</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">boolean</td>
                         <td className="py-3 px-4 text-zinc-500">Optional</td>
-                        <td className="py-3 px-4 text-zinc-400">If true, returns Server-Sent Events (SSE) data chunks. Default: <code className="text-zinc-200">false</code>.</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">If true, returns Server-Sent Events (SSE) data chunks. Default: <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">false</code>.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">temperature</td>
-                        <td className="py-3 px-4 text-purple-400">number</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">temperature</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">number</td>
                         <td className="py-3 px-4 text-zinc-500">Optional</td>
-                        <td className="py-3 px-4 text-zinc-400">Sampling temperature between 0.0 and 2.0. Default: <code className="text-zinc-200">0.7</code>.</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Sampling temperature between 0.0 and 2.0. Default: <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">0.7</code>.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">max_tokens</td>
-                        <td className="py-3 px-4 text-purple-400">integer</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">max_tokens</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">integer</td>
                         <td className="py-3 px-4 text-zinc-500">Optional</td>
-                        <td className="py-3 px-4 text-zinc-400">Maximum tokens to generate before stopping. Default: <code className="text-zinc-200">2048</code>.</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Maximum tokens to generate before stopping. Default: <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">2048</code>.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">response_format</td>
-                        <td className="py-3 px-4 text-purple-400">object</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">response_format</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">object</td>
                         <td className="py-3 px-4 text-zinc-500">Optional</td>
-                        <td className="py-3 px-4 text-zinc-400">Enforces structured outputs. Pass <code className="text-zinc-200">{`{ "type": "json_object" }`}</code> to guarantee valid JSON syntax, or <code className="text-zinc-200">{`{ "type": "json_schema", "json_schema": { "name": "...", "strict": true, "schema": {...} } }`}</code> for strict JSON Schema conformance.</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Enforces structured outputs. Pass <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">{`{ "type": "json_object" }`}</code> to guarantee valid JSON syntax, or <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">{`{ "type": "json_schema", "json_schema": { "name": "...", "strict": true, "schema": {...} } }`}</code> for strict JSON Schema conformance.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">tools</td>
-                        <td className="py-3 px-4 text-purple-400">array</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">tools</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">array</td>
                         <td className="py-3 px-4 text-zinc-500">Optional</td>
-                        <td className="py-3 px-4 text-zinc-400">List of function calling tools available to the model. Conforms to OpenAI wire schema.</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">List of function calling tools available to the model. Conforms to OpenAI wire schema.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">tool_choice</td>
-                        <td className="py-3 px-4 text-purple-400">string | object</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">tool_choice</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">string | object</td>
                         <td className="py-3 px-4 text-zinc-500">Optional</td>
-                        <td className="py-3 px-4 text-zinc-400">Controls which tool is invoked. Supported: <code className="text-zinc-200">"none"</code>, <code className="text-zinc-200">"auto"</code>, or a specific function object. Default: <code className="text-zinc-200">"auto"</code>.</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Controls which tool is invoked. Supported: <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">"none"</code>, <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">"auto"</code>, or a specific function object. Default: <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">"auto"</code>.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1318,7 +1318,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
               <div className="space-y-4 pt-4 border-t border-white/[0.08]">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-base font-semibold text-white flex items-center space-x-2">
+                    <h3 className="text-base font-semibold text-zinc-950 dark:text-white flex items-center space-x-2">
                       <Terminal className="w-4 h-4 text-cyan-400" />
                       <span>Interactive Request Builder</span>
                     </h3>
@@ -1454,7 +1454,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                     </button>
                   </div>
 
-                  <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto max-h-[320px]">
+                  <pre className="p-4 text-xs font-mono text-zinc-200 leading-relaxed overflow-x-auto max-h-[320px]">
                     <code>{getInteractiveSnippet()}</code>
                   </pre>
                 </div>
@@ -1470,9 +1470,9 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                   <span>SPECIFICATION</span>
                   <span>OpenAI Tool Calling Protocol</span>
                 </div>
-                <h1 className="text-3xl font-black text-white">Function & Tool Calling</h1>
+                <h1 className="text-3xl font-black text-zinc-950 dark:text-white">Function & Tool Calling</h1>
                 <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
-                  Connect open foundation models to external APIs, databases, and custom business logic. Models hosted on YOYO (such as <code className="text-zinc-200">qwen-2.5-coder-32b</code> and <code className="text-zinc-200">llama-3.3-70b</code>) natively output structured <code className="text-zinc-200">tool_calls</code> matching OpenAI wire specifications.
+                  Connect open foundation models to external APIs, databases, and custom business logic. Models hosted on YOYO (such as <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">qwen-2.5-coder-32b</code> and <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">llama-3.3-70b</code>) natively output structured <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">tool_calls</code> matching OpenAI wire specifications.
                 </p>
               </div>
 
@@ -1482,11 +1482,11 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-center">
                   <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                     <span className="text-cyan-400 font-bold block mb-1">1. Define Tools</span>
-                    <p className="text-[11px] text-zinc-400 font-sans">Provide function declarations & JSON schemas in <code className="text-zinc-200 font-mono">tools</code></p>
+                    <p className="text-[11px] text-zinc-400 font-sans">Provide function declarations & JSON schemas in <code className="text-zinc-800 dark:text-zinc-200 font-mono">tools</code></p>
                   </div>
                   <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                     <span className="text-purple-400 font-bold block mb-1">2. Model Decision</span>
-                    <p className="text-[11px] text-zinc-400 font-sans">Model outputs structured <code className="text-zinc-200 font-mono">tool_calls</code> payload</p>
+                    <p className="text-[11px] text-zinc-400 font-sans">Model outputs structured <code className="text-zinc-800 dark:text-zinc-200 font-mono">tool_calls</code> payload</p>
                   </div>
                   <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                     <span className="text-amber-400 font-bold block mb-1">3. Execute Tool</span>
@@ -1501,7 +1501,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
 
               {/* Tool Calling Code Example */}
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-white">Complete Working Example</h3>
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Complete Working Example</h3>
                 <div className="rounded-2xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
                   <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between">
                     <span className="text-xs font-mono text-zinc-400 font-bold">Python SDK: Tool Calling Loop</span>
@@ -1590,7 +1590,7 @@ if msg.tool_calls:
                     </button>
                   </div>
 
-                  <pre className="p-4 text-xs font-mono text-zinc-300 leading-relaxed overflow-x-auto max-h-[380px]">
+                  <pre className="p-4 text-xs font-mono text-zinc-200 leading-relaxed overflow-x-auto max-h-[380px]">
                     <code>{`from openai import OpenAI
 import json
 
@@ -1669,7 +1669,7 @@ if msg.tool_calls:
                 <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
                   <h4 className="text-xs font-semibold text-purple-400">Strict Schema Validation</h4>
                   <p className="text-xs text-zinc-400 leading-relaxed font-sans">
-                    Always include <code className="text-zinc-200 font-mono">"required"</code> array and detailed field <code className="text-zinc-200 font-mono">"description"</code> properties in your JSON schema to prevent hallucinated parameter keys.
+                    Always include <code className="text-zinc-800 dark:text-zinc-200 font-mono">"required"</code> array and detailed field <code className="text-zinc-800 dark:text-zinc-200 font-mono">"description"</code> properties in your JSON schema to prevent hallucinated parameter keys.
                   </p>
                 </div>
               </div>
@@ -1684,26 +1684,26 @@ if msg.tool_calls:
                   <span>POST</span>
                   <span>/v1/embeddings</span>
                 </div>
-                <h1 className="text-3xl font-black text-white">Embeddings</h1>
+                <h1 className="text-3xl font-black text-zinc-950 dark:text-white">Embeddings</h1>
                 <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   Generate high-dimensional vector representations of text for semantic search and retrieval-augmented generation (RAG).
                 </p>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Target Model</span>
                   <span className="text-cyan-400 font-bold font-mono text-xs">nomic-embed-text</span>
                 </div>
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Embedding Dimensions</span>
                   <span className="text-emerald-400 font-bold font-mono text-xs">768 floats</span>
                 </div>
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Max Context</span>
                   <span className="text-zinc-200 font-bold font-mono text-xs">8,192 tokens</span>
                 </div>
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Pricing</span>
                   <span className="text-purple-400 font-bold font-mono text-xs">$0.02 / 1M tokens</span>
                 </div>
@@ -1711,10 +1711,10 @@ if msg.tool_calls:
 
               {/* Embeddings Parameters Table */}
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-white">Request Parameters</h3>
-                <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-[#0A0B10]">
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Request Parameters</h3>
+                <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm">
                   <table className="w-full text-left text-xs font-mono">
-                    <thead className="bg-[#0D0F16] border-b border-white/[0.06] text-zinc-400 text-xs font-medium">
+                    <thead className="bg-zinc-50 dark:bg-[#0D0F16] border-b border-zinc-200 dark:border-white/[0.06] text-zinc-600 dark:text-zinc-400 text-xs font-semibold">
                       <tr>
                         <th className="py-2.5 px-4">Parameter</th>
                         <th className="py-2.5 px-4">Type</th>
@@ -1722,24 +1722,24 @@ if msg.tool_calls:
                         <th className="py-2.5 px-4">Description</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/[0.04] text-zinc-300">
+                    <tbody className="divide-y divide-zinc-200 dark:divide-white/[0.04] text-zinc-700 dark:text-zinc-300">
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">model</td>
-                        <td className="py-3 px-4 text-purple-400">string</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">model</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">string</td>
                         <td className="py-3 px-4 text-emerald-400">Required</td>
-                        <td className="py-3 px-4 text-zinc-400">Embedding model identifier (e.g. <code className="text-zinc-200">nomic-embed-text</code>).</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Embedding model identifier (e.g. <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">nomic-embed-text</code>).</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">input</td>
-                        <td className="py-3 px-4 text-purple-400">string | string[]</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">input</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">string | string[]</td>
                         <td className="py-3 px-4 text-emerald-400">Required</td>
-                        <td className="py-3 px-4 text-zinc-400">Input text string or array of text strings to embed.</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Input text string or array of text strings to embed.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">encoding_format</td>
-                        <td className="py-3 px-4 text-purple-400">string</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">encoding_format</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">string</td>
                         <td className="py-3 px-4 text-zinc-500">Optional</td>
-                        <td className="py-3 px-4 text-zinc-400">Format to return the embeddings. Pass <code className="text-zinc-200">"float"</code> (default) or <code className="text-zinc-200">"base64"</code>.</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Format to return the embeddings. Pass <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">"float"</code> (default) or <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">"base64"</code>.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1747,7 +1747,7 @@ if msg.tool_calls:
               </div>
 
               {/* Embeddings Code Tabs */}
-              <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+              <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06]">
                   <div className="flex items-center space-x-2">
                     {(['curl', 'python', 'typescript'] as const).map((tab) => (
@@ -1836,27 +1836,27 @@ console.log('Embedding length:', response.data[0].embedding.length);
                   <span>POST</span>
                   <span>/v1/rerank</span>
                 </div>
-                <h1 className="text-3xl font-black text-white">Semantic Reranker</h1>
+                <h1 className="text-3xl font-black text-zinc-950 dark:text-white">Semantic Reranker</h1>
                 <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
-                  Two-stage retrieval reranking using deep cross-encoders (<code className="text-zinc-200">bge-reranker-large</code>). Improves search and RAG relevance by up to 35% over vector cosine similarity alone.
+                  Two-stage retrieval reranking using deep cross-encoders (<code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">bge-reranker-large</code>). Improves search and RAG relevance by up to 35% over vector cosine similarity alone.
                 </p>
               </div>
 
               {/* Rerank Specs */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Resident Model</span>
                   <span className="text-cyan-400 font-bold font-mono text-xs">bge-reranker-large</span>
                 </div>
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">p95 Latency</span>
                   <span className="text-emerald-400 font-bold font-mono text-xs">&lt; 15ms</span>
                 </div>
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Max Documents</span>
                   <span className="text-zinc-200 font-bold font-mono text-xs">1,000 / req</span>
                 </div>
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Pricing</span>
                   <span className="text-purple-400 font-bold font-mono text-xs">$0.05 / 1k queries</span>
                 </div>
@@ -1875,10 +1875,10 @@ console.log('Embedding length:', response.data[0].embedding.length);
 
               {/* Request Parameters Table */}
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-white">Request Parameters</h3>
-                <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-[#0A0B10]">
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Request Parameters</h3>
+                <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm">
                   <table className="w-full text-left text-xs font-mono">
-                    <thead className="bg-[#0D0F16] border-b border-white/[0.06] text-zinc-400 text-xs font-medium">
+                    <thead className="bg-zinc-50 dark:bg-[#0D0F16] border-b border-zinc-200 dark:border-white/[0.06] text-zinc-600 dark:text-zinc-400 text-xs font-semibold">
                       <tr>
                         <th className="py-2.5 px-4">Parameter</th>
                         <th className="py-2.5 px-4">Type</th>
@@ -1886,36 +1886,36 @@ console.log('Embedding length:', response.data[0].embedding.length);
                         <th className="py-2.5 px-4">Description</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/[0.04] text-zinc-300">
+                    <tbody className="divide-y divide-zinc-200 dark:divide-white/[0.04] text-zinc-700 dark:text-zinc-300">
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">model</td>
-                        <td className="py-3 px-4 text-purple-400">string</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">model</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">string</td>
                         <td className="py-3 px-4 text-emerald-400">Required</td>
-                        <td className="py-3 px-4 text-zinc-400">Target reranking model (e.g. <code className="text-zinc-200">bge-reranker-large</code>).</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Target reranking model (e.g. <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">bge-reranker-large</code>).</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">query</td>
-                        <td className="py-3 px-4 text-purple-400">string</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">query</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">string</td>
                         <td className="py-3 px-4 text-emerald-400">Required</td>
-                        <td className="py-3 px-4 text-zinc-400">The search query or reference question to score documents against.</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">The search query or reference question to score documents against.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">documents</td>
-                        <td className="py-3 px-4 text-purple-400">string[] | object[]</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">documents</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">string[] | object[]</td>
                         <td className="py-3 px-4 text-emerald-400">Required</td>
-                        <td className="py-3 px-4 text-zinc-400">List of candidate text strings or objects with a <code className="text-zinc-200">text</code> field.</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">List of candidate text strings or objects with a <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">text</code> field.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">top_n</td>
-                        <td className="py-3 px-4 text-purple-400">integer</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">top_n</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">integer</td>
                         <td className="py-3 px-4 text-zinc-500">Optional</td>
-                        <td className="py-3 px-4 text-zinc-400">Number of top-ranked results to return. Default: returns all documents.</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Number of top-ranked results to return. Default: returns all documents.</td>
                       </tr>
                       <tr>
-                        <td className="py-3 px-4 text-cyan-400 font-bold">return_documents</td>
-                        <td className="py-3 px-4 text-purple-400">boolean</td>
+                        <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">return_documents</td>
+                        <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">boolean</td>
                         <td className="py-3 px-4 text-zinc-500">Optional</td>
-                        <td className="py-3 px-4 text-zinc-400">If true, returns the document text within each result object. Default: <code className="text-zinc-200">false</code>.</td>
+                        <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">If true, returns the document text within each result object. Default: <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">false</code>.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1923,7 +1923,7 @@ console.log('Embedding length:', response.data[0].embedding.length);
               </div>
 
               {/* Rerank Code Tabs */}
-              <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+              <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06]">
                   <div className="flex items-center space-x-2">
                     {(['curl', 'python', 'typescript'] as const).map((tab) => (
@@ -2026,8 +2026,8 @@ response.results.forEach((res) => {
 
               {/* Rerank Response Schema */}
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-white">Response Format</h3>
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4 text-xs font-mono text-zinc-300 overflow-x-auto">
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Response Format</h3>
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4 text-xs font-mono text-zinc-300 overflow-x-auto">
                   <pre>{`{
   "id": "rerank-c89b2f41",
   "results": [
@@ -2065,9 +2065,9 @@ response.results.forEach((res) => {
                     <span>GET</span>
                     <span>/v1/models</span>
                   </div>
-                  <h1 className="text-3xl font-black text-white">Available Foundation Models</h1>
+                  <h1 className="text-3xl font-black text-zinc-950 dark:text-white">Available Foundation Models</h1>
                   <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
-                    Returns all resident open-weights models served across YOYO cloud GPU clusters. Drop-in compatible with standard OpenAI SDK <code className="text-zinc-200">client.models.list()</code>.
+                    Returns all resident open-weights models served across YOYO cloud GPU clusters. Drop-in compatible with standard OpenAI SDK <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">client.models.list()</code>.
                   </p>
                 </div>
                 <Link
@@ -2081,10 +2081,10 @@ response.results.forEach((res) => {
 
               {/* Models Reference Table */}
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-white">Cloud Compute Catalog</h3>
-                <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-[#0A0B10]">
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Cloud Compute Catalog</h3>
+                <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm">
                   <table className="w-full text-left text-xs font-mono">
-                    <thead className="bg-[#0D0F16] border-b border-white/[0.06] text-zinc-400 text-xs font-medium">
+                    <thead className="bg-zinc-50 dark:bg-[#0D0F16] border-b border-zinc-200 dark:border-white/[0.06] text-zinc-600 dark:text-zinc-400 text-xs font-semibold">
                       <tr>
                         <th className="py-2.5 px-4">Identifier</th>
                         <th className="py-2.5 px-4">Provider</th>
@@ -2094,7 +2094,7 @@ response.results.forEach((res) => {
                         <th className="py-2.5 px-4">Hardware Target</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/[0.04] text-zinc-300">
+                    <tbody className="divide-y divide-zinc-200 dark:divide-white/[0.04] text-zinc-700 dark:text-zinc-300">
                       {[
                         {
                           id: 'llama-3.3-70b',
@@ -2162,12 +2162,12 @@ response.results.forEach((res) => {
                         },
                       ].map((m) => (
                         <tr key={m.id} className="hover:bg-white/[0.02] transition-colors">
-                          <td className="py-3 px-4 text-cyan-400 font-bold">{m.id}</td>
+                          <td className="py-3 px-4 text-cyan-600 dark:text-cyan-400 font-bold">{m.id}</td>
                           <td className="py-3 px-4 text-zinc-300">{m.provider}</td>
-                          <td className="py-3 px-4 text-purple-400">{m.context}</td>
-                          <td className="py-3 px-4 text-zinc-400">{m.precision}</td>
+                          <td className="py-3 px-4 text-purple-600 dark:text-purple-400 font-semibold">{m.context}</td>
+                          <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">{m.precision}</td>
                           <td className="py-3 px-4 text-emerald-400">{m.price}</td>
-                          <td className="py-3 px-4 text-zinc-400">{m.hardware}</td>
+                          <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">{m.hardware}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -2177,7 +2177,7 @@ response.results.forEach((res) => {
 
               {/* Wire Protocol Response Example */}
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-white">Wire Protocol Response JSON</h3>
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Wire Protocol Response JSON</h3>
                 <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] font-mono text-xs text-zinc-300 overflow-x-auto">
                   <pre>
                     <code>{`{
@@ -2227,7 +2227,7 @@ response.results.forEach((res) => {
               <div>
                 <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Batch Inference</span>
                 <div className="flex items-center space-x-3 mt-1">
-                  <h1 className="text-3xl font-black text-white">Batch API</h1>
+                  <h1 className="text-3xl font-black text-zinc-950 dark:text-white">Batch API</h1>
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                     50% Discount (24h SLA)
                   </span>
@@ -2239,7 +2239,7 @@ response.results.forEach((res) => {
 
               {/* JSONL Format Guide */}
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-white">1. Prepare your JSONL File</h3>
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">1. Prepare your JSONL File</h3>
                 <p className="text-xs text-zinc-400">
                   Each line in the file must be a JSON object containing a <code className="text-cyan-400">custom_id</code>, HTTP method, target URL, and inference body.
                 </p>
@@ -2251,10 +2251,10 @@ response.results.forEach((res) => {
 
               {/* Code Samples */}
               <div className="space-y-4">
-                <h3 className="text-base font-semibold text-white">2. Submit & Monitor Batch Jobs</h3>
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">2. Submit & Monitor Batch Jobs</h3>
                 
                 {/* Python SDK */}
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2 border-b border-white/[0.06] bg-[#0D0F16] flex items-center justify-between">
                     <span className="text-xs font-mono font-bold text-zinc-300">Python SDK</span>
                     <button
@@ -2319,7 +2319,7 @@ if status["status"] == "COMPLETED":
                 </div>
 
                 {/* cURL */}
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2 border-b border-white/[0.06] bg-[#0D0F16] flex items-center justify-between">
                     <span className="text-xs font-mono font-bold text-zinc-300">cURL REST API</span>
                     <button
@@ -2375,7 +2375,7 @@ curl https://api.yoyo.ai/v1/batches \\
 
               {/* Signature Spec */}
               <div className="p-5 rounded-2xl border border-white/[0.08] bg-[#0A0B10] space-y-3">
-                <h3 className="text-base font-semibold text-white">HMAC-SHA256 Signature Header</h3>
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">HMAC-SHA256 Signature Header</h3>
                 <p className="text-xs text-zinc-400">
                   Every outgoing webhook request includes a <code className="text-cyan-400">X-Yoyo-Signature</code> header in the format:
                 </p>
@@ -2383,16 +2383,16 @@ curl https://api.yoyo.ai/v1/batches \\
                   X-Yoyo-Signature: t=1730000000,v1=9b82c7d9e4a1f...
                 </div>
                 <p className="text-xs text-zinc-400">
-                  The signature is computed over <code className="text-zinc-200">{"${t}.${rawRequestBody}"}</code> using your endpoint secret (<code className="text-zinc-200">whsec_...</code>).
+                  The signature is computed over <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">{"${t}.${rawRequestBody}"}</code> using your endpoint secret (<code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">whsec_...</code>).
                 </p>
               </div>
 
               {/* Signature Verification Snippets */}
               <div className="space-y-4">
-                <h3 className="text-base font-semibold text-white">Signature Verification Implementations</h3>
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Signature Verification Implementations</h3>
 
                 {/* Python Verification */}
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2 border-b border-white/[0.06] bg-[#0D0F16] flex items-center justify-between">
                     <span className="text-xs font-mono font-bold text-zinc-300">Python (FastAPI / Flask)</span>
                     <button
@@ -2448,7 +2448,7 @@ def verify_yoyo_signature(payload_bytes: bytes, sig_header: str, secret: str, to
                 </div>
 
                 {/* Node.js Verification */}
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2 border-b border-white/[0.06] bg-[#0D0F16] flex items-center justify-between">
                     <span className="text-xs font-mono font-bold text-zinc-300">Node.js (Express / Fastify)</span>
                     <button
@@ -2502,55 +2502,55 @@ export function verifyYoyoSignature(rawBody: string | Buffer, sigHeader: string,
                 </p>
               </div>
 
-              <div className="overflow-x-auto rounded-xl border border-white/[0.08] bg-[#0A0B10]">
+              <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm">
                 <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-[#0D0F16] border-b border-white/[0.06] text-zinc-400 text-xs font-medium">
+                  <thead className="bg-zinc-50 dark:bg-[#0D0F16] border-b border-zinc-200 dark:border-white/[0.06] text-zinc-600 dark:text-zinc-400 text-xs font-semibold">
                     <tr>
                       <th className="py-2.5 px-4">Code</th>
                       <th className="py-2.5 px-4">Status</th>
                       <th className="py-2.5 px-4">Meaning & Remediation</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.04] text-zinc-300">
+                  <tbody className="divide-y divide-zinc-200 dark:divide-white/[0.04] text-zinc-700 dark:text-zinc-300">
                     <tr>
-                      <td className="py-3 px-4 text-emerald-400 font-bold">200 OK</td>
+                      <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-bold">200 OK</td>
                       <td className="py-3 px-4">Success</td>
-                      <td className="py-3 px-4 text-zinc-400">Request executed successfully and completions/embeddings returned.</td>
+                      <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Request executed successfully and completions/embeddings returned.</td>
                     </tr>
                     <tr>
-                      <td className="py-3 px-4 text-amber-400 font-bold">400 Bad Request</td>
+                      <td className="py-3 px-4 text-amber-600 dark:text-amber-400 font-bold">400 Bad Request</td>
                       <td className="py-3 px-4">Invalid Syntax</td>
-                      <td className="py-3 px-4 text-zinc-400">Malformed JSON body, missing required parameters (<code className="text-zinc-200">model</code>, <code className="text-zinc-200">messages</code>), or invalid types.</td>
+                      <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Malformed JSON body, missing required parameters (<code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">model</code>, <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">messages</code>), or invalid types.</td>
                     </tr>
                     <tr>
                       <td className="py-3 px-4 text-red-400 font-bold">401 Unauthorized</td>
                       <td className="py-3 px-4">Invalid Key</td>
-                      <td className="py-3 px-4 text-zinc-400">Missing, invalid, expired, or revoked <code className="text-zinc-200">sk_live_...</code> API key.</td>
+                      <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Missing, invalid, expired, or revoked <code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">sk_live_...</code> API key.</td>
                     </tr>
                     <tr>
                       <td className="py-3 px-4 text-red-400 font-bold">403 Forbidden</td>
                       <td className="py-3 px-4">Scope / Quota Denied</td>
-                      <td className="py-3 px-4 text-zinc-400">Target model is not permitted by API key scope, account is suspended, or prepaid compute balance is \$0.00.</td>
+                      <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Target model is not permitted by API key scope, account is suspended, or prepaid compute balance is \$0.00.</td>
                     </tr>
                     <tr>
-                      <td className="py-3 px-4 text-amber-400 font-bold">404 Not Found</td>
+                      <td className="py-3 px-4 text-amber-600 dark:text-amber-400 font-bold">404 Not Found</td>
                       <td className="py-3 px-4">Model Not Found</td>
-                      <td className="py-3 px-4 text-zinc-400">Requested model identifier does not exist in the active catalog (<code className="text-zinc-200">GET /v1/models</code>).</td>
+                      <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Requested model identifier does not exist in the active catalog (<code className="text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">GET /v1/models</code>).</td>
                     </tr>
                     <tr>
-                      <td className="py-3 px-4 text-amber-400 font-bold">429 Rate Limit</td>
+                      <td className="py-3 px-4 text-amber-600 dark:text-amber-400 font-bold">429 Rate Limit</td>
                       <td className="py-3 px-4">Too Many Requests</td>
-                      <td className="py-3 px-4 text-zinc-400">Exceeded RPM (Requests Per Minute) or sliding-window TPM (Tokens Per Minute) limit for this API key.</td>
+                      <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Exceeded RPM (Requests Per Minute) or sliding-window TPM (Tokens Per Minute) limit for this API key.</td>
                     </tr>
                     <tr>
                       <td className="py-3 px-4 text-red-400 font-bold">500 Internal Error</td>
                       <td className="py-3 px-4">Inference Error</td>
-                      <td className="py-3 px-4 text-zinc-400">Unexpected runtime exception during generation or serialization.</td>
+                      <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">Unexpected runtime exception during generation or serialization.</td>
                     </tr>
                     <tr>
                       <td className="py-3 px-4 text-red-400 font-bold">503 Service Unavailable</td>
                       <td className="py-3 px-4">All Workers Busy</td>
-                      <td className="py-3 px-4 text-zinc-400">All cloud GPU inference workers are temporarily busy or offline. Least-connections failover loop exhausted.</td>
+                      <td className="py-3 px-4 text-zinc-600 dark:text-zinc-400">All cloud GPU inference workers are temporarily busy or offline. Least-connections failover loop exhausted.</td>
                     </tr>
                   </tbody>
                 </table>
@@ -2558,11 +2558,11 @@ export function verifyYoyoSignature(rawBody: string | Buffer, sigHeader: string,
 
               {/* Standard Error Response Schema */}
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-white">Error Response Payload</h3>
+                <h3 className="text-base font-semibold text-zinc-950 dark:text-white">Error Response Payload</h3>
                 <p className="text-xs text-zinc-400">
                   All 4xx and 5xx responses emit standard OpenAI wire-protocol error objects:
                 </p>
-                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4 text-xs font-mono text-zinc-300 overflow-x-auto">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-[#090A10] shadow-sm p-4 text-xs font-mono text-zinc-300 overflow-x-auto">
                   <pre>{`{
   "error": {
     "message": "Token rate limit exceeded for key. Used: 62400 / 60000 TPM. Reset in 42s.",

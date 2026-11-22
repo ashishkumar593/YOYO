@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Logo } from '@/components/ui/logo';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { apiRequest } from '@/lib/api';
 import {
   CheckCircle2,
@@ -118,16 +119,16 @@ export default function StatusPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#060709] text-zinc-100 flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-300">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-600 transition-colors">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#060709]/80 backdrop-blur-md px-6 py-4">
+      <header className="sticky top-0 z-50 border-b border-border/80 bg-background/80 backdrop-blur-md px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Link href="/" className="hover:opacity-90 transition-opacity">
               <Logo size={28} />
             </Link>
-            <span className="text-zinc-600">/</span>
-            <span className="text-sm font-semibold text-zinc-200">
+            <span className="text-muted-foreground">/</span>
+            <span className="text-sm font-semibold text-foreground">
               System Status
             </span>
           </div>
@@ -136,23 +137,24 @@ export default function StatusPage() {
             <button
               onClick={fetchStatus}
               disabled={refreshing}
-              className="text-xs text-zinc-400 hover:text-foreground flex items-center space-x-1.5 transition-colors"
+              className="text-xs text-muted-foreground hover:text-foreground flex items-center space-x-1.5 transition-colors"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-cyan-400' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-primary' : ''}`} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
             <Link
               href="/docs"
-              className="text-xs text-zinc-400 hover:text-foreground transition-colors"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               Documentation
             </Link>
             <Link
               href="/dashboard"
-              className="px-3.5 py-1.5 rounded-xl bg-white text-zinc-950 font-medium text-xs hover:bg-zinc-100 transition-colors shadow-sm"
+              className="px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground font-medium text-xs hover:bg-primary/90 transition-colors shadow-sm"
             >
               Dashboard
             </Link>
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -161,45 +163,37 @@ export default function StatusPage() {
       <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-10 space-y-10">
         {/* Banner */}
         <div
-          className={`p-6 rounded-3xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all shadow-xl ${
+          className={`p-6 rounded-3xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all shadow-lg ${
             isHealthy
-              ? 'bg-emerald-500/10 border-emerald-500/30 shadow-emerald-500/5'
-              : 'bg-amber-500/10 border-amber-500/30 shadow-amber-500/5'
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+              : 'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400'
           }`}
         >
           <div className="flex items-center space-x-4">
             <div
               className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                isHealthy
-                  ? 'bg-emerald-500/20 text-emerald-400'
-                  : 'bg-amber-500/20 text-amber-400'
+                isHealthy ? 'bg-emerald-500/20 text-emerald-500' : 'bg-amber-500/20 text-amber-500'
               }`}
             >
-              {isHealthy ? (
-                <CheckCircle2 className="w-7 h-7" />
-              ) : (
-                <AlertTriangle className="w-7 h-7" />
-              )}
+              {isHealthy ? <CheckCircle2 className="w-6 h-6" /> : <AlertTriangle className="w-6 h-6" />}
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                {isHealthy
-                  ? 'All Systems Normal'
-                  : 'Platform Experiencing Degraded Latency'}
+              <h1 className="text-xl font-bold tracking-tight text-foreground">
+                {isHealthy ? 'All Global Systems Operational' : 'Degraded Cluster Performance'}
               </h1>
-              <p className="text-xs text-zinc-400 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Edge routing, cloud GPU inference clusters, and token metering running nominal.
               </p>
             </div>
           </div>
 
-          <div className="text-left sm:text-right text-xs text-zinc-400 shrink-0">
+          <div className="text-left sm:text-right text-xs text-muted-foreground shrink-0 font-mono">
             <div>
               Last checked:{' '}
-              <span className="text-zinc-200">{lastUpdated.toLocaleTimeString()}</span>
+              <span className="text-foreground font-semibold">{lastUpdated.toLocaleTimeString()}</span>
             </div>
-            <div className="flex items-center sm:justify-end space-x-1.5 mt-1 text-[11px] text-emerald-400 font-semibold">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <div className="flex items-center sm:justify-end space-x-1.5 mt-1 text-[11px] text-emerald-500 font-semibold">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Real-time Telemetry Active</span>
             </div>
           </div>
@@ -207,53 +201,53 @@ export default function StatusPage() {
 
         {/* Global Key Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl bg-[#0D0E16] border border-white/[0.08]">
-            <div className="flex items-center justify-between text-zinc-400 text-xs font-medium mb-2">
+          <div className="p-5 rounded-2xl bg-card border border-border/80 shadow-sm">
+            <div className="flex items-center justify-between text-muted-foreground text-xs font-medium mb-2">
               <span>90-Day Uptime</span>
-              <Activity className="w-4 h-4 text-cyan-400" />
+              <Activity className="w-4 h-4 text-cyan-500" />
             </div>
-            <div className="text-2xl font-bold text-white font-mono">99.99%</div>
-            <div className="text-[11px] text-zinc-400 mt-1">Zero unplanned outages</div>
+            <div className="text-2xl font-bold text-foreground font-mono">99.99%</div>
+            <div className="text-[11px] text-muted-foreground mt-1">Zero unplanned outages</div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#0D0E16] border border-white/[0.08]">
-            <div className="flex items-center justify-between text-zinc-400 text-xs font-medium mb-2">
+          <div className="p-5 rounded-2xl bg-card border border-border/80 shadow-sm">
+            <div className="flex items-center justify-between text-muted-foreground text-xs font-medium mb-2">
               <span>Edge Gateway Latency</span>
-              <Zap className="w-4 h-4 text-emerald-400" />
+              <Zap className="w-4 h-4 text-emerald-500" />
             </div>
-            <div className="text-2xl font-bold text-emerald-400 font-mono">0.4 ms</div>
-            <div className="text-[11px] text-zinc-400 mt-1">Fastify edge routing</div>
+            <div className="text-2xl font-bold text-emerald-500 font-mono">0.4 ms</div>
+            <div className="text-[11px] text-muted-foreground mt-1">Fastify edge routing</div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#0D0E16] border border-white/[0.08]">
-            <div className="flex items-center justify-between text-zinc-400 text-xs font-medium mb-2">
+          <div className="p-5 rounded-2xl bg-card border border-border/80 shadow-sm">
+            <div className="flex items-center justify-between text-muted-foreground text-xs font-medium mb-2">
               <span>Cloud GPU Pools</span>
-              <Cpu className="w-4 h-4 text-indigo-400" />
+              <Cpu className="w-4 h-4 text-indigo-500" />
             </div>
-            <div className="text-2xl font-bold text-white font-mono">
+            <div className="text-2xl font-bold text-foreground font-mono">
               {statusData?.cluster?.onlineNodes || 4} Nodes
             </div>
-            <div className="text-[11px] text-zinc-400 mt-1">H100 SXM5 & A100 80GB</div>
+            <div className="text-[11px] text-muted-foreground mt-1">H100 SXM5 &amp; A100 80GB</div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#0D0E16] border border-white/[0.08]">
-            <div className="flex items-center justify-between text-zinc-400 text-xs font-medium mb-2">
+          <div className="p-5 rounded-2xl bg-card border border-border/80 shadow-sm">
+            <div className="flex items-center justify-between text-muted-foreground text-xs font-medium mb-2">
               <span>Active Incidents</span>
-              <Shield className="w-4 h-4 text-purple-400" />
+              <Shield className="w-4 h-4 text-purple-500" />
             </div>
-            <div className="text-2xl font-bold text-white font-mono">0</div>
-            <div className="text-[11px] text-zinc-400 mt-1">Zero service interruptions</div>
+            <div className="text-2xl font-bold text-foreground font-mono">0</div>
+            <div className="text-[11px] text-muted-foreground mt-1">Zero service interruptions</div>
           </div>
         </div>
 
         {/* 90-Day Uptime Graph */}
-        <div className="p-6 rounded-3xl bg-[#0D0E16] border border-white/[0.08] space-y-4">
+        <div className="p-6 rounded-3xl bg-card border border-border/80 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-bold text-foreground text-base">Historical Platform Availability</h2>
-              <p className="text-xs text-zinc-400 mt-0.5">Continuous automated synthetic health checks</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Continuous automated synthetic health checks</p>
             </div>
-            <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+            <span className="text-xs font-semibold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 font-mono">
               99.99% Uptime
             </span>
           </div>
@@ -268,7 +262,7 @@ export default function StatusPage() {
                 />
               ))}
             </div>
-            <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500">
+            <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
               <span>90 days ago</span>
               <span>Today (Active)</span>
             </div>
@@ -276,33 +270,33 @@ export default function StatusPage() {
         </div>
 
         {/* Core Infrastructure Services */}
-        <div className="rounded-3xl bg-[#0D0E16] border border-white/[0.08] overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between">
-            <h2 className="font-bold text-foreground text-base">Core Services & Endpoints</h2>
-            <span className="text-xs text-zinc-400 font-mono">6 monitored components</span>
+        <div className="rounded-3xl bg-card border border-border/80 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-border/80 flex items-center justify-between bg-muted/20">
+            <h2 className="font-bold text-foreground text-base">Core Services &amp; Endpoints</h2>
+            <span className="text-xs text-muted-foreground font-mono">6 monitored components</span>
           </div>
 
-          <div className="divide-y divide-white/[0.04]">
+          <div className="divide-y divide-border/60">
             {(statusData?.services || []).map((service: any, idx: number) => (
               <div
                 key={idx}
-                className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-white/[0.01] transition-colors"
+                className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-muted/30 transition-colors"
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                   <div>
-                    <div className="font-semibold text-white text-sm">{service.name}</div>
-                    <div className="text-[11px] font-mono text-zinc-500">
-                      Response latency: <span className="text-zinc-300">{service.latencyMs}ms</span>
+                    <div className="font-semibold text-foreground text-sm">{service.name}</div>
+                    <div className="text-[11px] font-mono text-muted-foreground">
+                      Response latency: <span className="text-foreground font-semibold">{service.latencyMs}ms</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-6 sm:justify-end text-xs font-mono">
-                  <div className="text-zinc-400">
-                    Uptime: <span className="text-emerald-400 font-semibold">{service.uptimePct}%</span>
+                  <div className="text-muted-foreground">
+                    Uptime: <span className="text-emerald-500 font-semibold">{service.uptimePct}%</span>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-[10px]">
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-bold text-[10px]">
                     Active
                   </span>
                 </div>
@@ -312,17 +306,17 @@ export default function StatusPage() {
         </div>
 
         {/* Cloud Foundation Models Live Latency & Throughput */}
-        <div className="rounded-3xl bg-[#0D0E16] border border-white/[0.08] overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between">
+        <div className="rounded-3xl bg-card border border-border/80 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-border/80 flex items-center justify-between bg-muted/20">
             <div>
               <h2 className="font-bold text-foreground text-base">Live Model Inference Latency</h2>
-              <p className="text-xs text-zinc-400 mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Current Time-To-First-Token (TTFT) and throughput across cloud GPU clusters
               </p>
             </div>
             <Link
               href="/dashboard/playground"
-              className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center space-x-1"
+              className="text-xs text-primary hover:underline font-semibold flex items-center space-x-1"
             >
               <span>Test in Playground</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -331,7 +325,7 @@ export default function StatusPage() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#090A10] text-zinc-400 text-xs font-medium border-b border-white/[0.06]">
+              <thead className="bg-muted/40 text-muted-foreground text-xs font-semibold border-b border-border/80">
                 <tr>
                   <th className="px-6 py-3">Model</th>
                   <th className="px-6 py-3">Identifier</th>
@@ -340,15 +334,15 @@ export default function StatusPage() {
                   <th className="px-6 py-3 text-right">Cluster Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.04]">
+              <tbody className="divide-y divide-border/60">
                 {modelMetrics.map((m) => (
-                  <tr key={m.id} className="hover:bg-white/[0.01] transition-colors">
-                    <td className="px-6 py-3.5 font-sans font-bold text-white">{m.name}</td>
-                    <td className="px-6 py-3.5 text-zinc-300 font-mono">{m.id}</td>
-                    <td className="px-6 py-3.5 text-zinc-300 font-mono">{m.ttft}</td>
-                    <td className="px-6 py-3.5 text-emerald-400 font-semibold font-mono">{m.speed}</td>
+                  <tr key={m.id} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-6 py-3.5 font-sans font-bold text-foreground">{m.name}</td>
+                    <td className="px-6 py-3.5 text-muted-foreground font-mono">{m.id}</td>
+                    <td className="px-6 py-3.5 text-foreground font-mono font-medium">{m.ttft}</td>
+                    <td className="px-6 py-3.5 text-emerald-500 font-semibold font-mono">{m.speed}</td>
                     <td className="px-6 py-3.5 text-right">
-                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-xs bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-medium">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                         <span>{m.status}</span>
                       </span>
@@ -361,32 +355,35 @@ export default function StatusPage() {
         </div>
 
         {/* Incident History */}
-        <div className="p-6 rounded-3xl bg-[#0D0E16] border border-white/[0.08] space-y-4">
-          <h2 className="font-bold text-foreground text-base">Past Incidents & Maintenance</h2>
-          <div className="p-8 text-center text-zinc-500 text-xs border border-white/[0.04] rounded-2xl bg-[#090A10]">
-            <CheckCircle2 className="w-8 h-8 text-emerald-500/40 mx-auto mb-2" />
-            <p className="font-semibold text-zinc-300">All systems operating normally.</p>
-            <p className="text-[11px] text-zinc-500 mt-1">No incidents reported in the preceding 90 days.</p>
+        <div className="p-6 rounded-3xl bg-card border border-border/80 shadow-sm space-y-4">
+          <h2 className="font-bold text-foreground text-base">Past Incidents &amp; Maintenance</h2>
+          <div className="p-8 text-center text-muted-foreground text-xs border border-border/80 rounded-2xl bg-muted/20">
+            <CheckCircle2 className="w-8 h-8 text-emerald-500/60 mx-auto mb-2" />
+            <p className="font-semibold text-foreground">All systems operating normally.</p>
+            <p className="text-[11px] text-muted-foreground mt-1">No incidents reported in the preceding 90 days.</p>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.08] bg-[#060709] px-6 py-6 mt-16 text-center text-xs text-zinc-500">
+      <footer className="border-t border-border/80 bg-card px-6 py-6 mt-16 text-center text-xs text-muted-foreground">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>&copy; {new Date().getFullYear()} YOYO Platform. Global Cloud AI Infrastructure.</div>
           <div className="flex items-center space-x-6">
-            <Link href="/" className="hover:text-cyan-400 transition-colors">
+            <Link href="/" className="hover:text-primary transition-colors">
               Home
             </Link>
-            <Link href="/docs" className="hover:text-cyan-400 transition-colors">
-              Docs
+            <Link href="/docs" className="hover:text-primary transition-colors">
+              Documentation
             </Link>
-            <Link href="/terms" className="hover:text-cyan-400 transition-colors">
-              Terms
+            <Link href="/dashboard" className="hover:text-primary transition-colors">
+              Developer Console
             </Link>
-            <Link href="/privacy" className="hover:text-cyan-400 transition-colors">
+            <Link href="/privacy" className="hover:text-primary transition-colors">
               Privacy
+            </Link>
+            <Link href="/terms" className="hover:text-primary transition-colors">
+              Terms
             </Link>
           </div>
         </div>
@@ -394,4 +391,3 @@ export default function StatusPage() {
     </div>
   );
 }
-

@@ -672,7 +672,7 @@ print(response.choices[0].message.content)`;
           </div>
 
           {/* Quick Developer Command Strip */}
-          <div className="p-5 rounded-2xl bg-[#090B12] border border-white/[0.08] flex flex-col space-y-3">
+          <div className="p-5 rounded-2xl bg-card border border-border/80 flex flex-col space-y-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <Terminal className="w-4 h-4 text-cyan-400" />
@@ -1366,7 +1366,7 @@ print(response.choices[0].message.content)`;
           {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* OpenAI Drop-In Card */}
-            <div className="p-6 rounded-2xl bg-[#090B12] border border-white/[0.08] space-y-4">
+            <div className="p-6 rounded-2xl bg-card border border-border/80 space-y-4">
               <div className="flex items-center space-x-3">
                 <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   <Code className="w-4 h-4" />
@@ -1392,7 +1392,7 @@ print(response.choices[0].message.content)`;
             </div>
 
             {/* Async Batch Workloads Card */}
-            <div className="p-6 rounded-2xl bg-[#090B12] border border-white/[0.08] space-y-4">
+            <div className="p-6 rounded-2xl bg-card border border-border/80 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
@@ -1426,7 +1426,7 @@ print(response.choices[0].message.content)`;
             </div>
 
             {/* Custom LoRA Adapters Card */}
-            <div className="p-6 rounded-2xl bg-[#090B12] border border-white/[0.08] space-y-4">
+            <div className="p-6 rounded-2xl bg-card border border-border/80 space-y-4">
               <div className="flex items-center space-x-3">
                 <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                   <Sparkles className="w-4 h-4" />
@@ -1451,7 +1451,7 @@ print(response.choices[0].message.content)`;
             </div>
 
             {/* Developer Webhooks & Async Notifications */}
-            <div className="p-6 rounded-2xl bg-[#090B12] border border-white/[0.08] space-y-4">
+            <div className="p-6 rounded-2xl bg-card border border-border/80 space-y-4">
               <div className="flex items-center space-x-3">
                 <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                   <Webhook className="w-4 h-4" />
@@ -1484,7 +1484,7 @@ print(response.choices[0].message.content)`;
       {activeTab === 'local' && (
         <div className="space-y-6">
           {/* Header & Status Card */}
-          <div className="p-6 rounded-2xl bg-[#090B12] border border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-6 rounded-2xl bg-card border border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1.5">
               <div className="flex items-center space-x-2.5">
                 <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
@@ -1584,7 +1584,7 @@ print(response.choices[0].message.content)`;
                     setPullModelTag(p.tag);
                     handlePullModel(p.tag);
                   }}
-                  className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-cyan-500/10 border border-white/[0.08] hover:border-cyan-500/30 text-[11px] font-mono text-zinc-300 hover:text-cyan-400 transition-all flex items-center space-x-1"
+                  className="px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-cyan-500/10 border border-border/80 hover:border-cyan-500/30 text-[11px] font-mono text-zinc-300 hover:text-cyan-400 transition-all flex items-center space-x-1"
                 >
                   <span>+</span>
                   <span>{p.tag}</span>
@@ -1692,7 +1692,7 @@ print(response.choices[0].message.content)`;
 
           {/* Running Models in Memory / VRAM */}
           {localStatus?.runningModels && localStatus.runningModels.length > 0 && (
-            <div className="p-5 rounded-2xl bg-[#090B12] border border-border/80 space-y-3">
+            <div className="p-5 rounded-2xl bg-card border border-border/80 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-amber-400">
                   <Activity className="w-4 h-4" />
@@ -1736,7 +1736,7 @@ print(response.choices[0].message.content)`;
       {/* ========================================================================= */}
       {showCreateKeyModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-[#0B0D17] border border-border/80 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
+          <div className="bg-card border border-border/80 rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
               <div className="flex items-center space-x-2">
                 <Key className="w-4 h-4 text-amber-400" />
@@ -1920,7 +1920,7 @@ print(response.choices[0].message.content)`;
       {/* ========================================================================= */}
       {keyToDelete && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
-          <div className="bg-[#0B0D17] border border-red-500/30 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+          <div className="bg-card border border-red-500/30 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
             <div className="flex items-center space-x-2 text-red-400">
               <AlertTriangle className="w-5 h-5" />
               <h3 className="text-sm font-bold text-foreground">Revoke API Key Authorization</h3>

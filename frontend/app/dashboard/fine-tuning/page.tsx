@@ -418,14 +418,14 @@ export default function FineTuningPage() {
                       <span
                         className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold font-mono uppercase border ${
                           job.status === 'succeeded'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                             : job.status === 'running'
-                            ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 animate-pulse'
+                            ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20 animate-pulse'
                             : job.status === 'validating_files' || job.status === 'queued'
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
                             : job.status === 'cancelled'
-                            ? 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                            : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                            ? 'bg-muted text-muted-foreground border-border/60'
+                            : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
                         }`}
                       >
                         {job.status === 'running' && (

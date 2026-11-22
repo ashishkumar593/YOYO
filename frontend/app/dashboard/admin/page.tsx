@@ -527,7 +527,7 @@ export default function AdminDashboardPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'overview'
               ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-              : 'text-muted-foreground hover:text-foreground'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
           }`}
         >
           <Activity className="w-4 h-4" />
@@ -540,12 +540,18 @@ export default function AdminDashboardPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'developers'
               ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-              : 'text-muted-foreground hover:text-foreground'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
           }`}
         >
           <Users className="w-4 h-4" />
           <span>Developer Directory &amp; Quotas</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-black/20 text-slate-900 border border-black/10">
+          <span
+            className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold border transition-colors ${
+              activeTab === 'developers'
+                ? 'bg-black/15 text-slate-950 border-black/15'
+                : 'bg-muted text-muted-foreground border-border/60'
+            }`}
+          >
             {usersTotal || stats?.totalUsers || 0}
           </span>
         </button>
@@ -556,12 +562,18 @@ export default function AdminDashboardPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'billing'
               ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-              : 'text-muted-foreground hover:text-foreground'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
           }`}
         >
           <CreditCard className="w-4 h-4" />
           <span>Billing &amp; Revenue</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-black/20 text-slate-900 border border-black/10">
+          <span
+            className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold border transition-colors ${
+              activeTab === 'billing'
+                ? 'bg-black/15 text-slate-950 border-black/15'
+                : 'bg-muted text-muted-foreground border-border/60'
+            }`}
+          >
             ${billingSummary?.totalCirculatingCreditsUsd ? billingSummary.totalCirculatingCreditsUsd.toFixed(0) : (stats?.estimatedRevenueUsd || 0)}
           </span>
         </button>
@@ -572,12 +584,18 @@ export default function AdminDashboardPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'models'
               ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-              : 'text-muted-foreground hover:text-foreground'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
           }`}
         >
           <Cpu className="w-4 h-4" />
           <span>Model Limits & Pricing</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-black/20 text-slate-900 border border-black/10">
+          <span
+            className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold border transition-colors ${
+              activeTab === 'models'
+                ? 'bg-black/15 text-slate-950 border-black/15'
+                : 'bg-muted text-muted-foreground border-border/60'
+            }`}
+          >
             {modelsList.length}
           </span>
         </button>
@@ -588,12 +606,18 @@ export default function AdminDashboardPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'workers'
               ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-              : 'text-muted-foreground hover:text-foreground'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
           }`}
         >
           <Server className="w-4 h-4" />
           <span>Cloud GPU Worker Cluster</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-black/20 text-slate-900 border border-black/10">
+          <span
+            className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold border transition-colors ${
+              activeTab === 'workers'
+                ? 'bg-black/15 text-slate-950 border-black/15'
+                : 'bg-muted text-muted-foreground border-border/60'
+            }`}
+          >
             {workers.filter((w) => w.status === 'ONLINE').length}/{workers.length} Online
           </span>
         </button>
@@ -609,14 +633,14 @@ export default function AdminDashboardPage() {
             <div className="p-5 rounded-2xl bg-card/80 border border-border/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-muted-foreground">
                 <span className="text-xs font-semibold uppercase tracking-wider font-mono">Platform Developers</span>
-                <Users className="w-4 h-4 text-amber-400" />
+                <Users className="w-4 h-4 text-amber-500 dark:text-amber-400" />
               </div>
               <div className="mt-3">
                 <span className="text-3xl font-extrabold tracking-tight font-mono text-foreground">
                   {formatNumber(stats?.totalUsers ?? usersTotal ?? 0)}
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 font-mono">
-                  <span className="text-emerald-400 font-semibold">Active Tenants</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Active Tenants</span>
                   <span>• Registered</span>
                 </div>
               </div>
@@ -632,7 +656,7 @@ export default function AdminDashboardPage() {
                   {formatNumber(stats?.totalRequests ?? 0)}
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 font-mono">
-                  <span className="text-emerald-400 font-semibold">Live Traffic</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Live Traffic</span>
                   <span>• Gateway Telemetry</span>
                 </div>
               </div>
@@ -641,10 +665,10 @@ export default function AdminDashboardPage() {
             <div className="p-5 rounded-2xl bg-card/80 border border-border/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-muted-foreground">
                 <span className="text-xs font-semibold uppercase tracking-wider font-mono">Total Tokens Served</span>
-                <Zap className="w-4 h-4 text-cyan-400" />
+                <Zap className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
               </div>
               <div className="mt-3">
-                <span className="text-3xl font-extrabold tracking-tight font-mono text-cyan-400">
+                <span className="text-3xl font-extrabold tracking-tight font-mono text-cyan-600 dark:text-cyan-400">
                   {formatNumber(stats?.totalTokensConsumed ?? 0)}
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 font-mono">
@@ -656,14 +680,14 @@ export default function AdminDashboardPage() {
             <div className="p-5 rounded-2xl bg-card/80 border border-border/80 shadow-sm relative overflow-hidden">
               <div className="flex items-center justify-between text-muted-foreground">
                 <span className="text-xs font-semibold uppercase tracking-wider font-mono">Estimated Revenue</span>
-                <DollarSign className="w-4 h-4 text-emerald-400" />
+                <DollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="mt-3">
-                <span className="text-3xl font-extrabold tracking-tight font-mono text-emerald-400">
+                <span className="text-3xl font-extrabold tracking-tight font-mono text-emerald-600 dark:text-emerald-400">
                   ${formatNumber(stats?.estimatedRevenueUsd ?? 0)}
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 font-mono">
-                  <span className="text-emerald-400 font-semibold">Active Ledger</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Active Ledger</span>
                   <span>• Billed Volume</span>
                 </div>
               </div>
@@ -675,7 +699,7 @@ export default function AdminDashboardPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
               <div>
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-amber-400" />
+                  <Activity className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                   Cluster Resilience &amp; Circuit Breaker Fleet
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -687,7 +711,7 @@ export default function AdminDashboardPage() {
                 onClick={handleResetCircuitBreakers}
                 className="px-3 py-1.5 rounded-xl bg-muted hover:bg-muted/80 text-xs font-semibold flex items-center gap-1.5 transition-colors text-foreground"
               >
-                <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                <RotateCcw className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                 <span>Reset All Circuit Breakers</span>
               </button>
             </div>
@@ -708,10 +732,10 @@ export default function AdminDashboardPage() {
                     <span
                       className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border uppercase ${
                         cb.state === 'CLOSED'
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                           : cb.state === 'HALF_OPEN'
-                          ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                          : 'bg-red-500/10 text-red-400 border-red-500/30'
+                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                          : 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30'
                       }`}
                     >
                       {cb.state}
@@ -882,7 +906,7 @@ export default function AdminDashboardPage() {
                             </div>
                             <div className="font-mono text-muted-foreground text-[11px]">{dev.email}</div>
                             {dev.profile?.companyName && (
-                              <span className="text-[10px] text-zinc-400 font-mono">
+                              <span className="text-[10px] text-muted-foreground font-mono">
                                 {dev.profile.companyName}
                               </span>
                             )}
@@ -892,13 +916,13 @@ export default function AdminDashboardPage() {
                             <span
                               className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold border ${
                                 dev.status === 'ACTIVE'
-                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                  : 'bg-red-500/10 text-red-400 border-red-500/20'
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                  : 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
                               }`}
                             >
                               <span
                                 className={`w-1.5 h-1.5 rounded-full ${
-                                  dev.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-red-400'
+                                  dev.status === 'ACTIVE' ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-red-500 dark:bg-red-400'
                                 }`}
                               />
                               {dev.status}
@@ -912,7 +936,11 @@ export default function AdminDashboardPage() {
                               </span>
                               <span
                                 className={
-                                  percent > 90 ? 'text-red-400' : percent > 70 ? 'text-amber-400' : 'text-emerald-400'
+                                  percent > 90
+                                    ? 'text-red-600 dark:text-red-400 font-semibold'
+                                    : percent > 70
+                                    ? 'text-amber-600 dark:text-amber-400 font-semibold'
+                                    : 'text-emerald-600 dark:text-emerald-400 font-semibold'
                                 }
                               >
                                 {percent}%
@@ -946,7 +974,7 @@ export default function AdminDashboardPage() {
                               <button
                                 type="button"
                                 onClick={() => openDeveloperBillingDrawer(dev)}
-                                className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/20 text-[11px] font-semibold transition-colors flex items-center gap-1"
+                                className="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/20 text-[11px] font-semibold transition-colors flex items-center gap-1"
                                 title="Manage Developer Billing & Credits"
                               >
                                 <DollarSign className="w-3 h-3" />
@@ -973,7 +1001,7 @@ export default function AdminDashboardPage() {
                                   setEditingCreditUser(dev);
                                   setCreditInput(dev.creditBalance || 100);
                                 }}
-                                className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 text-[11px] font-semibold transition-colors"
+                                className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 text-[11px] font-semibold transition-colors"
                                 title="Adjust Credit Balance"
                               >
                                 +Credit
@@ -995,8 +1023,8 @@ export default function AdminDashboardPage() {
                                 onClick={() => handleToggleStatus(dev)}
                                 className={`p-1 rounded-lg transition-colors ${
                                   dev.status === 'ACTIVE'
-                                    ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
-                                    : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20'
+                                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
                                 }`}
                                 title={dev.status === 'ACTIVE' ? 'Suspend Developer' : 'Activate Developer'}
                               >
@@ -1051,7 +1079,7 @@ export default function AdminDashboardPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
             <div>
               <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-emerald-400" />
+                <CreditCard className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 Developer Billing &amp; Credit Reserves
               </h3>
               <p className="text-xs text-muted-foreground mt-1">
@@ -1080,7 +1108,7 @@ export default function AdminDashboardPage() {
                 <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
                   Circulating Credits
                 </span>
-                <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   <DollarSign className="w-4 h-4" />
                 </span>
               </div>
@@ -1097,7 +1125,7 @@ export default function AdminDashboardPage() {
                 <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
                   Processed Deposits
                 </span>
-                <span className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <span className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                   <CreditCard className="w-4 h-4" />
                 </span>
               </div>
@@ -1114,7 +1142,7 @@ export default function AdminDashboardPage() {
                 <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
                   Developer Tenants
                 </span>
-                <span className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <span className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                   <Users className="w-4 h-4" />
                 </span>
               </div>
@@ -1131,11 +1159,11 @@ export default function AdminDashboardPage() {
                 <span className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider">
                   Low Balance Alerts
                 </span>
-                <span className="p-2 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                <span className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                   <AlertTriangle className="w-4 h-4" />
                 </span>
               </div>
-              <div className="mt-2 text-2xl font-bold font-mono text-rose-400">
+              <div className="mt-2 text-2xl font-bold font-mono text-rose-600 dark:text-rose-400">
                 {billingSummary?.lowBalanceDevelopersCount ?? 0}
               </div>
               <span className="text-[11px] text-muted-foreground mt-1 block">
@@ -1193,7 +1221,7 @@ export default function AdminDashboardPage() {
                   {loadingUsers ? (
                     <tr>
                       <td colSpan={6} className="py-12 text-center text-muted-foreground font-mono">
-                        <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-emerald-400" />
+                        <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-emerald-500 dark:text-emerald-400" />
                         Loading billing registry...
                       </td>
                     </tr>
@@ -1219,18 +1247,18 @@ export default function AdminDashboardPage() {
                             </div>
                             <div className="font-mono text-muted-foreground text-[11px]">{dev.email}</div>
                             {dev.profile?.companyName && (
-                              <span className="text-[10px] text-zinc-400 font-mono">
+                              <span className="text-[10px] text-muted-foreground font-mono">
                                 {dev.profile.companyName}
                               </span>
                             )}
                           </td>
 
                           <td className="py-3.5 px-4 font-mono">
-                            <span className={`text-sm font-bold ${isLow ? 'text-rose-400' : 'text-emerald-400'}`}>
+                            <span className={`text-sm font-bold ${isLow ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                               ${balance.toFixed(2)}
                             </span>
                             {isLow && (
-                              <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/20 font-sans font-bold">
+                              <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 font-sans font-bold">
                                 Low
                               </span>
                             )}
@@ -1240,8 +1268,8 @@ export default function AdminDashboardPage() {
                             <span
                               className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
                                 dev.creditBalance?.autoRecharge
-                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                  : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                  : 'bg-muted text-muted-foreground border-border/60'
                               }`}
                             >
                               {dev.creditBalance?.autoRecharge ? 'Enabled' : 'Disabled'}
@@ -1253,7 +1281,15 @@ export default function AdminDashboardPage() {
                               <span className="text-foreground font-semibold">
                                 {formatNumber(used)} / {formatNumber(limit)} tokens
                               </span>
-                              <span className={percent > 90 ? 'text-red-400' : percent > 70 ? 'text-amber-400' : 'text-emerald-400'}>
+                              <span
+                                className={
+                                  percent > 90
+                                    ? 'text-red-600 dark:text-red-400 font-semibold'
+                                    : percent > 70
+                                    ? 'text-amber-600 dark:text-amber-400 font-semibold'
+                                    : 'text-emerald-600 dark:text-emerald-400 font-semibold'
+                                }
+                              >
                                 {percent}%
                               </span>
                             </div>
@@ -1277,7 +1313,7 @@ export default function AdminDashboardPage() {
                               <button
                                 type="button"
                                 onClick={() => openDeveloperBillingDrawer(dev)}
-                                className="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-colors shadow-sm shadow-emerald-500/20 flex items-center gap-1"
+                                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-slate-950 font-bold text-xs transition-colors shadow-sm shadow-emerald-500/20 flex items-center gap-1"
                               >
                                 <DollarSign className="w-3.5 h-3.5" />
                                 <span>Manage Billing</span>
@@ -1289,8 +1325,8 @@ export default function AdminDashboardPage() {
                                 onClick={() => handleToggleStatus(dev)}
                                 className={`p-1.5 rounded-lg transition-colors ${
                                   dev.status === 'ACTIVE'
-                                    ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
-                                    : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                                    ? 'bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20'
+                                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
                                 }`}
                                 title={dev.status === 'ACTIVE' ? 'Suspend Account' : 'Activate Account'}
                               >
@@ -1312,14 +1348,14 @@ export default function AdminDashboardPage() {
             <div className="p-4 border-b border-border/80 flex items-center justify-between">
               <div>
                 <h4 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono flex items-center gap-2">
-                  <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                  <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   Live Platform Billing Transactions &amp; Ledger
                 </h4>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
                   Real-time log of deposits, automated usage debits, admin credits, and refunds.
                 </p>
               </div>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 {billingSummary?.recentTransactions?.length || 0} events
               </span>
             </div>
@@ -1356,15 +1392,15 @@ export default function AdminDashboardPage() {
                           <span
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                               tx.amountUsd >= 0
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
                             }`}
                           >
                             {tx.type}
                           </span>
                         </td>
                         <td className="py-2.5 px-4 font-mono font-bold">
-                          <span className={tx.amountUsd >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                          <span className={tx.amountUsd >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>
                             {tx.amountUsd >= 0 ? `+$${tx.amountUsd.toFixed(2)}` : `-$${Math.abs(tx.amountUsd).toFixed(2)}`}
                           </span>
                         </td>
@@ -2282,7 +2318,7 @@ export default function AdminDashboardPage() {
                       type="button"
                       disabled={isSavingDeveloperBilling}
                       onClick={handleApplyCreditAdjustment}
-                      className="w-full py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 hover:bg-emerald-400 transition-colors disabled:opacity-40"
+                      className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-slate-950 font-bold text-xs shadow-md shadow-emerald-500/20 transition-colors disabled:opacity-40"
                     >
                       {isSavingDeveloperBilling ? 'Updating Credit...' : 'Apply Credit Adjustment'}
                     </button>
@@ -2291,7 +2327,7 @@ export default function AdminDashboardPage() {
                   {/* Action 2: Quota & Account Controls */}
                   <div className="p-4 rounded-xl bg-background border border-border/80 space-y-3">
                     <h4 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono flex items-center gap-1.5">
-                      <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                      <Sliders className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                       Token Quota &amp; Policy
                     </h4>
 
@@ -2359,7 +2395,7 @@ export default function AdminDashboardPage() {
                 <div className="p-4 rounded-xl bg-background border border-border/80 space-y-2">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono flex items-center gap-1.5">
-                      <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                      <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       Transaction Ledger ({developerBillingDetails?.transactions?.length || 0})
                     </h4>
                   </div>
@@ -2386,7 +2422,7 @@ export default function AdminDashboardPage() {
                             <tr key={t.id} className="text-[11px]">
                               <td className="py-2 px-2 font-mono font-bold text-foreground">{t.type}</td>
                               <td className="py-2 px-2 font-mono font-bold">
-                                <span className={t.amountUsd >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                                <span className={t.amountUsd >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>
                                   {t.amountUsd >= 0 ? `+$${t.amountUsd.toFixed(2)}` : `-$${Math.abs(t.amountUsd).toFixed(2)}`}
                                 </span>
                               </td>

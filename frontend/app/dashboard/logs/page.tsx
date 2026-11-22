@@ -282,13 +282,13 @@ function RequestLogsInner() {
             onClick={() => setAutoRefresh(!autoRefresh)}
             className={`px-3 py-1.5 rounded-xl border text-xs font-mono font-semibold flex items-center space-x-2 transition-all ${
               autoRefresh
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                 : 'bg-muted/40 border-border text-muted-foreground hover:text-foreground'
             }`}
           >
             <span
               className={`w-2 h-2 rounded-full ${
-                autoRefresh ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'
+                autoRefresh ? 'bg-emerald-500 dark:bg-emerald-400 animate-pulse' : 'bg-muted-foreground/40'
               }`}
             />
             <span>{autoRefresh ? 'Live Stream (5s)' : 'Stream Paused'}</span>

@@ -783,9 +783,9 @@ export default function ArenaPage() {
       : 0;
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 space-y-6">
+    <div className="flex flex-col min-h-screen bg-background text-foreground transition-colors p-4 md:p-8 space-y-6">
       {/* Header & Arena Stats */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/80 pb-5">
         <div>
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-gradient-to-tr from-amber-500/20 via-orange-500/10 to-transparent border border-amber-500/30 text-amber-400">
@@ -798,7 +798,7 @@ export default function ArenaPage() {
                   Head-to-Head
                 </span>
               </div>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-muted-foreground">
                 Concurrently benchmark latency, throughput, reasoning accuracy, and pricing across models & LoRA adapters.
               </p>
             </div>
@@ -806,26 +806,26 @@ export default function ArenaPage() {
         </div>
 
         {/* Match Scorecard */}
-        <div className="flex items-center gap-3 bg-slate-900/90 border border-slate-800 rounded-xl px-4 py-2 text-sm shadow-inner">
+        <div className="flex items-center gap-3 bg-card border border-border/80 rounded-xl px-4 py-2 text-sm shadow-inner">
           <Award className="w-4 h-4 text-amber-400" />
-          <span className="text-slate-400 font-medium">Arena Ledger:</span>
+          <span className="text-muted-foreground font-medium">Arena Ledger:</span>
           <span className="font-semibold text-emerald-400">Model A: {scoreHistory.aWins}</span>
           <span className="text-slate-600">|</span>
           <span className="font-semibold text-blue-400">Model B: {scoreHistory.bWins}</span>
           <span className="text-slate-600">|</span>
-          <span className="text-slate-400">Ties: {scoreHistory.ties}</span>
+          <span className="text-muted-foreground">Ties: {scoreHistory.ties}</span>
         </div>
       </div>
 
       {/* Mode Switcher Tabs */}
-      <div className="flex flex-wrap items-center gap-2 p-1 bg-slate-900/90 border border-slate-800 rounded-xl w-fit">
+      <div className="flex flex-wrap items-center gap-2 p-1 bg-card border border-border/80 rounded-xl w-fit">
         <button
           type="button"
           onClick={() => setArenaMode('interactive')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
             arenaMode === 'interactive'
               ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Swords className="w-4 h-4" />
@@ -837,7 +837,7 @@ export default function ArenaPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
             arenaMode === 'automated_evals'
               ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/40 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Scale className="w-4 h-4" />
@@ -852,7 +852,7 @@ export default function ArenaPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
             arenaMode === 'leaderboard_history'
               ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/40 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Trophy className="w-4 h-4" />
@@ -867,7 +867,7 @@ export default function ArenaPage() {
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
             arenaMode === 'quality_gates'
               ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/40 shadow-sm'
-              : 'text-slate-400 hover:text-slate-200'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <ShieldAlert className="w-4 h-4" />
@@ -882,7 +882,7 @@ export default function ArenaPage() {
         <div className="space-y-6">
           {/* Preset Prompts Pill Bar */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-        <span className="text-slate-400 whitespace-nowrap font-medium flex items-center gap-1">
+        <span className="text-muted-foreground whitespace-nowrap font-medium flex items-center gap-1">
           <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Benchmark Presets:
         </span>
         {PRESET_PROMPTS.map((p, idx) => (
@@ -890,7 +890,7 @@ export default function ArenaPage() {
             key={idx}
             type="button"
             onClick={() => setUserPrompt(p.prompt)}
-            className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 transition-colors whitespace-nowrap"
+            className="px-3 py-1.5 rounded-lg bg-card hover:bg-muted border border-border/80 text-foreground transition-colors whitespace-nowrap"
           >
             {p.label}
           </button>
@@ -899,18 +899,18 @@ export default function ArenaPage() {
 
       {/* Submitted Vision Banner */}
       {submittedImage && (
-        <div className="flex items-center gap-4 bg-slate-900/90 border border-slate-800 rounded-2xl p-3 shadow-lg">
+        <div className="flex items-center gap-4 bg-card border border-border/80 rounded-2xl p-3 shadow-lg">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={submittedImage}
             alt="Arena visual prompt"
-            className="w-16 h-16 object-cover rounded-xl border border-slate-700 shadow-md"
+            className="w-16 h-16 object-cover rounded-xl border border-border/80 shadow-md"
           />
           <div className="flex flex-col">
-            <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
               <ImageIcon className="w-3.5 h-3.5 text-amber-400" /> Active Visual Benchmark Input
             </span>
-            <span className="text-[11px] text-slate-400 font-mono">
+            <span className="text-[11px] text-muted-foreground font-mono">
               Visual payload dispatched concurrently to {modelA} and {modelB}
             </span>
           </div>
@@ -920,9 +920,9 @@ export default function ArenaPage() {
       {/* Main Dual Arena Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* MODEL A PANEL */}
-        <div className="flex flex-col bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div className="flex flex-col bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xl">
           {/* Header Controls */}
-          <div className="p-4 border-b border-slate-800 bg-slate-950/60 flex flex-wrap items-center justify-between gap-3">
+          <div className="p-4 border-b border-border/80 bg-muted/40 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center font-bold text-xs">
                 A
@@ -932,7 +932,7 @@ export default function ArenaPage() {
                   value={modelA}
                   onChange={(e) => setModelA(e.target.value)}
                   disabled={isBenchmarking}
-                  className="appearance-none bg-slate-900 border border-slate-700 hover:border-slate-600 rounded-lg pl-3 pr-8 py-1.5 text-sm font-medium text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer disabled:opacity-50"
+                  className="appearance-none bg-card border border-border/80 hover:border-slate-600 rounded-lg pl-3 pr-8 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer disabled:opacity-50"
                 >
                   {availableModels.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -940,11 +940,11 @@ export default function ArenaPage() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-xs text-slate-400">
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
                 <span>Temp:</span>
                 <input
@@ -957,13 +957,13 @@ export default function ArenaPage() {
                   disabled={isBenchmarking}
                   className="w-16 accent-emerald-500 cursor-pointer"
                 />
-                <span className="font-mono text-slate-300 w-6">{tempA}</span>
+                <span className="font-mono text-foreground w-6">{tempA}</span>
               </div>
               <button
                 type="button"
                 onClick={() => copyToClipboard(resultA.content, true)}
                 disabled={!resultA.content}
-                className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-foreground transition-colors disabled:opacity-30"
+                className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
                 title="Copy Model A Output"
               >
                 {copiedA ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -972,12 +972,12 @@ export default function ArenaPage() {
           </div>
 
           {/* Model A Telemetry Ribbon */}
-          <div className="grid grid-cols-4 gap-2 p-3 bg-slate-950/40 border-b border-slate-800/60 text-xs">
+          <div className="grid grid-cols-4 gap-2 p-3 bg-muted/40 border-b border-border/80/60 text-xs">
             <div className="flex flex-col">
               <span className="text-slate-500 flex items-center gap-1">
                 <Clock className="w-3 h-3 text-emerald-400" /> TTFT
               </span>
-              <span className="font-mono font-medium text-slate-200 mt-0.5">
+              <span className="font-mono font-medium text-foreground mt-0.5">
                 {resultA.ttftMs ? `${resultA.ttftMs}ms` : '—'}
                 {fasterModel === 'A' && (
                   <span className="ml-1 text-[10px] text-emerald-400 font-bold">(-{ttftAdvantagePct}%)</span>
@@ -988,7 +988,7 @@ export default function ArenaPage() {
               <span className="text-slate-500 flex items-center gap-1">
                 <Zap className="w-3 h-3 text-amber-400" /> Speed
               </span>
-              <span className="font-mono font-medium text-slate-200 mt-0.5">
+              <span className="font-mono font-medium text-foreground mt-0.5">
                 {resultA.speedTps ? `${resultA.speedTps} tok/s` : '—'}
               </span>
             </div>
@@ -996,7 +996,7 @@ export default function ArenaPage() {
               <span className="text-slate-500 flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-blue-400" /> Prefix Cache
               </span>
-              <span className="font-mono font-medium text-slate-200 mt-0.5">
+              <span className="font-mono font-medium text-foreground mt-0.5">
                 {resultA.cachedTokens ? `${resultA.cachedTokens} tok (50% Off)` : '—'}
               </span>
             </div>
@@ -1004,7 +1004,7 @@ export default function ArenaPage() {
               <span className="text-slate-500 flex items-center gap-1">
                 <DollarSign className="w-3 h-3 text-emerald-400" /> Est. Cost
               </span>
-              <span className="font-mono font-medium text-slate-200 mt-0.5">
+              <span className="font-mono font-medium text-foreground mt-0.5">
                 {resultA.costUsd ? `$${resultA.costUsd}` : '—'}
                 {cheaperModel === 'A' && (
                   <span className="ml-1 text-[10px] text-emerald-400 font-bold">(-{costAdvantagePct}%)</span>
@@ -1014,7 +1014,7 @@ export default function ArenaPage() {
           </div>
 
           {/* Model A Output Terminal */}
-          <div className="p-4 flex-1 min-h-[340px] max-h-[500px] overflow-y-auto font-mono text-sm leading-relaxed text-slate-200 bg-slate-950/20">
+          <div className="p-4 flex-1 min-h-[340px] max-h-[500px] overflow-y-auto font-mono text-sm leading-relaxed text-foreground bg-muted/30">
             {resultA.error ? (
               <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
                 {resultA.error}
@@ -1033,9 +1033,9 @@ export default function ArenaPage() {
         </div>
 
         {/* MODEL B PANEL */}
-        <div className="flex flex-col bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div className="flex flex-col bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xl">
           {/* Header Controls */}
-          <div className="p-4 border-b border-slate-800 bg-slate-950/60 flex flex-wrap items-center justify-between gap-3">
+          <div className="p-4 border-b border-border/80 bg-muted/40 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="w-6 h-6 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-400 flex items-center justify-center font-bold text-xs">
                 B
@@ -1045,7 +1045,7 @@ export default function ArenaPage() {
                   value={modelB}
                   onChange={(e) => setModelB(e.target.value)}
                   disabled={isBenchmarking}
-                  className="appearance-none bg-slate-900 border border-slate-700 hover:border-slate-600 rounded-lg pl-3 pr-8 py-1.5 text-sm font-medium text-white focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer disabled:opacity-50"
+                  className="appearance-none bg-card border border-border/80 hover:border-slate-600 rounded-lg pl-3 pr-8 py-1.5 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer disabled:opacity-50"
                 >
                   {availableModels.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -1053,11 +1053,11 @@ export default function ArenaPage() {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 text-muted-foreground absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-xs text-slate-400">
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
                 <span>Temp:</span>
                 <input
@@ -1070,13 +1070,13 @@ export default function ArenaPage() {
                   disabled={isBenchmarking}
                   className="w-16 accent-blue-500 cursor-pointer"
                 />
-                <span className="font-mono text-slate-300 w-6">{tempB}</span>
+                <span className="font-mono text-foreground w-6">{tempB}</span>
               </div>
               <button
                 type="button"
                 onClick={() => copyToClipboard(resultB.content, false)}
                 disabled={!resultB.content}
-                className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-foreground transition-colors disabled:opacity-30"
+                className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
                 title="Copy Model B Output"
               >
                 {copiedB ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -1085,12 +1085,12 @@ export default function ArenaPage() {
           </div>
 
           {/* Model B Telemetry Ribbon */}
-          <div className="grid grid-cols-4 gap-2 p-3 bg-slate-950/40 border-b border-slate-800/60 text-xs">
+          <div className="grid grid-cols-4 gap-2 p-3 bg-muted/40 border-b border-border/80/60 text-xs">
             <div className="flex flex-col">
               <span className="text-slate-500 flex items-center gap-1">
                 <Clock className="w-3 h-3 text-blue-400" /> TTFT
               </span>
-              <span className="font-mono font-medium text-slate-200 mt-0.5">
+              <span className="font-mono font-medium text-foreground mt-0.5">
                 {resultB.ttftMs ? `${resultB.ttftMs}ms` : '—'}
                 {fasterModel === 'B' && (
                   <span className="ml-1 text-[10px] text-blue-400 font-bold">(-{ttftAdvantagePct}%)</span>
@@ -1101,7 +1101,7 @@ export default function ArenaPage() {
               <span className="text-slate-500 flex items-center gap-1">
                 <Zap className="w-3 h-3 text-amber-400" /> Speed
               </span>
-              <span className="font-mono font-medium text-slate-200 mt-0.5">
+              <span className="font-mono font-medium text-foreground mt-0.5">
                 {resultB.speedTps ? `${resultB.speedTps} tok/s` : '—'}
               </span>
             </div>
@@ -1109,7 +1109,7 @@ export default function ArenaPage() {
               <span className="text-slate-500 flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-blue-400" /> Prefix Cache
               </span>
-              <span className="font-mono font-medium text-slate-200 mt-0.5">
+              <span className="font-mono font-medium text-foreground mt-0.5">
                 {resultB.cachedTokens ? `${resultB.cachedTokens} tok (50% Off)` : '—'}
               </span>
             </div>
@@ -1117,7 +1117,7 @@ export default function ArenaPage() {
               <span className="text-slate-500 flex items-center gap-1">
                 <DollarSign className="w-3 h-3 text-emerald-400" /> Est. Cost
               </span>
-              <span className="font-mono font-medium text-slate-200 mt-0.5">
+              <span className="font-mono font-medium text-foreground mt-0.5">
                 {resultB.costUsd ? `$${resultB.costUsd}` : '—'}
                 {cheaperModel === 'B' && (
                   <span className="ml-1 text-[10px] text-blue-400 font-bold">(-{costAdvantagePct}%)</span>
@@ -1127,7 +1127,7 @@ export default function ArenaPage() {
           </div>
 
           {/* Model B Output Terminal */}
-          <div className="p-4 flex-1 min-h-[340px] max-h-[500px] overflow-y-auto font-mono text-sm leading-relaxed text-slate-200 bg-slate-950/20">
+          <div className="p-4 flex-1 min-h-[340px] max-h-[500px] overflow-y-auto font-mono text-sm leading-relaxed text-foreground bg-muted/30">
             {resultB.error ? (
               <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
                 {resultB.error}
@@ -1148,10 +1148,10 @@ export default function ArenaPage() {
 
       {/* Human-in-the-Loop Evaluation Voting Bar */}
       {resultA.done && resultB.done && (resultA.content || resultB.content) && (
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in duration-300">
+        <div className="bg-card border border-border/80 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in duration-300">
           <div className="flex items-center gap-2">
             <Scale className="w-5 h-5 text-amber-400" />
-            <span className="text-sm font-medium text-slate-200">Rate Benchmark Quality:</span>
+            <span className="text-sm font-medium text-foreground">Rate Benchmark Quality:</span>
             {vote && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-medium">
                 Voted: {vote}
@@ -1166,7 +1166,7 @@ export default function ArenaPage() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                 vote === 'A'
                   ? 'bg-emerald-500 text-slate-950 border-emerald-400 shadow-lg shadow-emerald-500/20'
-                  : 'bg-slate-800 hover:bg-slate-750 text-slate-200 border-slate-700'
+                  : 'bg-muted hover:bg-muted/80 text-foreground border-border/80'
               }`}
             >
               👈 Model A is Better
@@ -1177,7 +1177,7 @@ export default function ArenaPage() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                 vote === 'TIE'
                   ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20'
-                  : 'bg-slate-800 hover:bg-slate-750 text-slate-200 border-slate-700'
+                  : 'bg-muted hover:bg-muted/80 text-foreground border-border/80'
               }`}
             >
               🤝 Tie / Equal
@@ -1188,7 +1188,7 @@ export default function ArenaPage() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                 vote === 'B'
                   ? 'bg-blue-500 text-slate-950 border-blue-400 shadow-lg shadow-blue-500/20'
-                  : 'bg-slate-800 hover:bg-slate-750 text-slate-200 border-slate-700'
+                  : 'bg-muted hover:bg-muted/80 text-foreground border-border/80'
               }`}
             >
               👉 Model B is Better
@@ -1199,7 +1199,7 @@ export default function ArenaPage() {
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                 vote === 'BOTH_BAD'
                   ? 'bg-rose-500 text-white border-rose-400'
-                  : 'bg-slate-800 hover:bg-slate-750 text-slate-400 border-slate-700'
+                  : 'bg-muted hover:bg-muted/80 text-muted-foreground border-border/80'
               }`}
             >
               👎 Both Failed
@@ -1209,9 +1209,9 @@ export default function ArenaPage() {
       )}
 
       {/* Input Prompt Dock */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-2xl">
-        <div className="flex items-center justify-between text-xs text-slate-400">
-          <span className="font-medium text-slate-300 flex items-center gap-1.5">
+      <div className="bg-card border border-border/80 rounded-2xl p-4 space-y-3 shadow-2xl">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span className="font-medium text-foreground flex items-center gap-1.5">
             <Terminal className="w-3.5 h-3.5 text-amber-400" /> Prompt Arena Dispatch:
           </span>
           <div className="flex items-center gap-3">
@@ -1231,7 +1231,7 @@ export default function ArenaPage() {
 
         {/* Attached Vision Image Preview Banner */}
         {attachedImage && (
-          <div className="flex items-center justify-between bg-slate-950/80 border border-amber-500/30 rounded-xl p-2.5">
+          <div className="flex items-center justify-between bg-background/80 border border-amber-500/30 rounded-xl p-2.5">
             <div className="flex items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -1240,16 +1240,16 @@ export default function ArenaPage() {
                 className="w-10 h-10 object-cover rounded-lg border border-amber-500/40"
               />
               <div className="flex flex-col">
-                <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                   <ImageIcon className="w-3.5 h-3.5 text-amber-400" /> Vision Attachment Loaded
                 </span>
-                <span className="text-[10px] text-slate-400 font-mono">Ready for dual-dispatch benchmark</span>
+                <span className="text-[10px] text-muted-foreground font-mono">Ready for dual-dispatch benchmark</span>
               </div>
             </div>
             <button
               type="button"
               onClick={handleRemoveImage}
-              className="p-1 rounded-lg text-slate-400 hover:text-foreground hover:bg-slate-800 transition-colors"
+              className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               title="Remove Image"
             >
               <X className="w-4 h-4" />
@@ -1282,7 +1282,7 @@ export default function ArenaPage() {
             }
             rows={3}
             disabled={isBenchmarking}
-            className="flex-1 bg-slate-950 border border-slate-800 focus:border-amber-500/70 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50 resize-none disabled:opacity-50"
+            className="flex-1 bg-background border border-border/80 focus:border-amber-500/70 rounded-xl px-4 py-3 text-sm text-foreground placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50 resize-none disabled:opacity-50"
           />
 
           <div className="flex flex-col gap-2">
@@ -1293,7 +1293,7 @@ export default function ArenaPage() {
               className={`p-2 rounded-lg border transition-all flex items-center justify-center ${
                 attachedImage
                   ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-foreground border-slate-700'
+                  : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground border-border/80'
               }`}
               title="Attach image for vision comparison"
             >
@@ -1323,7 +1323,7 @@ export default function ArenaPage() {
               type="button"
               onClick={handleReset}
               disabled={isBenchmarking}
-              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-foreground transition-colors flex items-center justify-center"
+              className="p-2 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
               title="Reset Benchmark State"
             >
               <RotateCcw className="w-4 h-4" />
@@ -1341,7 +1341,7 @@ export default function ArenaPage() {
                 <BarChart3 className="w-4 h-4 text-amber-400" />
                 Select Golden Benchmark Suite
               </h2>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-muted-foreground">
                 Rigorous standardized test suites with deterministic multi-criterion scoring
               </span>
             </div>
@@ -1354,23 +1354,23 @@ export default function ArenaPage() {
                     onClick={() => setBenchmarkSuiteId(suite.id)}
                     className={`cursor-pointer p-4 rounded-xl border transition-all flex flex-col justify-between ${
                       isSelected
-                        ? 'bg-slate-900 border-amber-500/60 ring-1 ring-amber-500/40 shadow-lg shadow-amber-500/5'
-                        : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900'
+                        ? 'bg-card border-amber-500/60 ring-1 ring-amber-500/40 shadow-lg shadow-amber-500/5'
+                        : 'bg-card/60 border-border/80 hover:border-border/80 hover:bg-card'
                     }`}
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                        <span className="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-muted text-foreground border border-border/80">
                           {suite.category}
                         </span>
-                        <span className="text-[11px] font-medium text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                        <span className="text-[11px] font-medium text-amber-500 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                           {suite.sampleCount} Test Cases
                         </span>
                       </div>
-                      <h3 className="font-semibold text-slate-100 text-sm mb-1">{suite.name}</h3>
-                      <p className="text-xs text-slate-400 leading-relaxed">{suite.description}</p>
+                      <h3 className="font-semibold text-foreground text-sm mb-1">{suite.name}</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{suite.description}</p>
                     </div>
-                    <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                    <div className="mt-3 pt-3 border-t border-border/80/80 flex items-center justify-between text-xs">
                       <span className={isSelected ? 'text-amber-400 font-semibold' : 'text-slate-500'}>
                         {isSelected ? '✓ Selected Active Suite' : 'Click to select'}
                       </span>
@@ -1383,7 +1383,7 @@ export default function ArenaPage() {
           </div>
 
           {/* Model Selection and Run Bar */}
-          <div className="p-4 bg-slate-900/90 border border-slate-800 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xl">
+          <div className="p-4 bg-card border border-border/80 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-xl">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
               {/* Candidate Model A */}
               <div>
@@ -1394,7 +1394,7 @@ export default function ArenaPage() {
                   value={modelA}
                   onChange={(e) => setModelA(e.target.value)}
                   disabled={isEvaluating}
-                  className="w-full bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-lg px-3 py-2 text-sm font-medium text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
+                  className="w-full bg-background border border-border/80 hover:border-slate-600 rounded-lg px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50"
                 >
                   {availableModels.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -1413,7 +1413,7 @@ export default function ArenaPage() {
                   value={modelB}
                   onChange={(e) => setModelB(e.target.value)}
                   disabled={isEvaluating}
-                  className="w-full bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-lg px-3 py-2 text-sm font-medium text-white focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                  className="w-full bg-background border border-border/80 hover:border-slate-600 rounded-lg px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
                 >
                   {availableModels.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -1432,7 +1432,7 @@ export default function ArenaPage() {
                   value={judgeModel}
                   onChange={(e) => setJudgeModel(e.target.value)}
                   disabled={isEvaluating}
-                  className="w-full bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-lg px-3 py-2 text-sm font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50"
+                  className="w-full bg-background border border-border/80 hover:border-slate-600 rounded-lg px-3 py-2 text-sm font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50"
                 >
                   {availableModels.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -1466,7 +1466,7 @@ export default function ArenaPage() {
 
           {/* In-Flight Evaluating Notice */}
           {isEvaluating && (
-            <div className="p-6 rounded-2xl bg-slate-900 border border-amber-500/40 shadow-xl flex flex-col md:flex-row items-center gap-4 animate-pulse">
+            <div className="p-6 rounded-2xl bg-card border border-amber-500/40 shadow-xl flex flex-col md:flex-row items-center gap-4 animate-pulse">
               <div className="p-3 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
                 <Loader2 className="w-6 h-6 animate-spin" />
               </div>
@@ -1474,7 +1474,7 @@ export default function ArenaPage() {
                 <h4 className="font-semibold text-foreground text-base">
                   Automated LLM-as-a-Judge Benchmark In Progress
                 </h4>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   1. Dispatching test cases concurrently to <span className="text-emerald-400 font-mono">{modelA}</span> and <span className="text-blue-400 font-mono">{modelB}</span>
                   <br />
                   2. Presenting blind candidate outputs to LLM Referee <span className="text-amber-400 font-mono">{judgeModel}</span> with strict scoring rubric.
@@ -1485,12 +1485,12 @@ export default function ArenaPage() {
 
           {/* Empty State when no evaluation has run yet */}
           {!evalResult && !isEvaluating && (
-            <div className="p-10 rounded-2xl bg-slate-900/50 border border-dashed border-slate-800 text-center flex flex-col items-center justify-center">
+            <div className="p-10 rounded-2xl bg-card/50 border border-dashed border-border/80 text-center flex flex-col items-center justify-center">
               <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-4">
                 <Scale className="w-6 h-6" />
               </div>
               <h3 className="text-base font-semibold text-foreground mb-2">Automated Multi-Criterion Evaluation Engine</h3>
-              <p className="text-sm text-slate-400 max-w-lg mb-6">
+              <p className="text-sm text-muted-foreground max-w-lg mb-6">
                 Evaluate models against standardized test suites automatically using an LLM-as-a-Judge.
                 The judge grades accuracy, reasoning depth, and instruction adherence to eliminate human evaluation bias.
               </p>
@@ -1515,22 +1515,22 @@ export default function ArenaPage() {
               <div
                 className={`p-6 rounded-2xl border shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 ${
                   evalResult.summary.winsA > evalResult.summary.winsB
-                    ? 'bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border-emerald-500/40'
+                    ? 'bg-gradient-to-r from-emerald-500/10 via-card to-card border-emerald-500/40'
                     : evalResult.summary.winsB > evalResult.summary.winsA
-                    ? 'bg-gradient-to-r from-blue-950/40 via-slate-900 to-slate-900 border-blue-500/40'
-                    : 'bg-slate-900 border-amber-500/40'
+                    ? 'bg-gradient-to-r from-blue-500/10 via-card to-card border-blue-500/40'
+                    : 'bg-card border-amber-500/40'
                 }`}
               >
                 <div className="flex items-center gap-4">
-                  <div className="p-3.5 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                  <div className="p-3.5 rounded-2xl bg-amber-500/20 text-amber-500 dark:text-amber-400 border border-amber-500/30">
                     <Award className="w-8 h-8" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      <span className="text-xs uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30">
                         {evalResult.suiteName}
                       </span>
-                      <span className="text-xs text-slate-400 font-mono">
+                      <span className="text-xs text-muted-foreground font-mono">
                         Referee: {evalResult.judgeModel}
                       </span>
                     </div>
@@ -1541,7 +1541,7 @@ export default function ArenaPage() {
                         ? `🏆 ${evalResult.modelB} Victorious`
                         : '⚖️ Head-to-Head Draw'}
                     </h3>
-                    <p className="text-sm text-slate-300 mt-1">
+                    <p className="text-sm text-foreground mt-1">
                       {evalResult.summary.winsA > evalResult.summary.winsB
                         ? `${evalResult.modelA} achieved a ${evalResult.summary.winRateA}% win rate (${evalResult.summary.winsA}W - ${evalResult.summary.winsB}L - ${evalResult.summary.ties}T)`
                         : evalResult.summary.winsB > evalResult.summary.winsA
@@ -1556,7 +1556,7 @@ export default function ArenaPage() {
                     type="button"
                     onClick={() => handleRunEvaluation()}
                     disabled={isEvaluating}
-                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-2 transition-colors"
+                    className="px-4 py-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground border border-border/80 text-xs font-semibold flex items-center gap-2 transition-colors"
                   >
                     <RotateCcw className="w-3.5 h-3.5" /> Re-run Suite
                   </button>
@@ -1565,18 +1565,18 @@ export default function ArenaPage() {
 
               {/* High Level Comparative Scorecards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
-                  <span className="text-xs text-slate-400">Head-to-Head Win Rate</span>
+                <div className="p-4 bg-card border border-border/80 rounded-xl">
+                  <span className="text-xs text-muted-foreground">Head-to-Head Win Rate</span>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-lg font-bold text-emerald-400">
+                    <span className="text-lg font-bold text-emerald-500 dark:text-emerald-400">
                       {evalResult.summary.winRateA}%
                     </span>
-                    <span className="text-xs text-slate-500">vs</span>
-                    <span className="text-lg font-bold text-blue-400">
+                    <span className="text-xs text-muted-foreground">vs</span>
+                    <span className="text-lg font-bold text-blue-500 dark:text-blue-400">
                       {evalResult.summary.winRateB}%
                     </span>
                   </div>
-                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden flex mt-2">
+                  <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden flex mt-2">
                     <div
                       className="bg-emerald-500 h-full"
                       style={{ width: `${evalResult.summary.winRateA}%` }}
@@ -1588,8 +1588,8 @@ export default function ArenaPage() {
                   </div>
                 </div>
 
-                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
-                  <span className="text-xs text-slate-400">Overall Score (out of 10)</span>
+                <div className="p-4 bg-card border border-border/80 rounded-xl">
+                  <span className="text-xs text-muted-foreground">Overall Score (out of 10)</span>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-lg font-bold text-emerald-400">
                       {evalResult.summary.avgOverallScoreA}
@@ -1604,8 +1604,8 @@ export default function ArenaPage() {
                   </span>
                 </div>
 
-                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
-                  <span className="text-xs text-slate-400">Average Latency</span>
+                <div className="p-4 bg-card border border-border/80 rounded-xl">
+                  <span className="text-xs text-muted-foreground">Average Latency</span>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-lg font-bold text-emerald-400">
                       {evalResult.summary.avgLatencyMsA}ms
@@ -1630,11 +1630,11 @@ export default function ArenaPage() {
                   </span>
                 </div>
 
-                <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl">
-                  <span className="text-xs text-slate-400">Ledger Distribution</span>
+                <div className="p-4 bg-card border border-border/80 rounded-xl">
+                  <span className="text-xs text-muted-foreground">Ledger Distribution</span>
                   <div className="flex items-center justify-between mt-2 text-sm font-semibold">
                     <span className="text-emerald-400">{evalResult.summary.winsA} Wins</span>
-                    <span className="text-slate-400">{evalResult.summary.ties} Ties</span>
+                    <span className="text-muted-foreground">{evalResult.summary.ties} Ties</span>
                     <span className="text-blue-400">{evalResult.summary.winsB} Wins</span>
                   </div>
                   <span className="text-[11px] text-slate-500 mt-2 block">
@@ -1644,7 +1644,7 @@ export default function ArenaPage() {
               </div>
 
               {/* Criterion Radar Breakdown Bars */}
-              <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl">
+              <div className="p-5 bg-card border border-border/80 rounded-2xl">
                 <h4 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-amber-400" />
                   Multi-Criterion Rubric Score Comparison
@@ -1653,7 +1653,7 @@ export default function ArenaPage() {
                   {/* Accuracy */}
                   <div>
                     <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="font-medium text-slate-300">Accuracy & Algorithmic Correctness</span>
+                      <span className="font-medium text-foreground">Accuracy & Algorithmic Correctness</span>
                       <div className="flex items-center gap-3">
                         <span className="font-semibold text-emerald-400">
                           {evalResult.modelA}: {evalResult.summary.categoryScoresA.accuracy}/10
@@ -1665,13 +1665,13 @@ export default function ArenaPage() {
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                      <div className="w-full bg-background h-2 rounded-full overflow-hidden border border-border/80">
                         <div
                           className="bg-emerald-500 h-full rounded-full"
                           style={{ width: `${evalResult.summary.categoryScoresA.accuracy * 10}%` }}
                         />
                       </div>
-                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                      <div className="w-full bg-background h-2 rounded-full overflow-hidden border border-border/80">
                         <div
                           className="bg-blue-500 h-full rounded-full"
                           style={{ width: `${evalResult.summary.categoryScoresB.accuracy * 10}%` }}
@@ -1683,7 +1683,7 @@ export default function ArenaPage() {
                   {/* Reasoning */}
                   <div>
                     <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="font-medium text-slate-300">Reasoning Depth & Logic Verification</span>
+                      <span className="font-medium text-foreground">Reasoning Depth & Logic Verification</span>
                       <div className="flex items-center gap-3">
                         <span className="font-semibold text-emerald-400">
                           {evalResult.modelA}: {evalResult.summary.categoryScoresA.reasoning}/10
@@ -1695,13 +1695,13 @@ export default function ArenaPage() {
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                      <div className="w-full bg-background h-2 rounded-full overflow-hidden border border-border/80">
                         <div
                           className="bg-emerald-500 h-full rounded-full"
                           style={{ width: `${evalResult.summary.categoryScoresA.reasoning * 10}%` }}
                         />
                       </div>
-                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                      <div className="w-full bg-background h-2 rounded-full overflow-hidden border border-border/80">
                         <div
                           className="bg-blue-500 h-full rounded-full"
                           style={{ width: `${evalResult.summary.categoryScoresB.reasoning * 10}%` }}
@@ -1713,7 +1713,7 @@ export default function ArenaPage() {
                   {/* Adherence */}
                   <div>
                     <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="font-medium text-slate-300">Instruction & Schema Adherence</span>
+                      <span className="font-medium text-foreground">Instruction & Schema Adherence</span>
                       <div className="flex items-center gap-3">
                         <span className="font-semibold text-emerald-400">
                           {evalResult.modelA}: {evalResult.summary.categoryScoresA.adherence}/10
@@ -1725,13 +1725,13 @@ export default function ArenaPage() {
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                      <div className="w-full bg-background h-2 rounded-full overflow-hidden border border-border/80">
                         <div
                           className="bg-emerald-500 h-full rounded-full"
                           style={{ width: `${evalResult.summary.categoryScoresA.adherence * 10}%` }}
                         />
                       </div>
-                      <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                      <div className="w-full bg-background h-2 rounded-full overflow-hidden border border-border/80">
                         <div
                           className="bg-blue-500 h-full rounded-full"
                           style={{ width: `${evalResult.summary.categoryScoresB.adherence * 10}%` }}
@@ -1753,35 +1753,35 @@ export default function ArenaPage() {
                     const isExpanded = expandedSampleId === sample.sampleId;
                     const winnerTag =
                       sample.judge.winner === 'modelA'
-                        ? { label: `Winner: ${evalResult.modelA}`, color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' }
+                        ? { label: `Winner: ${evalResult.modelA}`, color: 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/30' }
                         : sample.judge.winner === 'modelB'
-                        ? { label: `Winner: ${evalResult.modelB}`, color: 'bg-blue-500/20 text-blue-300 border-blue-500/30' }
-                        : { label: 'Tied Score', color: 'bg-slate-700 text-slate-300 border-slate-600' };
+                        ? { label: `Winner: ${evalResult.modelB}`, color: 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-500/30' }
+                        : { label: 'Tied Score', color: 'bg-muted text-foreground border-border/80' };
 
                     return (
                       <div
                         key={sample.sampleId}
-                        className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden transition-all"
+                        className="bg-card border border-border/80 rounded-xl overflow-hidden transition-all"
                       >
                         {/* Accordion Header */}
                         <div
                           onClick={() => setExpandedSampleId(isExpanded ? null : sample.sampleId)}
-                          className="p-4 cursor-pointer hover:bg-slate-800/50 flex items-center justify-between gap-4 select-none"
+                          className="p-4 cursor-pointer hover:bg-muted/50 flex items-center justify-between gap-4 select-none"
                         >
                           <div className="flex items-center gap-3">
-                            <span className="text-slate-400 text-xs font-mono">{sample.sampleId}</span>
-                            <span className="font-semibold text-slate-200 text-sm">{sample.sampleTitle}</span>
+                            <span className="text-muted-foreground text-xs font-mono">{sample.sampleId}</span>
+                            <span className="font-semibold text-foreground text-sm">{sample.sampleTitle}</span>
                             <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${winnerTag.color}`}>
                               {winnerTag.label}
                             </span>
                           </div>
                           <div className="flex items-center gap-4">
-                            <div className="text-xs text-slate-400 hidden sm:flex items-center gap-3">
+                            <div className="text-xs text-muted-foreground hidden sm:flex items-center gap-3">
                               <span>Model A: <strong className="text-emerald-400">{sample.judge.scoreA.overall}/10</strong></span>
                               <span>Model B: <strong className="text-blue-400">{sample.judge.scoreB.overall}/10</strong></span>
                             </div>
                             <ChevronDown
-                              className={`w-4 h-4 text-slate-400 transition-transform ${
+                              className={`w-4 h-4 text-muted-foreground transition-transform ${
                                 isExpanded ? 'transform rotate-180' : ''
                               }`}
                             />
@@ -1790,61 +1790,61 @@ export default function ArenaPage() {
 
                         {/* Accordion Body */}
                         {isExpanded && (
-                          <div className="p-4 border-t border-slate-800 bg-slate-950/40 space-y-4 text-xs">
+                          <div className="p-4 border-t border-border/80 bg-muted/40 space-y-4 text-xs">
                             {/* Prompt Card */}
-                            <div className="p-3 bg-slate-900/90 rounded-lg border border-slate-800">
-                              <span className="font-semibold text-slate-300 uppercase tracking-wider text-[11px] block mb-1">
+                            <div className="p-3 bg-card rounded-lg border border-border/80">
+                              <span className="font-semibold text-foreground uppercase tracking-wider text-[11px] block mb-1">
                                 Test Prompt Dispatched
                               </span>
-                              <p className="text-slate-200 font-mono whitespace-pre-wrap">{sample.prompt}</p>
+                              <p className="text-foreground font-mono whitespace-pre-wrap">{sample.prompt}</p>
                             </div>
 
                             {/* Side-by-Side Model Responses */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {/* Model A */}
-                              <div className="p-3 bg-slate-900/90 rounded-lg border border-slate-800 flex flex-col justify-between">
+                              <div className="p-3 bg-card rounded-lg border border-border/80 flex flex-col justify-between">
                                 <div>
                                   <div className="flex items-center justify-between mb-2">
                                     <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
                                       <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                                       {evalResult.modelA}
                                     </span>
-                                    <span className="text-slate-400 font-mono text-[11px]">
+                                    <span className="text-muted-foreground font-mono text-[11px]">
                                       {sample.responseA.latencyMs}ms | {sample.responseA.tokens} tokens
                                     </span>
                                   </div>
-                                  <div className="bg-slate-950 p-2.5 rounded border border-slate-800 max-h-60 overflow-y-auto font-mono text-slate-300 text-[11px] whitespace-pre-wrap">
+                                  <div className="bg-background p-2.5 rounded border border-border/80 max-h-60 overflow-y-auto font-mono text-foreground text-[11px] whitespace-pre-wrap">
                                     {sample.responseA.content}
                                   </div>
                                 </div>
-                                <div className="mt-3 pt-2 border-t border-slate-800 flex items-center justify-between text-slate-400 text-[11px]">
-                                  <span>Accuracy: <strong className="text-slate-200">{sample.judge.scoreA.accuracy}</strong></span>
-                                  <span>Reasoning: <strong className="text-slate-200">{sample.judge.scoreA.reasoning}</strong></span>
-                                  <span>Adherence: <strong className="text-slate-200">{sample.judge.scoreA.adherence}</strong></span>
+                                <div className="mt-3 pt-2 border-t border-border/80 flex items-center justify-between text-muted-foreground text-[11px]">
+                                  <span>Accuracy: <strong className="text-foreground">{sample.judge.scoreA.accuracy}</strong></span>
+                                  <span>Reasoning: <strong className="text-foreground">{sample.judge.scoreA.reasoning}</strong></span>
+                                  <span>Adherence: <strong className="text-foreground">{sample.judge.scoreA.adherence}</strong></span>
                                   <span className="text-emerald-400 font-bold">Overall: {sample.judge.scoreA.overall}/10</span>
                                 </div>
                               </div>
 
                               {/* Model B */}
-                              <div className="p-3 bg-slate-900/90 rounded-lg border border-slate-800 flex flex-col justify-between">
+                              <div className="p-3 bg-card rounded-lg border border-border/80 flex flex-col justify-between">
                                 <div>
                                   <div className="flex items-center justify-between mb-2">
                                     <span className="font-semibold text-blue-400 flex items-center gap-1.5">
                                       <span className="w-2 h-2 rounded-full bg-blue-400"></span>
                                       {evalResult.modelB}
                                     </span>
-                                    <span className="text-slate-400 font-mono text-[11px]">
+                                    <span className="text-muted-foreground font-mono text-[11px]">
                                       {sample.responseB.latencyMs}ms | {sample.responseB.tokens} tokens
                                     </span>
                                   </div>
-                                  <div className="bg-slate-950 p-2.5 rounded border border-slate-800 max-h-60 overflow-y-auto font-mono text-slate-300 text-[11px] whitespace-pre-wrap">
+                                  <div className="bg-background p-2.5 rounded border border-border/80 max-h-60 overflow-y-auto font-mono text-foreground text-[11px] whitespace-pre-wrap">
                                     {sample.responseB.content}
                                   </div>
                                 </div>
-                                <div className="mt-3 pt-2 border-t border-slate-800 flex items-center justify-between text-slate-400 text-[11px]">
-                                  <span>Accuracy: <strong className="text-slate-200">{sample.judge.scoreB.accuracy}</strong></span>
-                                  <span>Reasoning: <strong className="text-slate-200">{sample.judge.scoreB.reasoning}</strong></span>
-                                  <span>Adherence: <strong className="text-slate-200">{sample.judge.scoreB.adherence}</strong></span>
+                                <div className="mt-3 pt-2 border-t border-border/80 flex items-center justify-between text-muted-foreground text-[11px]">
+                                  <span>Accuracy: <strong className="text-foreground">{sample.judge.scoreB.accuracy}</strong></span>
+                                  <span>Reasoning: <strong className="text-foreground">{sample.judge.scoreB.reasoning}</strong></span>
+                                  <span>Adherence: <strong className="text-foreground">{sample.judge.scoreB.adherence}</strong></span>
                                   <span className="text-blue-400 font-bold">Overall: {sample.judge.scoreB.overall}/10</span>
                                 </div>
                               </div>
@@ -1855,7 +1855,7 @@ export default function ArenaPage() {
                               <span className="font-semibold text-amber-400 flex items-center gap-1.5 mb-1 text-xs">
                                 <Scale className="w-3.5 h-3.5" /> LLM Referee Adjudication & Rationale ({evalResult.judgeModel})
                               </span>
-                              <p className="text-slate-200 leading-relaxed italic text-[11.5px]">
+                              <p className="text-foreground leading-relaxed italic text-[11.5px]">
                                 &ldquo;{sample.judge.reasoning}&rdquo;
                               </p>
                             </div>
@@ -1873,16 +1873,16 @@ export default function ArenaPage() {
         /* CI/CD QUALITY GATES & REGRESSION ENGINE VIEW */
         <div className="flex flex-col gap-6">
           {/* Header Card */}
-          <div className="p-6 bg-gradient-to-r from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl shadow-xl">
+          <div className="p-6 bg-gradient-to-r from-amber-500/10 via-card to-card border border-amber-500/30 rounded-2xl shadow-xl">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <ShieldAlert className="w-5 h-5 text-amber-400" />
+                  <ShieldAlert className="w-5 h-5 text-amber-500 dark:text-amber-400" />
                   <h2 className="text-xl font-bold text-foreground tracking-tight">
                     Pre-Deployment CI/CD Quality Gatekeeper & Regression Detector
                   </h2>
                 </div>
-                <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
+                <p className="text-xs text-muted-foreground max-w-3xl leading-relaxed">
                   Assert automated LLM-as-a-Judge thresholds against production baselines before deployment. Enforce hard-stop assertions on win rates, reasoning accuracy, and latency budgets in GitHub Actions, GitLab CI, or custom webhooks.
                 </p>
               </div>
@@ -1893,9 +1893,9 @@ export default function ArenaPage() {
                     const el = document.getElementById('cicd-snippets-section');
                     el?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                  className="px-3.5 py-1.5 rounded-xl bg-muted hover:bg-muted/80 text-foreground border border-border/80 text-xs font-semibold flex items-center gap-1.5 transition-colors"
                 >
-                  <FileCode className="w-3.5 h-3.5 text-amber-400" />
+                  <FileCode className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                   View CI/CD Snippets
                 </button>
               </div>
@@ -1903,14 +1903,14 @@ export default function ArenaPage() {
           </div>
 
           {/* Configuration & Threshold Sliders */}
-          <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="p-6 bg-card border border-border/80 rounded-2xl shadow-lg space-y-6">
+            <div className="flex items-center justify-between border-b border-border/80 pb-4">
               <div>
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <Sliders className="w-4 h-4 text-amber-400" />
                   Quality Gate Configuration & Threshold Constraints
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Specify candidate and baseline models, target benchmark suite, and pass/fail thresholds.
                 </p>
               </div>
@@ -1925,7 +1925,7 @@ export default function ArenaPage() {
                 <select
                   value={gateCandidate}
                   onChange={(e) => setGateCandidate(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
                 >
                   {availableModels.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -1942,7 +1942,7 @@ export default function ArenaPage() {
                 <select
                   value={gateBaseline}
                   onChange={(e) => setGateBaseline(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
                 >
                   {availableModels.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -1959,7 +1959,7 @@ export default function ArenaPage() {
                 <select
                   value={gateSuiteId}
                   onChange={(e) => setGateSuiteId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
                 >
                   {suitesList.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -1973,9 +1973,9 @@ export default function ArenaPage() {
             {/* Threshold Sliders Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
               {/* Min Win Rate */}
-              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+              <div className="p-3.5 bg-background rounded-xl border border-border/80 space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-medium">Min Win Rate</span>
+                  <span className="text-muted-foreground font-medium">Min Win Rate</span>
                   <span className="text-amber-400 font-bold font-mono">{gateMinWinRate}%</span>
                 </div>
                 <input
@@ -1985,7 +1985,7 @@ export default function ArenaPage() {
                   step={5}
                   value={gateMinWinRate}
                   onChange={(e) => setGateMinWinRate(parseInt(e.target.value, 10))}
-                  className="w-full accent-amber-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                  className="w-full accent-amber-500 cursor-pointer h-1.5 bg-muted rounded-lg"
                 />
                 <span className="text-[10px] text-slate-500 block">
                   Candidate must achieve at least {gateMinWinRate}% wins vs baseline
@@ -1993,9 +1993,9 @@ export default function ArenaPage() {
               </div>
 
               {/* Min Overall Score */}
-              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+              <div className="p-3.5 bg-background rounded-xl border border-border/80 space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-medium">Min Overall Score</span>
+                  <span className="text-muted-foreground font-medium">Min Overall Score</span>
                   <span className="text-emerald-400 font-bold font-mono">{gateMinScore.toFixed(1)} / 10</span>
                 </div>
                 <input
@@ -2005,7 +2005,7 @@ export default function ArenaPage() {
                   step={0.5}
                   value={gateMinScore}
                   onChange={(e) => setGateMinScore(parseFloat(e.target.value))}
-                  className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                  className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-muted rounded-lg"
                 />
                 <span className="text-[10px] text-slate-500 block">
                   Absolute judge quality threshold (adherence, reasoning, tone)
@@ -2013,7 +2013,7 @@ export default function ArenaPage() {
               </div>
 
               {/* Min Accuracy Score */}
-              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+              <div className="p-3.5 bg-background rounded-xl border border-border/80 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-blue-400 font-medium">Min Accuracy Score</span>
                   <span className="text-blue-400 font-bold font-mono">{gateMinAccuracy.toFixed(1)} / 10</span>
@@ -2025,7 +2025,7 @@ export default function ArenaPage() {
                   step={0.5}
                   value={gateMinAccuracy}
                   onChange={(e) => setGateMinAccuracy(parseFloat(e.target.value))}
-                  className="w-full accent-blue-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                  className="w-full accent-blue-500 cursor-pointer h-1.5 bg-muted rounded-lg"
                 />
                 <span className="text-[10px] text-slate-500 block">
                   Rigorous correctness threshold on domain answers
@@ -2033,7 +2033,7 @@ export default function ArenaPage() {
               </div>
 
               {/* Max Latency */}
-              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+              <div className="p-3.5 bg-background rounded-xl border border-border/80 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-orange-400 font-medium">Max Avg Latency</span>
                   <span className="text-orange-400 font-bold font-mono">{gateMaxLatency} ms</span>
@@ -2045,7 +2045,7 @@ export default function ArenaPage() {
                   step={100}
                   value={gateMaxLatency}
                   onChange={(e) => setGateMaxLatency(parseInt(e.target.value, 10))}
-                  className="w-full accent-orange-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                  className="w-full accent-orange-500 cursor-pointer h-1.5 bg-muted rounded-lg"
                 />
                 <span className="text-[10px] text-slate-500 block">
                   Latency budget ceiling before failing for slow responses
@@ -2055,7 +2055,7 @@ export default function ArenaPage() {
 
             {/* Action Bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-muted-foreground">
                 In CI/CD environments, violations return HTTP 422 to automatically fail pull request checks.
               </span>
               <button
@@ -2081,7 +2081,7 @@ export default function ArenaPage() {
 
           {/* Live Gate Verdict Card */}
           {gateResult && (
-            <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl space-y-5">
+            <div className="p-6 bg-card border border-border/80 rounded-2xl shadow-xl space-y-5">
               {/* Verdict Banner */}
               <div
                 className={`p-4 rounded-xl border flex items-start justify-between gap-4 ${
@@ -2102,7 +2102,7 @@ export default function ArenaPage() {
                         ? 'DEPLOYMENT APPROVED — QUALITY GATE PASSED'
                         : 'DEPLOYMENT BLOCKED — QUALITY GATE VIOLATIONS'}
                     </h4>
-                    <p className="text-xs mt-1 text-slate-300">
+                    <p className="text-xs mt-1 text-foreground">
                       {gateResult.passed
                         ? `Candidate "${gateResult.metrics.candidateModel}" met or exceeded all required performance and regression thresholds against baseline "${gateResult.metrics.baselineModel}".`
                         : `Candidate "${gateResult.metrics.candidateModel}" failed ${gateResult.violations?.length || 1} quality/regression constraints against baseline "${gateResult.metrics.baselineModel}". CI/CD release halted.`}
@@ -2132,13 +2132,13 @@ export default function ArenaPage() {
                     {gateResult.violations.map((v: any, idx: number) => (
                       <div
                         key={idx}
-                        className="p-2.5 bg-slate-950/80 rounded-lg border border-red-500/20 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2"
+                        className="p-2.5 bg-background/80 rounded-lg border border-red-500/20 flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2"
                       >
                         <div>
-                          <span className="font-semibold text-slate-200 capitalize">
+                          <span className="font-semibold text-foreground capitalize">
                             {v.metric.replace('_', ' ')}
                           </span>
-                          <span className="text-slate-400 ml-2">{v.message}</span>
+                          <span className="text-muted-foreground ml-2">{v.message}</span>
                         </div>
                         <div className="font-mono text-[11px] text-red-300 shrink-0">
                           Actual: <strong>{v.actual}</strong> | Threshold: <strong>{v.threshold}</strong>
@@ -2152,9 +2152,9 @@ export default function ArenaPage() {
               {/* Metric Comparison KPI Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Win Rate */}
-                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium block mb-1">Win Rate vs Baseline</span>
-                  <div className="text-xl font-bold font-mono text-white">
+                <div className="p-4 bg-background rounded-xl border border-border/80">
+                  <span className="text-xs text-muted-foreground font-medium block mb-1">Win Rate vs Baseline</span>
+                  <div className="text-xl font-bold font-mono text-foreground">
                     {gateResult.metrics.candidateWinRate}%
                   </div>
                   <div className="mt-2 flex items-center justify-between text-[11px]">
@@ -2172,9 +2172,9 @@ export default function ArenaPage() {
                 </div>
 
                 {/* Overall Score */}
-                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium block mb-1">Overall Judge Score</span>
-                  <div className="text-xl font-bold font-mono text-white">
+                <div className="p-4 bg-background rounded-xl border border-border/80">
+                  <span className="text-xs text-muted-foreground font-medium block mb-1">Overall Judge Score</span>
+                  <div className="text-xl font-bold font-mono text-foreground">
                     {gateResult.metrics.candidateOverallScore} <span className="text-xs text-slate-500 font-normal">/ 10</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between text-[11px]">
@@ -2192,9 +2192,9 @@ export default function ArenaPage() {
                 </div>
 
                 {/* Accuracy Score */}
-                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium block mb-1">Accuracy / Correctness</span>
-                  <div className="text-xl font-bold font-mono text-white">
+                <div className="p-4 bg-background rounded-xl border border-border/80">
+                  <span className="text-xs text-muted-foreground font-medium block mb-1">Accuracy / Correctness</span>
+                  <div className="text-xl font-bold font-mono text-foreground">
                     {gateResult.metrics.candidateAccuracyScore} <span className="text-xs text-slate-500 font-normal">/ 10</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between text-[11px]">
@@ -2212,9 +2212,9 @@ export default function ArenaPage() {
                 </div>
 
                 {/* Avg Latency */}
-                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium block mb-1">Candidate Avg Latency</span>
-                  <div className="text-xl font-bold font-mono text-white">
+                <div className="p-4 bg-background rounded-xl border border-border/80">
+                  <span className="text-xs text-muted-foreground font-medium block mb-1">Candidate Avg Latency</span>
+                  <div className="text-xl font-bold font-mono text-foreground">
                     {gateResult.metrics.candidateLatencyMs} <span className="text-xs text-slate-500 font-normal">ms</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between text-[11px]">
@@ -2233,7 +2233,7 @@ export default function ArenaPage() {
               </div>
 
               {/* Baseline Reference Footer */}
-              <div className="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 gap-2">
+              <div className="p-3 bg-muted/40 rounded-xl border border-border/80/80 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-muted-foreground gap-2">
                 <div>
                   <span className="text-slate-500">Baseline Context: </span>
                   <span className="text-blue-400 font-mono">{gateResult.metrics.baselineModel}</span>
@@ -2257,14 +2257,14 @@ export default function ArenaPage() {
           )}
 
           {/* Model Drift & Trajectory Radar Card */}
-          <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div className="p-6 bg-card border border-border/80 rounded-2xl shadow-lg space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/80 pb-4">
               <div>
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <TrendingDown className="w-4 h-4 text-amber-400" />
                   Model Degradation & Trajectory Drift Radar
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Scan historical evaluation runs to identify quality regressions or latency inflation over time.
                 </p>
               </div>
@@ -2273,7 +2273,7 @@ export default function ArenaPage() {
                 <select
                   value={driftModelId}
                   onChange={(e) => setDriftModelId(e.target.value)}
-                  className="bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="bg-background border border-border/80 rounded-xl px-3 py-1.5 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
                 >
                   {availableModels.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -2285,7 +2285,7 @@ export default function ArenaPage() {
                   type="button"
                   onClick={() => handleCheckDrift()}
                   disabled={isCheckingDrift}
-                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40"
+                  className="px-3.5 py-1.5 rounded-xl bg-muted hover:bg-muted/80 text-foreground border border-border/80 text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-40"
                 >
                   {isCheckingDrift ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
                   Scan Trajectory
@@ -2296,30 +2296,30 @@ export default function ArenaPage() {
             {driftReport && (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
-                    <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold block mb-1">
+                  <div className="p-3.5 bg-background rounded-xl border border-border/80">
+                    <span className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold block mb-1">
                       Trajectory Status
                     </span>
                     <span
                       className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                         driftReport.status === 'STABLE'
-                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                          ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/30'
                           : driftReport.status === 'DEGRADED'
-                          ? 'bg-red-500/20 text-red-300 border-red-500/30'
+                          ? 'bg-red-500/20 text-red-600 dark:text-red-300 border-red-500/30'
                           : driftReport.status === 'ACCELERATED'
-                          ? 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                          : 'bg-slate-800 text-slate-400 border-slate-700'
+                          ? 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-500/30'
+                          : 'bg-muted text-muted-foreground border-border/80'
                       }`}
                     >
                       {driftReport.status}
                     </span>
                   </div>
 
-                  <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+                  <div className="p-3.5 bg-background rounded-xl border border-border/80">
                     <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold block mb-1">
                       Quality Score Delta
                     </span>
-                    <div className="text-base font-bold font-mono text-white">
+                    <div className="text-base font-bold font-mono text-foreground">
                       {driftReport.baselineScore} &rarr; {driftReport.currentScore}
                       <span
                         className={`text-xs ml-2 ${
@@ -2331,11 +2331,11 @@ export default function ArenaPage() {
                     </div>
                   </div>
 
-                  <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+                  <div className="p-3.5 bg-background rounded-xl border border-border/80">
                     <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold block mb-1">
                       Latency Delta
                     </span>
-                    <div className="text-base font-bold font-mono text-white">
+                    <div className="text-base font-bold font-mono text-foreground">
                       {driftReport.baselineLatencyMs}ms &rarr; {driftReport.currentLatencyMs}ms
                       <span
                         className={`text-xs ml-2 ${
@@ -2347,7 +2347,7 @@ export default function ArenaPage() {
                     </div>
                   </div>
 
-                  <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+                  <div className="p-3.5 bg-background rounded-xl border border-border/80">
                     <span className="text-[11px] text-slate-500 uppercase tracking-wider font-semibold block mb-1">
                       Drift Detected Flag
                     </span>
@@ -2365,9 +2365,9 @@ export default function ArenaPage() {
                   </div>
                 </div>
 
-                <div className="p-3.5 bg-slate-950/80 rounded-xl border border-slate-800 text-xs flex items-start gap-2.5">
+                <div className="p-3.5 bg-background/80 rounded-xl border border-border/80 text-xs flex items-start gap-2.5">
                   <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                  <p className="text-slate-300 italic leading-relaxed">
+                  <p className="text-foreground italic leading-relaxed">
                     &ldquo;{driftReport.recommendation}&rdquo;
                   </p>
                 </div>
@@ -2376,20 +2376,20 @@ export default function ArenaPage() {
           </div>
 
           {/* Exportable CI/CD Snippets Card */}
-          <div id="cicd-snippets-section" className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+          <div id="cicd-snippets-section" className="p-6 bg-card border border-border/80 rounded-2xl shadow-lg space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/80 pb-4">
               <div>
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <FileCode className="w-4 h-4 text-amber-400" />
                   Production CI/CD Automation Snippets
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Integrate these pre-configured assertions into your continuous deployment pipeline to halt builds on regressions.
                 </p>
               </div>
 
               {/* Snippet Tabs */}
-              <div className="flex items-center gap-1 p-1 bg-slate-950 border border-slate-800 rounded-xl text-xs">
+              <div className="flex items-center gap-1 p-1 bg-background border border-border/80 rounded-xl text-xs">
                 {(['github_actions', 'curl', 'python', 'typescript'] as const).map((tab) => (
                   <button
                     key={tab}
@@ -2398,7 +2398,7 @@ export default function ArenaPage() {
                     className={`px-3 py-1.5 rounded-lg font-semibold capitalize transition-all ${
                       activeSnippetTab === tab
                         ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200'
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     {tab === 'github_actions' ? 'GitHub Actions' : tab === 'curl' ? 'cURL CLI' : tab}
@@ -2409,7 +2409,7 @@ export default function ArenaPage() {
 
             {/* Code Block Container */}
             <div className="relative">
-              <pre className="p-4 bg-slate-950 rounded-xl border border-slate-800 font-mono text-xs text-slate-300 overflow-x-auto leading-relaxed max-h-80">
+              <pre className="p-4 bg-background rounded-xl border border-border/80 font-mono text-xs text-foreground overflow-x-auto leading-relaxed max-h-80">
                 {activeSnippetTab === 'github_actions' &&
 `name: Model Quality Gate
 on:
@@ -2514,7 +2514,7 @@ console.log('Model approved for production deployment!');`}
                     toast('Snippet copied to clipboard!', 'success');
                   }
                 }}
-                className="absolute top-3 right-3 p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-foreground hover:bg-slate-700 border border-slate-700 transition-colors shadow"
+                className="absolute top-3 right-3 p-2 rounded-lg bg-muted text-foreground hover:bg-muted/80 border border-border/80 transition-colors shadow"
                 title="Copy snippet to clipboard"
               >
                 <Copy className="w-4 h-4" />
@@ -2527,7 +2527,7 @@ console.log('Model approved for production deployment!');`}
         <div className="flex flex-col gap-6">
           {/* Top KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="p-4 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl shadow-lg">
+            <div className="p-4 bg-gradient-to-br from-amber-500/10 via-card to-card border border-amber-500/30 rounded-2xl shadow-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                   <Trophy className="w-3.5 h-3.5 text-amber-400" /> Platform Champion
@@ -2536,21 +2536,21 @@ console.log('Model approved for production deployment!');`}
                   #1 Global
                 </span>
               </div>
-              <div className="text-lg font-bold text-white tracking-tight">
+              <div className="text-lg font-bold text-foreground tracking-tight">
                 {leaderboard[0]?.model || 'deepseek-r1-70b'}
               </div>
-              <div className="text-xs text-slate-400 mt-1 flex items-center gap-2">
+              <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
                 <span className="text-amber-400 font-bold">{leaderboard[0]?.elo || 1685} Elo</span>
                 <span>•</span>
                 <span className="text-emerald-400 font-semibold">{leaderboard[0]?.winRate || 87}% Win Rate</span>
               </div>
             </div>
 
-            <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+            <div className="p-4 bg-card border border-border/80 rounded-2xl shadow-lg">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
                 Evaluated Matches
               </span>
-              <div className="text-2xl font-bold text-white tracking-tight">
+              <div className="text-2xl font-bold text-foreground tracking-tight">
                 {leaderboard.reduce((acc, curr) => acc + curr.matches, 0) || 124}
               </div>
               <span className="text-xs text-slate-500 mt-1 block">
@@ -2558,8 +2558,8 @@ console.log('Model approved for production deployment!');`}
               </span>
             </div>
 
-            <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+            <div className="p-4 bg-card border border-border/80 rounded-2xl shadow-lg">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
                 Active Benchmark Suites
               </span>
               <div className="text-2xl font-bold text-emerald-400 tracking-tight">
@@ -2570,8 +2570,8 @@ console.log('Model approved for production deployment!');`}
               </span>
             </div>
 
-            <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
+            <div className="p-4 bg-card border border-border/80 rounded-2xl shadow-lg">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-2">
                 Average Decision Latency
               </span>
               <div className="text-2xl font-bold text-blue-400 tracking-tight">
@@ -2584,14 +2584,14 @@ console.log('Model approved for production deployment!');`}
           </div>
 
           {/* AI Synthetic Benchmark Suite Generator Card */}
-          <div className="p-5 bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/30 border border-slate-800 rounded-2xl shadow-xl">
+          <div className="p-5 bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/30 border border-border/80 rounded-2xl shadow-xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
               <div>
                 <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-amber-400" />
                   Synthesize Custom Benchmark Suite via AI
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Generate challenging, multi-turn evaluation prompt pairs and criteria for any proprietary domain, API, or compliance spec.
                 </p>
               </div>
@@ -2599,7 +2599,7 @@ console.log('Model approved for production deployment!');`}
 
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
               <div className="sm:col-span-6">
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-1">
                   Target Domain or Challenge Topic
                 </label>
                 <input
@@ -2607,18 +2607,18 @@ console.log('Model approved for production deployment!');`}
                   value={synthDomain}
                   onChange={(e) => setSynthDomain(e.target.value)}
                   placeholder="e.g. Distributed Consensus & Raft, HIPAA PII Redaction, SQL Window Functions..."
-                  className="w-full bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-xl px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full bg-background border border-border/80 hover:border-slate-600 rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-1">
                   Category
                 </label>
                 <select
                   value={synthCategory}
                   onChange={(e) => setSynthCategory(e.target.value as any)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
                 >
                   <option value="coding">Coding</option>
                   <option value="reasoning">Reasoning</option>
@@ -2628,13 +2628,13 @@ console.log('Model approved for production deployment!');`}
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-foreground uppercase tracking-wider mb-1">
                   Test Count
                 </label>
                 <select
                   value={synthCount}
                   onChange={(e) => setSynthCount(parseInt(e.target.value, 10))}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
                 >
                   <option value={2}>2 Cases</option>
                   <option value={3}>3 Cases</option>
@@ -2665,14 +2665,14 @@ console.log('Model approved for production deployment!');`}
           </div>
 
           {/* Global Model Leaderboard Table */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-            <div className="p-4 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
+          <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xl">
+            <div className="p-4 border-b border-border/80 bg-muted/40 flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                   <Trophy className="w-4 h-4 text-amber-400" />
                   Global Model Arena Elo Leaderboard
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Dynamic Elo ratings updated after each head-to-head match using K=32 calibration.
                 </p>
               </div>
@@ -2683,7 +2683,7 @@ console.log('Model approved for production deployment!');`}
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-950 text-slate-400 uppercase tracking-wider text-[11px] border-b border-slate-800">
+                <thead className="bg-background text-muted-foreground uppercase tracking-wider text-[11px] border-b border-border/80">
                   <tr>
                     <th className="py-3 px-4">Rank</th>
                     <th className="py-3 px-4">Model Candidate</th>
@@ -2701,40 +2701,40 @@ console.log('Model approved for production deployment!');`}
                       entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `#${entry.rank}`;
 
                     return (
-                      <tr key={entry.model} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="py-3 px-4 font-bold text-slate-200 text-sm">
+                      <tr key={entry.model} className="hover:bg-muted/40 transition-colors">
+                        <td className="py-3 px-4 font-bold text-foreground text-sm">
                           {rankMedal}
                         </td>
-                        <td className="py-3 px-4 font-mono font-medium text-slate-100">
+                        <td className="py-3 px-4 font-mono font-medium text-foreground">
                           <div className="flex items-center gap-2">
                             <span>{entry.model}</span>
                             {isLoRA && (
-                              <span className="px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-sans">
+                              <span className="px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/20 text-[10px] font-sans">
                                 LoRA Adapter
                               </span>
                             )}
                           </div>
                         </td>
                         <td className="py-3 px-4">
-                          <span className="font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 font-mono">
+                          <span className="font-bold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 font-mono">
                             {entry.elo} Elo
                           </span>
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
-                            <div className="w-16 bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
+                            <div className="w-16 bg-background h-1.5 rounded-full overflow-hidden border border-border/80">
                               <div
                                 className="bg-emerald-500 h-full rounded-full"
                                 style={{ width: `${entry.winRate}%` }}
                               />
                             </div>
-                            <span className="font-semibold text-slate-200">{entry.winRate}%</span>
+                            <span className="font-semibold text-foreground">{entry.winRate}%</span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 font-semibold text-slate-200">
+                        <td className="py-3 px-4 font-semibold text-foreground">
                           {entry.avgScore}
                         </td>
-                        <td className="py-3 px-4 text-slate-400 font-mono">
+                        <td className="py-3 px-4 text-muted-foreground font-mono">
                           {entry.avgLatencyMs}ms
                         </td>
                         <td className="py-3 px-4 text-right">
@@ -2744,7 +2744,7 @@ console.log('Model approved for production deployment!');`}
                               setModelA(entry.model);
                               setArenaMode('automated_evals');
                             }}
-                            className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-foreground border border-slate-700 transition-colors text-[11px] font-semibold"
+                            className="px-3 py-1 rounded-lg bg-muted hover:bg-muted/80 text-foreground border border-border/80 transition-colors text-[11px] font-semibold"
                           >
                             Challenge
                           </button>
@@ -2758,14 +2758,14 @@ console.log('Model approved for production deployment!');`}
           </div>
 
           {/* Historical Evaluation Runs Audit Ledger */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-            <div className="p-4 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
+          <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xl">
+            <div className="p-4 border-b border-border/80 bg-muted/40 flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                   <History className="w-4 h-4 text-amber-400" />
                   Recent Evaluation Runs Audit Ledger
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Immutable record of recent automated head-to-head judge evaluations.
                 </p>
               </div>
@@ -2781,7 +2781,7 @@ console.log('Model approved for production deployment!');`}
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-950 text-slate-400 uppercase tracking-wider text-[11px] border-b border-slate-800">
+                  <thead className="bg-background text-muted-foreground uppercase tracking-wider text-[11px] border-b border-border/80">
                     <tr>
                       <th className="py-3 px-4">Run ID & Date</th>
                       <th className="py-3 px-4">Benchmark Suite</th>
@@ -2791,37 +2791,37 @@ console.log('Model approved for production deployment!');`}
                       <th className="py-3 px-4 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/80">
+                  <tbody className="divide-y divide-border/60">
                     {evalHistory.map((run: any) => {
                       const winnerTag =
                         run.summary.winsA > run.summary.winsB
-                          ? { label: `Winner: ${run.modelA}`, color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' }
+                          ? { label: `Winner: ${run.modelA}`, color: 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border-emerald-500/30' }
                           : run.summary.winsB > run.summary.winsA
-                          ? { label: `Winner: ${run.modelB}`, color: 'bg-blue-500/20 text-blue-300 border-blue-500/30' }
-                          : { label: 'Tied Decision', color: 'bg-slate-700 text-slate-300 border-slate-600' };
+                          ? { label: `Winner: ${run.modelB}`, color: 'bg-blue-500/20 text-blue-600 dark:text-blue-300 border-blue-500/30' }
+                          : { label: 'Tied Decision', color: 'bg-muted text-foreground border-border/80' };
 
                       return (
-                        <tr key={run.id} className="hover:bg-slate-800/40 transition-colors">
+                        <tr key={run.id} className="hover:bg-muted/40 transition-colors">
                           <td className="py-3 px-4">
-                            <span className="font-mono text-slate-300 block">{run.id}</span>
-                            <span className="text-[10px] text-slate-500 font-mono">
+                            <span className="font-mono text-foreground block">{run.id}</span>
+                            <span className="text-[10px] text-muted-foreground font-mono">
                               {new Date(run.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </td>
-                          <td className="py-3 px-4 font-medium text-slate-200">
+                          <td className="py-3 px-4 font-medium text-foreground">
                             {run.suiteName}
                           </td>
-                          <td className="py-3 px-4 font-mono text-slate-300">
-                            <span className="text-emerald-400">{run.modelA}</span>
-                            <span className="text-slate-500 mx-1.5">vs</span>
-                            <span className="text-blue-400">{run.modelB}</span>
+                          <td className="py-3 px-4 font-mono text-foreground">
+                            <span className="text-emerald-500 dark:text-emerald-400">{run.modelA}</span>
+                            <span className="text-muted-foreground mx-1.5">vs</span>
+                            <span className="text-blue-500 dark:text-blue-400">{run.modelB}</span>
                           </td>
                           <td className="py-3 px-4">
                             <span className={`px-2 py-0.5 rounded-full border text-[11px] font-semibold ${winnerTag.color}`}>
                               {winnerTag.label}
                             </span>
                           </td>
-                          <td className="py-3 px-4 font-mono text-slate-300">
+                          <td className="py-3 px-4 font-mono text-foreground">
                             {run.summary.avgOverallScoreA} vs {run.summary.avgOverallScoreB}
                           </td>
                           <td className="py-3 px-4 text-right">
@@ -2834,7 +2834,7 @@ console.log('Model approved for production deployment!');`}
                                 }
                                 setArenaMode('automated_evals');
                               }}
-                              className="px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30 transition-colors text-[11px] font-semibold"
+                              className="px-3 py-1 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-300 hover:bg-amber-500/30 border border-amber-500/30 transition-colors text-[11px] font-semibold"
                             >
                               Inspect Verdict
                             </button>
@@ -2842,7 +2842,7 @@ console.log('Model approved for production deployment!');`}
                               type="button"
                               onClick={() => handleExportAudit(run.id, 'markdown')}
                               disabled={isExportingAudit}
-                              className="ml-2 px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-foreground hover:bg-slate-700 border border-slate-700 transition-colors text-[11px] font-semibold inline-flex items-center gap-1"
+                              className="ml-2 px-2.5 py-1 rounded-lg bg-muted text-foreground hover:bg-muted/80 border border-border/80 transition-colors text-[11px] font-semibold inline-flex items-center gap-1"
                               title="Export Cryptographic Compliance Certificate (Markdown & SHA-256)"
                             >
                               <Download className="w-3 h-3" />

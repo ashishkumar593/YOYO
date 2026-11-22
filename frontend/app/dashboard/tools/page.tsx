@@ -232,7 +232,7 @@ export default function ToolsWorkbenchPage() {
                       <div className="p-1.5 rounded-lg bg-black/40 border border-border/60">
                         {getToolIcon(fn.name)}
                       </div>
-                      <span className="text-xs font-bold text-white font-mono">
+                      <span className="text-xs font-bold text-foreground font-mono">
                         {fn.name}
                       </span>
                     </div>
@@ -353,12 +353,12 @@ export default function ToolsWorkbenchPage() {
         {agentResult && (
           <div className="pt-4 border-t border-border/60 space-y-4 animate-in fade-in duration-300">
             <div className="flex items-center justify-between text-xs font-mono">
-              <span className="text-white font-bold flex items-center gap-1.5">
+              <span className="text-foreground font-bold flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Execution Timeline & Tool Invocations</span>
+                <span>Execution Timeline &amp; Tool Invocations</span>
               </span>
-              <span className="text-zinc-400 text-[11px]">
-                Iterations: <span className="text-white font-bold">{agentResult.iterations}</span> • Latency:{' '}
+              <span className="text-muted-foreground text-[11px]">
+                Iterations: <span className="text-foreground font-bold">{agentResult.iterations}</span> • Latency:{' '}
                 <span className="text-emerald-400 font-bold">{agentResult.latencyMs}ms</span>
               </span>
             </div>
@@ -374,12 +374,12 @@ export default function ToolsWorkbenchPage() {
                       ? 'bg-emerald-500/[0.04] border-emerald-500/30'
                       : s.type === 'final_answer'
                       ? 'bg-cyan-500/[0.05] border-cyan-500/40'
-                      : 'bg-black/40 border-border/60'
+                      : 'bg-muted/40 border-border/60'
                   }`}
                 >
                   <div className="flex items-center justify-between text-[11px]">
                     <div className="flex items-center space-x-2">
-                      <span className="px-1.5 py-0.5 rounded bg-white/10 text-white font-bold">
+                      <span className="px-1.5 py-0.5 rounded bg-muted text-foreground font-bold">
                         Step {s.step}
                       </span>
                       <span
@@ -426,7 +426,7 @@ export default function ToolsWorkbenchPage() {
             </div>
 
             {/* Synthesized Final Output Card */}
-            <div className="p-5 rounded-2xl bg-[#090B12] border border-cyan-500/30 space-y-2">
+            <div className="p-5 rounded-2xl bg-card border border-cyan-500/30 space-y-2">
               <span className="text-cyan-400 text-xs font-bold font-mono flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Final Agent Solution & Synthesis</span>
@@ -508,7 +508,7 @@ export default function ToolsWorkbenchPage() {
             </button>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#090B12] border border-border/80 flex flex-col justify-between">
+          <div className="p-4 rounded-xl bg-card border border-border/80 flex flex-col justify-between">
             <span className="text-[11px] font-mono text-muted-foreground block mb-2">
               Execution Response Payload
             </span>
