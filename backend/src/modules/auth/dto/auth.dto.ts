@@ -25,3 +25,29 @@ export class LoginDto {
   password!: string;
 }
 
+export class OAuthLoginDto {
+  @IsOptional()
+  @IsString()
+  provider?: 'google' | 'github';
+
+  @IsNotEmpty({ message: 'Email is required for OAuth login.' })
+  @IsEmail({}, { message: 'A valid email address is required.' })
+  email!: string;
+
+  @IsOptional()
+  @IsString()
+  fullName?: string;
+
+  @IsOptional()
+  @IsString()
+  avatarUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  token?: string;
+
+  @IsOptional()
+  @IsString()
+  code?: string;
+}
+

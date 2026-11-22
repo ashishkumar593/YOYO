@@ -764,10 +764,11 @@ export class InferenceService implements OnModuleInit, OnModuleDestroy {
     }
 
     try {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(modelIdentifierOrId);
       const pricing = await (this.prisma as any).modelPricing?.findFirst?.({
-        where: {
-          OR: [{ modelIdentifier: modelIdentifierOrId }, { id: modelIdentifierOrId }],
-        },
+        where: isUuid
+          ? { OR: [{ modelIdentifier: modelIdentifierOrId }, { id: modelIdentifierOrId }] }
+          : { modelIdentifier: modelIdentifierOrId },
       });
 
       if (pricing) {

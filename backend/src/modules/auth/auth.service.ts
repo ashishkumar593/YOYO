@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../database/prisma.service';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
+import { RegisterDto, LoginDto, OAuthLoginDto } from './dto/auth.dto';
 import { UserRole, UserStatus, OrgRole } from '@prisma/client';
 
 @Injectable()
@@ -68,6 +68,110 @@ export class AuthService {
     const tokens = await this.generateTokens(user.id, user.email, user.role);
     return {
       user,
+      ...tokens,
+    };
+  }
+
+  async handleOAuth(
+    provider: 'google' | 'github',
+    dto: OAuthLoginDto,
+    userAgent?: string,
+    ipAddress?: string
+  ) {
+    if (!dto.email) {
+      throw new BadRequestException('Email address is required for OAuth authentication.');
+    }
+
+    const email = dto.email.toLowerCase().trim();
+    let user = await this.prisma.user.findUnique({
+      where: { email },
+      include: { profile: true },
+    });
+
+    if (!user) {
+      // Auto-provision developer account
+      const salt = await bcrypt.genSalt(10);
+      const randomSecret = crypto.randomBytes(32).toString('hex');
+      const passwordHash = await bcrypt.hash(randomSecret, salt);
+
+      const userCount = await this.prisma.user.count();
+      const role: UserRole = userCount === 0 ? UserRole.SUPER_ADMIN : UserRole.USER;
+
+      user = await this.prisma.user.create({
+        data: {
+          email,
+          passwordHash,
+          role,
+          status: UserStatus.ACTIVE,
+          emailVerified: true,
+          profile: {
+            create: {
+              fullName: dto.fullName || (provider === 'google' ? 'Google Developer' : 'GitHub Developer'),
+              avatarUrl: dto.avatarUrl || (provider === 'github' ? 'https://avatars.githubusercontent.com/u/0' : ''),
+            },
+          },
+          quota: {
+            create: {
+              monthlyTokenLimit: BigInt(50000000), // 50M tokens allocation
+              monthlyRequestLimit: 50000,
+              resetsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            },
+          },
+          creditBalance: {
+            create: {
+              balanceUsd: 150.0,
+              currency: 'USD',
+            },
+          },
+        },
+        include: { profile: true },
+      });
+
+      // Create an initial developer API key
+      const keyRaw = `sk_live_${provider}_${crypto.randomBytes(12).toString('hex')}`;
+      const keyHash = crypto.createHash('sha256').update(keyRaw).digest('hex');
+      const keyPrefix = keyRaw.substring(0, 14);
+      const maskedKey = `${keyPrefix}...${keyRaw.slice(-4)}`;
+      await this.prisma.apiKey.create({
+        data: {
+          userId: user.id,
+          name: `Default ${provider.toUpperCase()} Access Key`,
+          keyPrefix,
+          maskedKey,
+          keyHash,
+          rateLimitRpm: 300,
+          rateLimitTpm: 300000,
+          isActive: true,
+        },
+      });
+    }
+
+    if (user.status === UserStatus.SUSPENDED) {
+      throw new UnauthorizedException('Your developer account has been suspended. Please contact platform operators.');
+    }
+
+    const tokens = await this.generateTokens(user.id, user.email, user.role);
+
+    const refreshHash = crypto.createHash('sha256').update(tokens.refreshToken).digest('hex');
+    await this.prisma.session.create({
+      data: {
+        userId: user.id,
+        refreshTokenHash: refreshHash,
+        userAgent: userAgent || `${provider}-oauth`,
+        ipAddress: ipAddress || 'oauth-exchange',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    });
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        fullName: user.profile?.fullName,
+        avatarUrl: user.profile?.avatarUrl,
+        provider,
+      },
       ...tokens,
     };
   }

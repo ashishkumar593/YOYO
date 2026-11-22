@@ -613,11 +613,11 @@ export default function AdminDashboardPage() {
               </div>
               <div className="mt-3">
                 <span className="text-3xl font-extrabold tracking-tight font-mono text-foreground">
-                  {formatNumber(stats?.totalUsers || 104280)}
+                  {formatNumber(stats?.totalUsers ?? usersTotal ?? 0)}
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 font-mono">
                   <span className="text-emerald-400 font-semibold">Active Tenants</span>
-                  <span>• Scale verified</span>
+                  <span>• Registered</span>
                 </div>
               </div>
             </div>
@@ -629,11 +629,11 @@ export default function AdminDashboardPage() {
               </div>
               <div className="mt-3">
                 <span className="text-3xl font-extrabold tracking-tight font-mono text-foreground">
-                  {formatNumber(stats?.totalRequests || 4829100)}
+                  {formatNumber(stats?.totalRequests ?? 0)}
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 font-mono">
-                  <span className="text-emerald-400 font-semibold">0.42ms</span>
-                  <span>gateway latency</span>
+                  <span className="text-emerald-400 font-semibold">Live Traffic</span>
+                  <span>• Gateway Telemetry</span>
                 </div>
               </div>
             </div>
@@ -645,10 +645,10 @@ export default function AdminDashboardPage() {
               </div>
               <div className="mt-3">
                 <span className="text-3xl font-extrabold tracking-tight font-mono text-cyan-400">
-                  {formatNumber(stats?.totalTokensConsumed || 842500000)}
+                  {formatNumber(stats?.totalTokensConsumed ?? 0)}
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 font-mono">
-                  <span className="text-zinc-300">Prompt &amp; Completion</span>
+                  <span className="text-muted-foreground">Prompt &amp; Completion</span>
                 </div>
               </div>
             </div>
@@ -660,7 +660,7 @@ export default function AdminDashboardPage() {
               </div>
               <div className="mt-3">
                 <span className="text-3xl font-extrabold tracking-tight font-mono text-emerald-400">
-                  ${formatNumber(stats?.estimatedRevenueUsd || 42125)}
+                  ${formatNumber(stats?.estimatedRevenueUsd ?? 0)}
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 font-mono">
                   <span className="text-emerald-400 font-semibold">Active Ledger</span>

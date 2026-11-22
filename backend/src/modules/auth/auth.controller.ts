@@ -12,7 +12,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
+import { RegisterDto, LoginDto, OAuthLoginDto } from './dto/auth.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -31,6 +31,30 @@ export class AuthController {
     const userAgent = req.headers['user-agent'];
     const ipAddress = req.ip;
     return this.authService.login(dto, userAgent, ipAddress);
+  }
+
+  @Post('oauth/:provider')
+  @HttpCode(HttpStatus.OK)
+  async oauthLogin(
+    @Param('provider') provider: 'google' | 'github',
+    @Body() dto: OAuthLoginDto,
+    @Req() req: any
+  ) {
+    const userAgent = req.headers['user-agent'];
+    const ipAddress = req.ip;
+    return this.authService.handleOAuth(provider, dto, userAgent, ipAddress);
+  }
+
+  @Post('oauth')
+  @HttpCode(HttpStatus.OK)
+  async oauthGeneric(
+    @Body() dto: OAuthLoginDto,
+    @Req() req: any
+  ) {
+    const provider = dto.provider || 'google';
+    const userAgent = req.headers['user-agent'];
+    const ipAddress = req.ip;
+    return this.authService.handleOAuth(provider, dto, userAgent, ipAddress);
   }
 
   @Post('sso/initiate')

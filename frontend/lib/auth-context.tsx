@@ -28,7 +28,11 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<any>;
+  oauthLogin: (
+    provider: 'google' | 'github',
+    payload: { email: string; fullName?: string; avatarUrl?: string; token?: string; code?: string }
+  ) => Promise<any>;
   register: (email: string, password: string, fullName?: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -38,6 +42,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   login: async () => {},
+  oauthLogin: async () => {},
   register: async () => {},
   logout: () => {},
   refreshUser: async () => {},
@@ -79,6 +84,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('yoyo_refresh_token', res.refreshToken);
     }
     await refreshUser();
+    return res;
+  };
+
+  const oauthLogin = async (
+    provider: 'google' | 'github',
+    payload: { email: string; fullName?: string; avatarUrl?: string; token?: string; code?: string }
+  ) => {
+    const res = await apiRequest(`/api/auth/oauth/${provider}`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    localStorage.setItem('yoyo_access_token', res.accessToken);
+    if (res.refreshToken) {
+      localStorage.setItem('yoyo_refresh_token', res.refreshToken);
+    }
+    await refreshUser();
+    return res;
   };
 
   const register = async (email: string, password: string, fullName?: string) => {
@@ -101,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, oauthLogin, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

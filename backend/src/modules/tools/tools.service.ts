@@ -1,5 +1,6 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, Optional } from '@nestjs/common';
 import { InferenceService } from '../inference/inference.service';
+import { PrismaService } from '../../database/prisma.service';
 
 export interface ToolDefinition {
   type: 'function';
@@ -37,7 +38,10 @@ export interface AgentRunResult {
 export class ToolsService {
   private readonly logger = new Logger(ToolsService.name);
 
-  constructor(private inferenceService: InferenceService) {}
+  constructor(
+    private inferenceService: InferenceService,
+    @Optional() private prisma?: PrismaService,
+  ) {}
 
   getToolDefinitions(): ToolDefinition[] {
     return [
@@ -129,7 +133,7 @@ export class ToolsService {
       case 'get_weather':
         return this.runWeather(args?.city, args?.unit);
       case 'db_query':
-        return this.runDbQuery(args?.table, args?.filter);
+        return await this.runDbQuery(args?.table, args?.filter);
       case 'web_search':
         return this.runWebSearch(args?.query);
       default:
@@ -174,45 +178,68 @@ export class ToolsService {
     };
   }
 
-  private runDbQuery(table: string, filter?: string) {
-    switch (table) {
-      case 'users':
-        return {
-          table: 'users',
-          totalUsers: 104230,
-          activeDevelopers: 98120,
-          tierDistribution: { Enterprise: '42%', Pro: '38%', Developer: '20%' },
-          queryFilter: filter || 'all',
-        };
-      case 'inferences':
-        return {
-          table: 'inferences',
-          dailyTotalInferences: 4829100,
-          p95LatencyMs: 38.4,
-          p99LatencyMs: 72.1,
-          avgTokensPerSecond: 184.2,
-          queryFilter: filter || 'latest_24h',
-        };
-      case 'revenue':
-        return {
-          table: 'revenue',
-          monthlyRecurringRevenueUsd: 284100.5,
-          activeBillingAccounts: 4820,
-          currency: 'USD',
-          queryFilter: filter || 'current_month',
-        };
-      case 'cluster_nodes':
-        return {
-          table: 'cluster_nodes',
-          totalWorkers: 12,
-          onlineWorkers: 12,
-          gpuUtilizationAvg: '74.2%',
-          totalAllocatedVramGb: 384,
-          queryFilter: filter || 'health=ONLINE',
-        };
-      default:
-        return { table, error: `Table '${table}' not found in analytical warehouse` };
+  private async runDbQuery(table: string, filter?: string) {
+    if (this.prisma) {
+      try {
+        switch (table) {
+          case 'users': {
+            const [totalUsers, activeKeys] = await Promise.all([
+              this.prisma.user.count(),
+              this.prisma.apiKey.count({ where: { isActive: true } }),
+            ]);
+            return {
+              table: 'users',
+              totalUsers,
+              activeApiKeys: activeKeys,
+              queryFilter: filter || 'all',
+            };
+          }
+          case 'inferences': {
+            const [totalInferences, sumTokens] = await Promise.all([
+              this.prisma.apiRequest.count(),
+              this.prisma.apiRequest.aggregate({ _sum: { totalTokens: true } }),
+            ]);
+            return {
+              table: 'inferences',
+              dailyTotalInferences: totalInferences,
+              totalTokens: sumTokens._sum.totalTokens || 0,
+              queryFilter: filter || 'latest_24h',
+            };
+          }
+          case 'revenue': {
+            const sumTokens = await this.prisma.apiRequest.aggregate({ _sum: { totalTokens: true } });
+            const tokens = sumTokens._sum.totalTokens || 0;
+            const estimatedRevenueUsd = Number(((Number(tokens) / 1000000) * 0.5).toFixed(2));
+            return {
+              table: 'revenue',
+              estimatedRevenueUsd,
+              currency: 'USD',
+              queryFilter: filter || 'current_month',
+            };
+          }
+          case 'cluster_nodes': {
+            const [totalWorkers, onlineWorkers] = await Promise.all([
+              this.prisma.modelWorker.count(),
+              this.prisma.modelWorker.count({ where: { status: 'ONLINE' } }),
+            ]);
+            return {
+              table: 'cluster_nodes',
+              totalWorkers,
+              onlineWorkers,
+              queryFilter: filter || 'health=ONLINE',
+            };
+          }
+        }
+      } catch (err: any) {
+        this.logger.warn(`runDbQuery live query failed: ${err.message}`);
+      }
     }
+
+    return {
+      table,
+      status: 'offline',
+      queryFilter: filter || 'all',
+    };
   }
 
   private runWebSearch(query: string) {
