@@ -19,8 +19,11 @@ import {
   Server,
   Workflow,
   Sparkles,
+  Menu,
+  X,
 } from 'lucide-react';
 import { YoyoLogo } from '@/components/ui/logo';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 type SectionId =
   | 'quickstart'
@@ -39,6 +42,7 @@ type SectionId =
 
 export default function DocsPage() {
   const [activeSection, setActiveSection] = useState<SectionId>('quickstart');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [sdkTab, setSdkTab] = useState<'python' | 'typescript'>('python');
   const [integrationTab, setIntegrationTab] = useState<'langchain' | 'llamaindex' | 'litellm' | 'cursor' | 'instructor'>('langchain');
@@ -183,46 +187,94 @@ print(completion.choices[0].message.content)`
   };
 
   return (
-    <div className="min-h-screen bg-[#07080C] text-zinc-100 flex flex-col font-sans selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#07080C] text-zinc-900 dark:text-zinc-100 flex flex-col font-sans selection:bg-cyan-500/30 transition-colors duration-200">
       {/* Top Header */}
-      <header className="border-b border-white/[0.08] bg-[#0A0B10]/90 backdrop-blur-md sticky top-0 z-50 px-6 lg:px-12 py-3.5 flex items-center justify-between">
-        <div className="flex items-center space-x-6">
+      <header className="border-b border-zinc-200 dark:border-white/[0.08] bg-white/90 dark:bg-[#0A0B10]/90 backdrop-blur-md sticky top-0 z-50 px-4 sm:px-6 lg:px-12 py-3.5 flex items-center justify-between transition-colors duration-200">
+        <div className="flex items-center space-x-3 sm:space-x-6">
           <Link href="/" className="flex items-center">
             <YoyoLogo size={28} showText={true} />
           </Link>
-          <span className="text-zinc-600">|</span>
-          <span className="text-xs font-medium text-zinc-400">
+          <span className="text-zinc-300 dark:text-zinc-700 hidden sm:inline">|</span>
+          <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400 hidden sm:inline">
             Enterprise Cloud API Documentation
           </span>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2.5 sm:space-x-4">
           <Link
             href="/status"
-            className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors flex items-center space-x-1.5"
+            className="text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors hidden sm:flex items-center space-x-1.5"
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400" />
             <span>Systems Normal</span>
           </Link>
           <Link
             href="/dashboard/playground"
-            className="text-xs text-zinc-400 hover:text-white transition-colors"
+            className="text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors hidden sm:inline-block"
           >
             Playground
           </Link>
+          <ThemeToggle />
           <Link
             href="/dashboard/keys"
-            className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 font-medium text-xs transition-all shadow-sm"
+            className="px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:hover:bg-zinc-100 dark:text-zinc-950 font-semibold text-xs transition-all shadow-sm"
           >
             Get API Key
           </Link>
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(!mobileNavOpen)}
+            aria-label="Toggle documentation navigation"
+            className="p-2 rounded-xl border border-zinc-200 dark:border-white/10 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white md:hidden transition-colors"
+          >
+            {mobileNavOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
         </div>
       </header>
+
+      {/* Mobile Documentation Navigation Drawer */}
+      {mobileNavOpen && (
+        <div className="md:hidden border-b border-zinc-200 dark:border-white/[0.08] bg-white/95 dark:bg-[#0A0B10]/95 backdrop-blur-xl px-4 py-4 space-y-4 shadow-xl z-40 max-h-[70vh] overflow-y-auto">
+          <div className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-mono">Documentation Sections</div>
+          <div className="grid grid-cols-1 gap-1 text-xs font-medium">
+            {[
+              { id: 'quickstart', label: 'Quickstart Guide' },
+              { id: 'auth', label: 'Authentication' },
+              { id: 'sdks', label: 'Official SDKs (Python / TS)' },
+              { id: 'integrations', label: 'Framework Integrations' },
+              { id: 'architecture', label: 'Cloud GPU Architecture' },
+              { id: 'chat', label: 'POST /v1/chat/completions' },
+              { id: 'tools', label: 'Function & Tool Calling' },
+              { id: 'embeddings', label: 'POST /v1/embeddings' },
+              { id: 'rerank', label: 'POST /v1/rerank' },
+              { id: 'models', label: 'GET /v1/models' },
+              { id: 'batches', label: 'Batch Inference API' },
+              { id: 'webhooks', label: 'Webhooks & HMAC' },
+              { id: 'errors', label: 'Errors & Status Codes' },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveSection(item.id as SectionId);
+                  setMobileNavOpen(false);
+                }}
+                className={`text-left px-3 py-2 rounded-xl transition-all ${
+                  activeSection === item.id
+                    ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold border border-cyan-500/20'
+                    : 'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/[0.04]'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Main layout */}
       <div className="flex-1 max-w-[1600px] w-full mx-auto flex">
         {/* Navigation Sidebar */}
-        <aside className="w-64 border-r border-white/[0.08] p-6 hidden md:block shrink-0 sticky top-[57px] h-[calc(100vh-57px)] overflow-y-auto">
+        <aside className="w-64 border-r border-zinc-200 dark:border-white/[0.08] p-6 hidden md:block shrink-0 sticky top-[57px] h-[calc(100vh-57px)] overflow-y-auto bg-white/40 dark:bg-transparent transition-colors duration-200">
           <div className="space-y-6 text-xs">
             <div>
               <span className="text-[11px] font-semibold text-zinc-400 block mb-2">Getting Started</span>
@@ -231,7 +283,7 @@ print(completion.choices[0].message.content)`
                   <button
                     onClick={() => setActiveSection('quickstart')}
                     className={`w-full text-left px-2.5 py-1.5 rounded transition-colors ${
-                      activeSection === 'quickstart' ? 'bg-cyan-500/10 text-cyan-400 font-semibold' : 'hover:text-white'
+                      activeSection === 'quickstart' ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                     }`}
                   >
                     Quickstart Guide
@@ -241,7 +293,7 @@ print(completion.choices[0].message.content)`
                   <button
                     onClick={() => setActiveSection('auth')}
                     className={`w-full text-left px-2.5 py-1.5 rounded transition-colors ${
-                      activeSection === 'auth' ? 'bg-cyan-500/10 text-cyan-400 font-semibold' : 'hover:text-white'
+                      activeSection === 'auth' ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                     }`}
                   >
                     Authentication
@@ -257,7 +309,7 @@ print(completion.choices[0].message.content)`
                   <button
                     onClick={() => setActiveSection('sdks')}
                     className={`w-full text-left px-2.5 py-1.5 rounded transition-colors ${
-                      activeSection === 'sdks' ? 'bg-cyan-500/10 text-cyan-400 font-bold' : 'hover:text-white'
+                      activeSection === 'sdks' ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                     }`}
                   >
                     Official SDKs (Python / TS)
@@ -267,7 +319,7 @@ print(completion.choices[0].message.content)`
                   <button
                     onClick={() => setActiveSection('integrations')}
                     className={`w-full text-left px-2.5 py-1.5 rounded transition-colors ${
-                      activeSection === 'integrations' ? 'bg-cyan-500/10 text-cyan-400 font-bold' : 'hover:text-white'
+                      activeSection === 'integrations' ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                     }`}
                   >
                     Framework Integrations
@@ -277,7 +329,7 @@ print(completion.choices[0].message.content)`
                   <button
                     onClick={() => setActiveSection('architecture')}
                     className={`w-full text-left px-2.5 py-1.5 rounded transition-colors ${
-                      activeSection === 'architecture' ? 'bg-cyan-500/10 text-cyan-400 font-bold' : 'hover:text-white'
+                      activeSection === 'architecture' ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                     }`}
                   >
                     Cloud GPU Architecture & SLA
@@ -293,7 +345,7 @@ print(completion.choices[0].message.content)`
                   <button
                     onClick={() => setActiveSection('chat')}
                     className={`w-full text-left px-2.5 py-1.5 rounded transition-colors ${
-                      activeSection === 'chat' ? 'bg-cyan-500/10 text-cyan-400 font-semibold' : 'hover:text-white'
+                      activeSection === 'chat' ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                     }`}
                   >
                     POST /v1/chat/completions
@@ -303,7 +355,7 @@ print(completion.choices[0].message.content)`
                   <button
                     onClick={() => setActiveSection('tools')}
                     className={`w-full text-left px-2.5 py-1.5 rounded transition-colors ${
-                      activeSection === 'tools' ? 'bg-cyan-500/10 text-cyan-400 font-semibold' : 'hover:text-white'
+                      activeSection === 'tools' ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                     }`}
                   >
                     Function & Tool Calling
@@ -313,7 +365,7 @@ print(completion.choices[0].message.content)`
                   <button
                     onClick={() => setActiveSection('embeddings')}
                     className={`w-full text-left px-2.5 py-1.5 rounded transition-colors ${
-                      activeSection === 'embeddings' ? 'bg-cyan-500/10 text-cyan-400 font-semibold' : 'hover:text-white'
+                      activeSection === 'embeddings' ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                     }`}
                   >
                     POST /v1/embeddings
@@ -323,7 +375,7 @@ print(completion.choices[0].message.content)`
                   <button
                     onClick={() => setActiveSection('rerank')}
                     className={`w-full text-left px-2.5 py-1.5 rounded transition-colors ${
-                      activeSection === 'rerank' ? 'bg-cyan-500/10 text-cyan-400 font-semibold' : 'hover:text-white'
+                      activeSection === 'rerank' ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                     }`}
                   >
                     POST /v1/rerank
@@ -333,7 +385,7 @@ print(completion.choices[0].message.content)`
                   <button
                     onClick={() => setActiveSection('models')}
                     className={`w-full text-left px-2.5 py-1.5 rounded transition-colors ${
-                      activeSection === 'models' ? 'bg-cyan-500/10 text-cyan-400 font-semibold' : 'hover:text-white'
+                      activeSection === 'models' ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                     }`}
                   >
                     GET /v1/models
@@ -349,7 +401,7 @@ print(completion.choices[0].message.content)`
                   <button
                     onClick={() => setActiveSection('batches')}
                     className={`w-full text-left px-2.5 py-1.5 rounded transition-colors ${
-                      activeSection === 'batches' ? 'bg-cyan-500/10 text-cyan-400 font-semibold' : 'hover:text-white'
+                      activeSection === 'batches' ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                     }`}
                   >
                     Batch API (50% Off)
@@ -359,7 +411,7 @@ print(completion.choices[0].message.content)`
                   <button
                     onClick={() => setActiveSection('webhooks')}
                     className={`w-full text-left px-2.5 py-1.5 rounded transition-colors ${
-                      activeSection === 'webhooks' ? 'bg-cyan-500/10 text-cyan-400 font-semibold' : 'hover:text-white'
+                      activeSection === 'webhooks' ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                     }`}
                   >
                     Webhooks & HMAC Signatures
@@ -375,7 +427,7 @@ print(completion.choices[0].message.content)`
                   <button
                     onClick={() => setActiveSection('errors')}
                     className={`w-full text-left px-2.5 py-1.5 rounded transition-colors ${
-                      activeSection === 'errors' ? 'bg-cyan-500/10 text-cyan-400 font-semibold' : 'hover:text-white'
+                      activeSection === 'errors' ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-bold' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white'
                     }`}
                   >
                     Errors & Status Codes
@@ -394,31 +446,31 @@ print(completion.choices[0].message.content)`
             <div className="space-y-8">
               <div>
                 <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Getting Started</span>
-                <h1 className="text-3xl font-black text-white mt-1">Quickstart Guide</h1>
-                <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
+                <h1 className="text-3xl font-black text-zinc-950 dark:text-white mt-1">Quickstart Guide</h1>
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   YOYO provides fully OpenAI-compliant HTTP endpoints backed by dedicated NVIDIA H100 SXM5 and A100 80GB cloud GPU clusters. You can use standard client SDKs in Python, Node.js, Go, or cURL without modifying your application logic.
                 </p>
               </div>
 
               {/* Step 1 */}
               <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                <h3 className="text-base font-bold text-zinc-950 dark:text-white flex items-center space-x-2">
                   <span className="w-5 h-5 rounded-full bg-cyan-400 text-black text-xs font-mono font-bold flex items-center justify-center">1</span>
                   <span>Obtain an API Key</span>
                 </h3>
-                <p className="text-xs text-zinc-400 leading-relaxed">
+                <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                   Log in to your developer console, navigate to <Link href="/dashboard/keys" className="text-cyan-400 underline">API Keys</Link>, and click <strong>Create New Key</strong>. You will receive a secret key in the format <code className="text-zinc-200 bg-white/[0.06] px-1.5 py-0.5 rounded font-mono">sk_live_...</code>.
                 </p>
               </div>
 
               {/* Step 2 */}
               <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                <h3 className="text-base font-bold text-zinc-950 dark:text-white flex items-center space-x-2">
                   <span className="w-5 h-5 rounded-full bg-cyan-400 text-black text-xs font-mono font-bold flex items-center justify-center">2</span>
                   <span>Direct OpenAI Drop-In (Python)</span>
                 </h3>
                 
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                     <span>Python Example (openai SDK)</span>
                     <button
@@ -450,12 +502,12 @@ for chunk in response:
 
               {/* Step 3 */}
               <div className="space-y-3">
-                <h3 className="text-base font-bold text-white flex items-center space-x-2">
+                <h3 className="text-base font-bold text-zinc-950 dark:text-white flex items-center space-x-2">
                   <span className="w-5 h-5 rounded-full bg-cyan-400 text-black text-xs font-mono font-bold flex items-center justify-center">3</span>
                   <span>cURL Command Line Request</span>
                 </h3>
 
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                     <span>cURL (POSIX / Bash)</span>
                     <button
@@ -485,8 +537,8 @@ for chunk in response:
             <div className="space-y-8">
               <div>
                 <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Security & Authentication</span>
-                <h1 className="text-3xl font-black text-white mt-1">Authentication</h1>
-                <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
+                <h1 className="text-3xl font-black text-zinc-950 dark:text-white mt-1">Authentication</h1>
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   Every request made to YOYO endpoints must include an API key in the HTTP <code className="text-zinc-200 font-mono">Authorization</code> header as a Bearer token.
                 </p>
               </div>
@@ -502,7 +554,7 @@ for chunk in response:
                     <Shield className="w-4 h-4 text-cyan-400" />
                     <span>SHA-256 Key Hashing</span>
                   </h4>
-                  <p className="text-xs text-zinc-400 leading-relaxed">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     Keys are hashed with SHA-256 before storage in PostgreSQL. The raw secret is only displayed once at the moment of creation.
                   </p>
                 </div>
@@ -512,7 +564,7 @@ for chunk in response:
                     <Zap className="w-4 h-4 text-amber-400" />
                     <span>Instant Key Revocation</span>
                   </h4>
-                  <p className="text-xs text-zinc-400 leading-relaxed">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     If an API key is leaked or compromised, revoke it immediately from the <Link href="/dashboard/keys" className="text-cyan-400 underline">API Keys Dashboard</Link>. Revocation takes effect instantly across all edge nodes.
                   </p>
                 </div>
@@ -525,8 +577,8 @@ for chunk in response:
             <div className="space-y-8">
               <div>
                 <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Client SDKs</span>
-                <h1 className="text-3xl font-black text-white mt-1">Official Client SDKs</h1>
-                <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
+                <h1 className="text-3xl font-black text-zinc-950 dark:text-white mt-1">Official Client SDKs</h1>
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   First-party, zero-bloat client libraries for Python and TypeScript with native typing, streaming support, and comprehensive exception hierarchies.
                 </p>
               </div>
@@ -558,7 +610,7 @@ for chunk in response:
                   {/* Installation */}
                   <div className="space-y-2">
                     <span className="text-xs font-semibold text-zinc-300">1. Installation</span>
-                    <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] p-4 flex items-center justify-between font-mono text-xs">
+                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4 flex items-center justify-between font-mono text-xs">
                       <span className="text-emerald-400">pip install yoyo-ai</span>
                       <button onClick={() => copy('pip install yoyo-ai', 'pip-install')} className="text-zinc-400 hover:text-white">
                         {copiedCode === 'pip-install' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -569,7 +621,7 @@ for chunk in response:
                   {/* Synchronous & Streaming */}
                   <div className="space-y-2">
                     <span className="text-xs font-semibold text-zinc-300">2. Synchronous Streaming Client</span>
-                    <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                       <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                         <span>Python (Synchronous)</span>
                         <button
@@ -609,7 +661,7 @@ except YoyoError as e:
                   {/* Asynchronous FastAPI */}
                   <div className="space-y-2">
                     <span className="text-xs font-semibold text-zinc-300">3. Asynchronous Client (FastAPI / asyncio)</span>
-                    <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                       <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                         <span>Python (AsyncYoyo)</span>
                         <button
@@ -645,7 +697,7 @@ asyncio.run(run_async_inference())`}</code>
                   {/* Installation */}
                   <div className="space-y-2">
                     <span className="text-xs font-semibold text-zinc-300">1. Installation</span>
-                    <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] p-4 flex items-center justify-between font-mono text-xs">
+                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4 flex items-center justify-between font-mono text-xs">
                       <span className="text-cyan-400">npm install @yoyo-ai/sdk</span>
                       <button onClick={() => copy('npm install @yoyo-ai/sdk', 'npm-install')} className="text-zinc-400 hover:text-white">
                         {copiedCode === 'npm-install' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -656,7 +708,7 @@ asyncio.run(run_async_inference())`}</code>
                   {/* Streaming In Node/Next.js */}
                   <div className="space-y-2">
                     <span className="text-xs font-semibold text-zinc-300">2. High-Throughput Async Streaming</span>
-                    <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                       <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                         <span>TypeScript / Node.js</span>
                         <button
@@ -696,7 +748,7 @@ main().catch(console.error);`}</code>
                   {/* Embeddings in TS */}
                   <div className="space-y-2">
                     <span className="text-xs font-semibold text-zinc-300">3. Vector Embeddings Generation</span>
-                    <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                    <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                       <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                         <span>TypeScript (Embeddings)</span>
                         <button
@@ -731,8 +783,8 @@ console.log('Embedding vector length:', result.data[0].embedding.length);
             <div className="space-y-8">
               <div>
                 <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Framework Integrations</span>
-                <h1 className="text-3xl font-black text-white mt-1">Framework Integrations</h1>
-                <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
+                <h1 className="text-3xl font-black text-zinc-950 dark:text-white mt-1">Framework Integrations</h1>
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   Because YOYO enforces 100% strict adherence to the OpenAI wire protocol, all major modern LLM orchestration frameworks, agents, and IDE tools work out-of-the-box.
                 </p>
               </div>
@@ -763,7 +815,7 @@ console.log('Embedding vector length:', result.data[0].embedding.length);
                   <p className="text-xs text-zinc-400">
                     Use <code className="text-cyan-400 font-mono">ChatOpenAI</code> from <code className="text-zinc-200 font-mono">langchain_openai</code>, pointing <code className="text-zinc-200 font-mono">base_url</code> to <code className="text-cyan-400 font-mono">https://api.yoyo.ai/v1</code>:
                   </p>
-                  <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                     <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                       <span>Python (LangChain)</span>
                       <button
@@ -802,7 +854,7 @@ print(response.content)`}</code>
                   <p className="text-xs text-zinc-400">
                     Use <code className="text-cyan-400 font-mono">OpenAI</code> from <code className="text-zinc-200 font-mono">llama_index.llms.openai</code>:
                   </p>
-                  <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                     <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                       <span>Python (LlamaIndex)</span>
                       <button
@@ -835,7 +887,7 @@ print(response.text)`}</code>
                   <p className="text-xs text-zinc-400">
                     Route requests through <code className="text-cyan-400 font-mono">litellm</code> using prefix <code className="text-zinc-200 font-mono">openai/&lt;model&gt;</code> and YOYO's <code className="text-zinc-200 font-mono">api_base</code>:
                   </p>
-                  <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                     <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                       <span>Python (LiteLLM)</span>
                       <button
@@ -864,10 +916,10 @@ print(response.choices[0].message.content)`}</code>
               {/* Cursor IDE */}
               {integrationTab === 'cursor' && (
                 <div className="space-y-4">
-                  <p className="text-xs text-zinc-400 leading-relaxed">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     Configure Cursor IDE or VS Code Continue extension to use your private YOYO cloud models for coding assistance, completions, and edits:
                   </p>
-                  <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] p-6 space-y-4">
+                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-6 space-y-4">
                     <div className="space-y-2 text-xs font-mono">
                       <div className="flex items-center space-x-2">
                         <span className="w-4 h-4 rounded bg-cyan-400/20 text-cyan-400 font-bold flex items-center justify-center text-[10px]">1</span>
@@ -900,7 +952,7 @@ print(response.choices[0].message.content)`}</code>
                   <p className="text-xs text-zinc-400">
                     Extract strongly-typed JSON data matching Pydantic schemas using <code className="text-cyan-400 font-mono">instructor</code>:
                   </p>
-                  <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                  <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                     <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                       <span>Python (Instructor + Pydantic)</span>
                       <button
@@ -950,8 +1002,8 @@ print(report.model_dump_json(indent=2))`}</code>
             <div className="space-y-8">
               <div>
                 <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Architecture & SLA</span>
-                <h1 className="text-3xl font-black text-white mt-1">Cloud GPU Architecture</h1>
-                <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
+                <h1 className="text-3xl font-black text-zinc-950 dark:text-white mt-1">Cloud GPU Architecture</h1>
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   YOYO is engineered as an enterprise-grade cloud inference fabric. Every request enters through an ultra-low latency Fastify Edge Gateway and is dynamically dispatched across dedicated NVIDIA H100 SXM5 and A100 80GB clusters.
                 </p>
               </div>
@@ -963,7 +1015,7 @@ print(report.model_dump_json(indent=2))`}</code>
                     <Cpu className="w-4 h-4" />
                     <span className="text-xs font-semibold text-zinc-200">H100 SXM5 Clusters</span>
                   </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     3.35 TB/s HBM3 memory bandwidth with 4th Gen Tensor Cores delivering sub-25ms Time-to-First-Token (TTFT) on 70B models.
                   </p>
                 </div>
@@ -973,7 +1025,7 @@ print(report.model_dump_json(indent=2))`}</code>
                     <Zap className="w-4 h-4" />
                     <span className="text-xs font-semibold text-zinc-200">PagedAttention</span>
                   </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     vLLM continuous batching and virtual memory allocation prevent KV cache memory fragmentation, achieving 100% compute utilization.
                   </p>
                 </div>
@@ -983,7 +1035,7 @@ print(report.model_dump_json(indent=2))`}</code>
                     <Server className="w-4 h-4" />
                     <span className="text-xs font-semibold text-zinc-200">Least-Connections</span>
                   </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     Dynamic dispatch routes queries to the worker with the fewest active streams. Instant automatic failover re-routes dropped connections in &lt;50ms.
                   </p>
                 </div>
@@ -1037,7 +1089,7 @@ print(report.model_dump_json(indent=2))`}</code>
                   The YOYO cloud inference platform provides enterprise Kubernetes manifests managed via Kustomize in the <code className="text-zinc-200">k8s/</code> directory. Deploy the entire stack to any CNCF-certified cluster (EKS, GKE, AKS, or on-prem bare-metal) with a single declarative command:
                 </p>
 
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06] flex items-center justify-between text-xs font-mono text-zinc-400">
                     <span>Declarative Kustomize Deployment</span>
                     <button
@@ -1119,7 +1171,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                       <Zap className="w-4 h-4" />
                       <span className="text-xs font-semibold text-zinc-200">Horizontal Pod Autoscaler (HPA)</span>
                     </div>
-                    <p className="text-xs text-zinc-400 leading-relaxed">
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                       Monitors real-time API Gateway load. Scales between <span className="text-emerald-400 font-bold">3 and 25 replicas</span> dynamically when average CPU exceeds <span className="text-zinc-200 font-mono">70%</span> or average Memory exceeds <span className="text-zinc-200 font-mono">80%</span>.
                     </p>
                   </div>
@@ -1129,7 +1181,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                       <Shield className="w-4 h-4" />
                       <span className="text-xs font-semibold text-zinc-200">Zero-Latency SSE Ingress Configuration</span>
                     </div>
-                    <p className="text-xs text-zinc-400 leading-relaxed">
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                       Configured with <code className="text-zinc-200">proxy-buffering: &quot;off&quot;</code> and <code className="text-zinc-200">proxy-read-timeout: &quot;3600&quot;</code> to eliminate intermediary NGINX socket buffers, guaranteeing instantaneous token stream delivery to clients.
                     </p>
                   </div>
@@ -1149,7 +1201,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
                     <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">1. CPU / Mock Mode</span>
-                    <p className="text-xs text-zinc-400 leading-relaxed">
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                       Spawns PostgreSQL, Redis, Backend, and Frontend. Instant boot with simulated foundation model tokens.
                     </p>
                     <code className="text-[11px] block text-zinc-300 bg-white/[0.04] p-2 rounded font-mono">
@@ -1159,7 +1211,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
 
                   <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
                     <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">2. Ollama GPU Profile</span>
-                    <p className="text-xs text-zinc-400 leading-relaxed">
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                       Mounts local NVIDIA GPUs with container passthrough and initializes Ollama foundation model workers.
                     </p>
                     <code className="text-[11px] block text-zinc-300 bg-white/[0.04] p-2 rounded font-mono">
@@ -1169,7 +1221,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
 
                   <div className="p-4 rounded-xl border border-white/[0.08] bg-[#0A0B10] space-y-2">
                     <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">3. vLLM High-Throughput</span>
-                    <p className="text-xs text-zinc-400 leading-relaxed">
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
                       High-throughput continuous batching and PagedAttention with Qwen and Llama foundation models on NVIDIA GPUs.
                     </p>
                     <code className="text-[11px] block text-zinc-300 bg-white/[0.04] p-2 rounded font-mono">
@@ -1190,7 +1242,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                   <span>/v1/chat/completions</span>
                 </div>
                 <h1 className="text-3xl font-black text-white">Chat Completions</h1>
-                <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   Generate streaming or non-streaming responses from hosted foundation models with full OpenAI wire-protocol parity.
                 </p>
               </div>
@@ -1419,7 +1471,7 @@ kubectl get pods,hpa,ingress -n yoyo-system`}</code>
                   <span>OpenAI Tool Calling Protocol</span>
                 </div>
                 <h1 className="text-3xl font-black text-white">Function & Tool Calling</h1>
-                <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   Connect open foundation models to external APIs, databases, and custom business logic. Models hosted on YOYO (such as <code className="text-zinc-200">qwen-2.5-coder-32b</code> and <code className="text-zinc-200">llama-3.3-70b</code>) natively output structured <code className="text-zinc-200">tool_calls</code> matching OpenAI wire specifications.
                 </p>
               </div>
@@ -1633,25 +1685,25 @@ if msg.tool_calls:
                   <span>/v1/embeddings</span>
                 </div>
                 <h1 className="text-3xl font-black text-white">Embeddings</h1>
-                <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   Generate high-dimensional vector representations of text for semantic search and retrieval-augmented generation (RAG).
                 </p>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Target Model</span>
                   <span className="text-cyan-400 font-bold font-mono text-xs">nomic-embed-text</span>
                 </div>
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Embedding Dimensions</span>
                   <span className="text-emerald-400 font-bold font-mono text-xs">768 floats</span>
                 </div>
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Max Context</span>
                   <span className="text-zinc-200 font-bold font-mono text-xs">8,192 tokens</span>
                 </div>
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Pricing</span>
                   <span className="text-purple-400 font-bold font-mono text-xs">$0.02 / 1M tokens</span>
                 </div>
@@ -1695,7 +1747,7 @@ if msg.tool_calls:
               </div>
 
               {/* Embeddings Code Tabs */}
-              <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+              <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06]">
                   <div className="flex items-center space-x-2">
                     {(['curl', 'python', 'typescript'] as const).map((tab) => (
@@ -1785,26 +1837,26 @@ console.log('Embedding length:', response.data[0].embedding.length);
                   <span>/v1/rerank</span>
                 </div>
                 <h1 className="text-3xl font-black text-white">Semantic Reranker</h1>
-                <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   Two-stage retrieval reranking using deep cross-encoders (<code className="text-zinc-200">bge-reranker-large</code>). Improves search and RAG relevance by up to 35% over vector cosine similarity alone.
                 </p>
               </div>
 
               {/* Rerank Specs */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Resident Model</span>
                   <span className="text-cyan-400 font-bold font-mono text-xs">bge-reranker-large</span>
                 </div>
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">p95 Latency</span>
                   <span className="text-emerald-400 font-bold font-mono text-xs">&lt; 15ms</span>
                 </div>
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Max Documents</span>
                   <span className="text-zinc-200 font-bold font-mono text-xs">1,000 / req</span>
                 </div>
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] p-4">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4">
                   <span className="text-[11px] text-zinc-500 block mb-1">Pricing</span>
                   <span className="text-purple-400 font-bold font-mono text-xs">$0.05 / 1k queries</span>
                 </div>
@@ -1871,7 +1923,7 @@ console.log('Embedding length:', response.data[0].embedding.length);
               </div>
 
               {/* Rerank Code Tabs */}
-              <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+              <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-[#0D0F16] border-b border-white/[0.06]">
                   <div className="flex items-center space-x-2">
                     {(['curl', 'python', 'typescript'] as const).map((tab) => (
@@ -1975,7 +2027,7 @@ response.results.forEach((res) => {
               {/* Rerank Response Schema */}
               <div className="space-y-3">
                 <h3 className="text-base font-semibold text-white">Response Format</h3>
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] p-4 text-xs font-mono text-zinc-300 overflow-x-auto">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4 text-xs font-mono text-zinc-300 overflow-x-auto">
                   <pre>{`{
   "id": "rerank-c89b2f41",
   "results": [
@@ -2014,7 +2066,7 @@ response.results.forEach((res) => {
                     <span>/v1/models</span>
                   </div>
                   <h1 className="text-3xl font-black text-white">Available Foundation Models</h1>
-                  <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
+                  <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                     Returns all resident open-weights models served across YOYO cloud GPU clusters. Drop-in compatible with standard OpenAI SDK <code className="text-zinc-200">client.models.list()</code>.
                   </p>
                 </div>
@@ -2180,7 +2232,7 @@ response.results.forEach((res) => {
                     50% Discount (24h SLA)
                   </span>
                 </div>
-                <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   Execute non-latency-sensitive workloads (evaluations, synthetic data generation, summarization) asynchronously across cloud GPU clusters at 50% of the standard real-time token cost.
                 </p>
               </div>
@@ -2202,7 +2254,7 @@ response.results.forEach((res) => {
                 <h3 className="text-base font-semibold text-white">2. Submit & Monitor Batch Jobs</h3>
                 
                 {/* Python SDK */}
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2 border-b border-white/[0.06] bg-[#0D0F16] flex items-center justify-between">
                     <span className="text-xs font-mono font-bold text-zinc-300">Python SDK</span>
                     <button
@@ -2267,7 +2319,7 @@ if status["status"] == "COMPLETED":
                 </div>
 
                 {/* cURL */}
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2 border-b border-white/[0.06] bg-[#0D0F16] flex items-center justify-between">
                     <span className="text-xs font-mono font-bold text-zinc-300">cURL REST API</span>
                     <button
@@ -2315,8 +2367,8 @@ curl https://api.yoyo.ai/v1/batches \\
             <div className="space-y-8">
               <div>
                 <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">Webhooks</span>
-                <h1 className="text-3xl font-black text-white mt-1">Webhooks & HMAC Verification</h1>
-                <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
+                <h1 className="text-3xl font-black text-zinc-950 dark:text-white mt-1">Webhooks & HMAC Verification</h1>
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   Receive cryptographically signed HTTP POST notifications for batch completions, usage limit thresholds, and platform lifecycle events.
                 </p>
               </div>
@@ -2340,7 +2392,7 @@ curl https://api.yoyo.ai/v1/batches \\
                 <h3 className="text-base font-semibold text-white">Signature Verification Implementations</h3>
 
                 {/* Python Verification */}
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2 border-b border-white/[0.06] bg-[#0D0F16] flex items-center justify-between">
                     <span className="text-xs font-mono font-bold text-zinc-300">Python (FastAPI / Flask)</span>
                     <button
@@ -2396,7 +2448,7 @@ def verify_yoyo_signature(payload_bytes: bytes, sig_header: str, secret: str, to
                 </div>
 
                 {/* Node.js Verification */}
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] overflow-hidden">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm overflow-hidden">
                   <div className="px-4 py-2 border-b border-white/[0.06] bg-[#0D0F16] flex items-center justify-between">
                     <span className="text-xs font-mono font-bold text-zinc-300">Node.js (Express / Fastify)</span>
                     <button
@@ -2444,8 +2496,8 @@ export function verifyYoyoSignature(rawBody: string | Buffer, sigHeader: string,
             <div className="space-y-8">
               <div>
                 <span className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">API Reference</span>
-                <h1 className="text-3xl font-black text-white mt-1">HTTP Status Codes & Errors</h1>
-                <p className="text-zinc-400 text-sm mt-2 leading-relaxed">
+                <h1 className="text-3xl font-black text-zinc-950 dark:text-white mt-1">HTTP Status Codes & Errors</h1>
+                <p className="text-zinc-600 dark:text-zinc-400 text-sm mt-2 leading-relaxed">
                   Standard HTTP response codes returned by the YOYO Fastify API Gateway.
                 </p>
               </div>
@@ -2510,7 +2562,7 @@ export function verifyYoyoSignature(rawBody: string | Buffer, sigHeader: string,
                 <p className="text-xs text-zinc-400">
                   All 4xx and 5xx responses emit standard OpenAI wire-protocol error objects:
                 </p>
-                <div className="rounded-xl border border-white/[0.08] bg-[#0A0B10] p-4 text-xs font-mono text-zinc-300 overflow-x-auto">
+                <div className="rounded-xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-[#0A0B10] shadow-sm p-4 text-xs font-mono text-zinc-300 overflow-x-auto">
                   <pre>{`{
   "error": {
     "message": "Token rate limit exceeded for key. Used: 62400 / 60000 TPM. Reset in 42s.",

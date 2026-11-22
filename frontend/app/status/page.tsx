@@ -136,14 +136,14 @@ export default function StatusPage() {
             <button
               onClick={fetchStatus}
               disabled={refreshing}
-              className="text-xs text-zinc-400 hover:text-white flex items-center space-x-1.5 transition-colors"
+              className="text-xs text-zinc-400 hover:text-foreground flex items-center space-x-1.5 transition-colors"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin text-cyan-400' : ''}`} />
               <span className="hidden sm:inline">Refresh</span>
             </button>
             <Link
               href="/docs"
-              className="text-xs text-zinc-400 hover:text-white transition-colors"
+              className="text-xs text-zinc-400 hover:text-foreground transition-colors"
             >
               Documentation
             </Link>
@@ -182,7 +182,7 @@ export default function StatusPage() {
               )}
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
                 {isHealthy
                   ? 'All Systems Normal'
                   : 'Platform Experiencing Degraded Latency'}
@@ -250,7 +250,7 @@ export default function StatusPage() {
         <div className="p-6 rounded-3xl bg-[#0D0E16] border border-white/[0.08] space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-bold text-white text-base">Historical Platform Availability</h2>
+              <h2 className="font-bold text-foreground text-base">Historical Platform Availability</h2>
               <p className="text-xs text-zinc-400 mt-0.5">Continuous automated synthetic health checks</p>
             </div>
             <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
@@ -278,7 +278,7 @@ export default function StatusPage() {
         {/* Core Infrastructure Services */}
         <div className="rounded-3xl bg-[#0D0E16] border border-white/[0.08] overflow-hidden">
           <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between">
-            <h2 className="font-bold text-white text-base">Core Services & Endpoints</h2>
+            <h2 className="font-bold text-foreground text-base">Core Services & Endpoints</h2>
             <span className="text-xs text-zinc-400 font-mono">6 monitored components</span>
           </div>
 
@@ -315,7 +315,7 @@ export default function StatusPage() {
         <div className="rounded-3xl bg-[#0D0E16] border border-white/[0.08] overflow-hidden">
           <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between">
             <div>
-              <h2 className="font-bold text-white text-base">Live Model Inference Latency</h2>
+              <h2 className="font-bold text-foreground text-base">Live Model Inference Latency</h2>
               <p className="text-xs text-zinc-400 mt-0.5">
                 Current Time-To-First-Token (TTFT) and throughput across cloud GPU clusters
               </p>
@@ -362,7 +362,7 @@ export default function StatusPage() {
 
         {/* Incident History */}
         <div className="p-6 rounded-3xl bg-[#0D0E16] border border-white/[0.08] space-y-4">
-          <h2 className="font-bold text-white text-base">Past Incidents & Maintenance</h2>
+          <h2 className="font-bold text-foreground text-base">Past Incidents & Maintenance</h2>
           <div className="p-8 text-center text-zinc-500 text-xs border border-white/[0.04] rounded-2xl bg-[#090A10]">
             <CheckCircle2 className="w-8 h-8 text-emerald-500/40 mx-auto mb-2" />
             <p className="font-semibold text-zinc-300">All systems operating normally.</p>

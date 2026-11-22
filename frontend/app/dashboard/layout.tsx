@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { SidebarProvider } from '@/lib/sidebar-context';
 import { Sidebar } from '@/components/sidebar';
 import { Navbar } from '@/components/navbar';
 
@@ -34,13 +35,14 @@ export default function DashboardLayout({
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <Navbar />
-        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-background text-foreground transition-colors duration-200">
+        <Sidebar />
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <Navbar />
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">{children}</main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
-

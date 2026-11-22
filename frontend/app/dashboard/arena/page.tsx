@@ -793,7 +793,7 @@ export default function ArenaPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-white tracking-tight">Model Benchmark Arena</h1>
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">Model Benchmark Arena</h1>
                 <span className="px-2 py-0.5 text-xs font-semibold uppercase tracking-wider rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
                   Head-to-Head
                 </span>
@@ -963,7 +963,7 @@ export default function ArenaPage() {
                 type="button"
                 onClick={() => copyToClipboard(resultA.content, true)}
                 disabled={!resultA.content}
-                className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition-colors disabled:opacity-30"
+                className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-foreground transition-colors disabled:opacity-30"
                 title="Copy Model A Output"
               >
                 {copiedA ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -1076,7 +1076,7 @@ export default function ArenaPage() {
                 type="button"
                 onClick={() => copyToClipboard(resultB.content, false)}
                 disabled={!resultB.content}
-                className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition-colors disabled:opacity-30"
+                className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-foreground transition-colors disabled:opacity-30"
                 title="Copy Model B Output"
               >
                 {copiedB ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -1249,7 +1249,7 @@ export default function ArenaPage() {
             <button
               type="button"
               onClick={handleRemoveImage}
-              className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="p-1 rounded-lg text-slate-400 hover:text-foreground hover:bg-slate-800 transition-colors"
               title="Remove Image"
             >
               <X className="w-4 h-4" />
@@ -1293,7 +1293,7 @@ export default function ArenaPage() {
               className={`p-2 rounded-lg border transition-all flex items-center justify-center ${
                 attachedImage
                   ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border-slate-700'
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-foreground border-slate-700'
               }`}
               title="Attach image for vision comparison"
             >
@@ -1323,7 +1323,7 @@ export default function ArenaPage() {
               type="button"
               onClick={handleReset}
               disabled={isBenchmarking}
-              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors flex items-center justify-center"
+              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-foreground transition-colors flex items-center justify-center"
               title="Reset Benchmark State"
             >
               <RotateCcw className="w-4 h-4" />
@@ -1337,7 +1337,7 @@ export default function ArenaPage() {
           {/* Suite Selection Cards */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-base font-semibold text-white flex items-center gap-2">
+              <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-amber-400" />
                 Select Golden Benchmark Suite
               </h2>
@@ -1471,7 +1471,7 @@ export default function ArenaPage() {
                 <Loader2 className="w-6 h-6 animate-spin" />
               </div>
               <div className="flex-1 text-center md:text-left">
-                <h4 className="font-semibold text-white text-base">
+                <h4 className="font-semibold text-foreground text-base">
                   Automated LLM-as-a-Judge Benchmark In Progress
                 </h4>
                 <p className="text-xs text-slate-400 mt-1">
@@ -1489,7 +1489,7 @@ export default function ArenaPage() {
               <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-4">
                 <Scale className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-semibold text-white mb-2">Automated Multi-Criterion Evaluation Engine</h3>
+              <h3 className="text-base font-semibold text-foreground mb-2">Automated Multi-Criterion Evaluation Engine</h3>
               <p className="text-sm text-slate-400 max-w-lg mb-6">
                 Evaluate models against standardized test suites automatically using an LLM-as-a-Judge.
                 The judge grades accuracy, reasoning depth, and instruction adherence to eliminate human evaluation bias.
@@ -1534,7 +1534,7 @@ export default function ArenaPage() {
                         Referee: {evalResult.judgeModel}
                       </span>
                     </div>
-                    <h3 className="text-2xl font-bold text-white mt-1">
+                    <h3 className="text-2xl font-bold text-foreground mt-1">
                       {evalResult.summary.winsA > evalResult.summary.winsB
                         ? `🏆 ${evalResult.modelA} Victorious`
                         : evalResult.summary.winsB > evalResult.summary.winsA
@@ -1645,7 +1645,7 @@ export default function ArenaPage() {
 
               {/* Criterion Radar Breakdown Bars */}
               <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl">
-                <h4 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-amber-400" />
                   Multi-Criterion Rubric Score Comparison
                 </h4>
@@ -1744,7 +1744,7 @@ export default function ArenaPage() {
 
               {/* Sample-by-Sample Breakdown Accordion */}
               <div>
-                <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                   <Scale className="w-4 h-4 text-amber-400" />
                   Individual Benchmark Cases & Referee Verdicts
                 </h4>
@@ -1878,7 +1878,7 @@ export default function ArenaPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <ShieldAlert className="w-5 h-5 text-amber-400" />
-                  <h2 className="text-xl font-bold text-white tracking-tight">
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">
                     Pre-Deployment CI/CD Quality Gatekeeper & Regression Detector
                   </h2>
                 </div>
@@ -1906,7 +1906,7 @@ export default function ArenaPage() {
           <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg space-y-6">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <Sliders className="w-4 h-4 text-amber-400" />
                   Quality Gate Configuration & Threshold Constraints
                 </h3>
@@ -2260,7 +2260,7 @@ export default function ArenaPage() {
           <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <TrendingDown className="w-4 h-4 text-amber-400" />
                   Model Degradation & Trajectory Drift Radar
                 </h3>
@@ -2379,7 +2379,7 @@ export default function ArenaPage() {
           <div id="cicd-snippets-section" className="p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-lg space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <FileCode className="w-4 h-4 text-amber-400" />
                   Production CI/CD Automation Snippets
                 </h3>
@@ -2514,7 +2514,7 @@ console.log('Model approved for production deployment!');`}
                     toast('Snippet copied to clipboard!', 'success');
                   }
                 }}
-                className="absolute top-3 right-3 p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700 transition-colors shadow"
+                className="absolute top-3 right-3 p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-foreground hover:bg-slate-700 border border-slate-700 transition-colors shadow"
                 title="Copy snippet to clipboard"
               >
                 <Copy className="w-4 h-4" />
@@ -2587,7 +2587,7 @@ console.log('Model approved for production deployment!');`}
           <div className="p-5 bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/30 border border-slate-800 rounded-2xl shadow-xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-amber-400" />
                   Synthesize Custom Benchmark Suite via AI
                 </h3>
@@ -2668,7 +2668,7 @@ console.log('Model approved for production deployment!');`}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
             <div className="p-4 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                   <Trophy className="w-4 h-4 text-amber-400" />
                   Global Model Arena Elo Leaderboard
                 </h3>
@@ -2744,7 +2744,7 @@ console.log('Model approved for production deployment!');`}
                               setModelA(entry.model);
                               setArenaMode('automated_evals');
                             }}
-                            className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 transition-colors text-[11px] font-semibold"
+                            className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-foreground border border-slate-700 transition-colors text-[11px] font-semibold"
                           >
                             Challenge
                           </button>
@@ -2761,7 +2761,7 @@ console.log('Model approved for production deployment!');`}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
             <div className="p-4 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                   <History className="w-4 h-4 text-amber-400" />
                   Recent Evaluation Runs Audit Ledger
                 </h3>
@@ -2842,7 +2842,7 @@ console.log('Model approved for production deployment!');`}
                               type="button"
                               onClick={() => handleExportAudit(run.id, 'markdown')}
                               disabled={isExportingAudit}
-                              className="ml-2 px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700 transition-colors text-[11px] font-semibold inline-flex items-center gap-1"
+                              className="ml-2 px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-foreground hover:bg-slate-700 border border-slate-700 transition-colors text-[11px] font-semibold inline-flex items-center gap-1"
                               title="Export Cryptographic Compliance Certificate (Markdown & SHA-256)"
                             >
                               <Download className="w-3 h-3" />

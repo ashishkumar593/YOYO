@@ -332,7 +332,7 @@ export default function SecurityAuditPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-white tracking-tight">Security & Compliance Audit Ledger</h1>
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">Security & Compliance Audit Ledger</h1>
                 <span className="px-2 py-0.5 text-xs font-semibold uppercase tracking-wider rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
                   SOC2 / HIPAA
                 </span>
@@ -416,7 +416,7 @@ export default function SecurityAuditPage() {
             <span>Total Logged Events</span>
             <Database className="w-4 h-4 text-cyan-400" />
           </div>
-          <div className="text-2xl font-mono font-bold text-white mt-2">
+          <div className="text-2xl font-mono font-bold text-foreground mt-2">
             {summary.totalEvents.toLocaleString()}
           </div>
           <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
@@ -452,7 +452,7 @@ export default function SecurityAuditPage() {
             <span>Retention Guarantee</span>
             <Lock className="w-4 h-4 text-blue-400" />
           </div>
-          <div className="text-2xl font-mono font-bold text-white mt-2">
+          <div className="text-2xl font-mono font-bold text-foreground mt-2">
             {summary.retentionDays} Days
           </div>
           <div className="text-[11px] text-slate-500 mt-1">Append-only immutable storage</div>
@@ -524,7 +524,7 @@ export default function SecurityAuditPage() {
                       })}
                     </td>
                     <td className="py-3 px-4 font-sans text-slate-200">
-                      <div className="font-medium text-xs text-white">
+                      <div className="font-medium text-xs text-foreground">
                         {entry.actorEmail || entry.user?.email || 'system@yoyo.ai'}
                       </div>
                       {entry.ipAddress && (
@@ -559,7 +559,7 @@ export default function SecurityAuditPage() {
                       <button
                         type="button"
                         onClick={() => setSelectedEntry(entry)}
-                        className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white transition-colors text-xs font-sans"
+                        className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-foreground transition-colors text-xs font-sans"
                       >
                         Inspect
                       </button>
@@ -587,7 +587,7 @@ export default function SecurityAuditPage() {
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">PII Auto-Masking</h3>
+                    <h3 className="text-sm font-bold text-foreground">PII Auto-Masking</h3>
                     <p className="text-xs text-slate-400">SOC2 / HIPAA Compliance</p>
                   </div>
                 </div>
@@ -624,7 +624,7 @@ export default function SecurityAuditPage() {
                     <AlertTriangle className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">Jailbreak Defense</h3>
+                    <h3 className="text-sm font-bold text-foreground">Jailbreak Defense</h3>
                     <p className="text-xs text-slate-400">Prompt Injection Filter</p>
                   </div>
                 </div>
@@ -660,7 +660,7 @@ export default function SecurityAuditPage() {
                   <Sliders className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Policy Enforcement</h3>
+                  <h3 className="text-sm font-bold text-foreground">Policy Enforcement</h3>
                   <p className="text-xs text-slate-400">Threshold & Actions</p>
                 </div>
               </div>
@@ -701,7 +701,7 @@ export default function SecurityAuditPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
               <div className="flex items-center space-x-2">
                 <Sparkles className="w-5 h-5 text-cyan-400" />
-                <h3 className="font-bold text-white text-base">Live Guardrails Inspection Sandbox</h3>
+                <h3 className="font-bold text-foreground text-base">Live Guardrails Inspection Sandbox</h3>
               </div>
 
               <div className="flex items-center gap-2">
@@ -872,12 +872,12 @@ export default function SecurityAuditPage() {
             <div className="p-4 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-cyan-400" />
-                <h3 className="font-bold text-white text-base">Audit Event Inspector</h3>
+                <h3 className="font-bold text-foreground text-base">Audit Event Inspector</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedEntry(null)}
-                className="text-slate-400 hover:text-white text-sm"
+                className="text-slate-400 hover:text-foreground text-sm"
               >
                 ✕
               </button>

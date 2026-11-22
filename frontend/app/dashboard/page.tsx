@@ -483,7 +483,7 @@ print(response.choices[0].message.content)`;
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-6">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
               <span>Developer Dashboard</span>
             </h1>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-bold">
@@ -519,7 +519,7 @@ print(response.choices[0].message.content)`;
           </button>
           <Link
             href="/docs"
-            className="px-3 py-2 rounded-xl bg-muted/60 hover:bg-muted text-xs font-medium flex items-center space-x-1 text-muted-foreground hover:text-white transition-all"
+            className="px-3 py-2 rounded-xl bg-muted/60 hover:bg-muted text-xs font-medium flex items-center space-x-1 text-muted-foreground hover:text-foreground transition-all"
           >
             <BookOpen className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Docs</span>
@@ -533,8 +533,8 @@ print(response.choices[0].message.content)`;
           onClick={() => setActiveTab('overview')}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-t-xl text-xs font-semibold transition-all border-b-2 whitespace-nowrap ${
             activeTab === 'overview'
-              ? 'border-primary text-white bg-primary/10'
-              : 'border-transparent text-muted-foreground hover:text-white hover:bg-muted/40'
+              ? 'border-primary text-primary bg-primary/10 font-bold'
+              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
           }`}
         >
           <BarChart3 className="w-3.5 h-3.5" />
@@ -545,8 +545,8 @@ print(response.choices[0].message.content)`;
           onClick={() => setActiveTab('keys')}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-t-xl text-xs font-semibold transition-all border-b-2 whitespace-nowrap ${
             activeTab === 'keys'
-              ? 'border-primary text-white bg-primary/10'
-              : 'border-transparent text-muted-foreground hover:text-white hover:bg-muted/40'
+              ? 'border-primary text-primary bg-primary/10 font-bold'
+              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
           }`}
         >
           <Key className="w-3.5 h-3.5 text-amber-400" />
@@ -560,8 +560,8 @@ print(response.choices[0].message.content)`;
           onClick={() => setActiveTab('models')}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-t-xl text-xs font-semibold transition-all border-b-2 whitespace-nowrap ${
             activeTab === 'models'
-              ? 'border-primary text-white bg-primary/10'
-              : 'border-transparent text-muted-foreground hover:text-white hover:bg-muted/40'
+              ? 'border-primary text-primary bg-primary/10 font-bold'
+              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
           }`}
         >
           <Cpu className="w-3.5 h-3.5 text-indigo-400" />
@@ -575,8 +575,8 @@ print(response.choices[0].message.content)`;
           onClick={() => setActiveTab('integrations')}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-t-xl text-xs font-semibold transition-all border-b-2 whitespace-nowrap ${
             activeTab === 'integrations'
-              ? 'border-primary text-white bg-primary/10'
-              : 'border-transparent text-muted-foreground hover:text-white hover:bg-muted/40'
+              ? 'border-primary text-primary bg-primary/10 font-bold'
+              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
           }`}
         >
           <Layers className="w-3.5 h-3.5 text-cyan-400" />
@@ -590,8 +590,8 @@ print(response.choices[0].message.content)`;
           }}
           className={`flex items-center space-x-2 px-4 py-2.5 rounded-t-xl text-xs font-semibold transition-all border-b-2 whitespace-nowrap ${
             activeTab === 'local'
-              ? 'border-primary text-white bg-primary/10'
-              : 'border-transparent text-muted-foreground hover:text-white hover:bg-muted/40'
+              ? 'border-primary text-primary bg-primary/10 font-bold'
+              : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40'
           }`}
         >
           <Server className="w-3.5 h-3.5 text-emerald-400" />
@@ -615,7 +615,7 @@ print(response.choices[0].message.content)`;
                 <Activity className="w-4 h-4 text-primary" />
               </div>
               <div className="mt-3">
-                <span className="text-3xl font-extrabold tracking-tight font-mono text-white">
+                <span className="text-3xl font-extrabold tracking-tight font-mono text-foreground">
                   {formatNumber(summary?.totalRequests || 0)}
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 flex items-center space-x-1 font-mono">
@@ -631,7 +631,7 @@ print(response.choices[0].message.content)`;
                 <Zap className="w-4 h-4 text-amber-400" />
               </div>
               <div className="mt-3">
-                <span className="text-3xl font-extrabold tracking-tight font-mono text-white">
+                <span className="text-3xl font-extrabold tracking-tight font-mono text-foreground">
                   {formatNumber(totalTokens)}
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 font-mono">
@@ -646,7 +646,7 @@ print(response.choices[0].message.content)`;
                 <Key className="w-4 h-4 text-cyan-400" />
               </div>
               <div className="mt-3">
-                <span className="text-3xl font-extrabold tracking-tight font-mono text-white">
+                <span className="text-3xl font-extrabold tracking-tight font-mono text-foreground">
                   {keys.length}
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 flex items-center space-x-1 font-mono">
@@ -661,7 +661,7 @@ print(response.choices[0].message.content)`;
                 <Clock className="w-4 h-4 text-emerald-400" />
               </div>
               <div className="mt-3">
-                <span className="text-3xl font-extrabold tracking-tight font-mono text-white">
+                <span className="text-3xl font-extrabold tracking-tight font-mono text-foreground">
                   0.38<span className="text-sm font-normal text-muted-foreground">ms</span>
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 font-mono">
@@ -676,7 +676,7 @@ print(response.choices[0].message.content)`;
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <Terminal className="w-4 h-4 text-cyan-400" />
-                <span className="text-xs font-semibold text-white uppercase tracking-wider font-mono">
+                <span className="text-xs font-semibold text-foreground uppercase tracking-wider font-mono">
                   Drop-In Inference SDKs & cURL Snippet
                 </span>
               </div>
@@ -685,7 +685,7 @@ print(response.choices[0].message.content)`;
                 <button
                   onClick={() => setActiveTabCode('curl')}
                   className={`px-2.5 py-1 rounded text-[11px] transition-colors ${
-                    activeTabCode === 'curl' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-white'
+                    activeTabCode === 'curl' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-foreground'
                   }`}
                 >
                   cURL
@@ -693,7 +693,7 @@ print(response.choices[0].message.content)`;
                 <button
                   onClick={() => setActiveTabCode('python')}
                   className={`px-2.5 py-1 rounded text-[11px] transition-colors ${
-                    activeTabCode === 'python' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-white'
+                    activeTabCode === 'python' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-foreground'
                   }`}
                 >
                   Python SDK
@@ -701,7 +701,7 @@ print(response.choices[0].message.content)`;
                 <button
                   onClick={() => setActiveTabCode('ts')}
                   className={`px-2.5 py-1 rounded text-[11px] transition-colors ${
-                    activeTabCode === 'ts' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-white'
+                    activeTabCode === 'ts' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-foreground'
                   }`}
                 >
                   TypeScript
@@ -709,7 +709,7 @@ print(response.choices[0].message.content)`;
                 <button
                   onClick={() => setActiveTabCode('openai')}
                   className={`px-2.5 py-1 rounded text-[11px] transition-colors ${
-                    activeTabCode === 'openai' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-white'
+                    activeTabCode === 'openai' ? 'bg-cyan-500/20 text-cyan-300 font-semibold' : 'text-zinc-400 hover:text-foreground'
                   }`}
                 >
                   OpenAI Drop-In
@@ -736,13 +736,13 @@ print(response.choices[0].message.content)`;
           <div className="p-6 rounded-2xl bg-card border border-border/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1.5 max-w-xl">
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-semibold text-white">Monthly Developer Token Ceiling</span>
+                <span className="text-sm font-semibold text-foreground">Monthly Developer Token Ceiling</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-medium">
                   {formatNumber(tokenLimit)} Tokens
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
-                Current month spend: <strong className="text-white font-mono">{formatNumber(totalTokens)}</strong> tokens used. Automatically refreshed each billing cycle.
+                Current month spend: <strong className="text-foreground font-mono">{formatNumber(totalTokens)}</strong> tokens used. Automatically refreshed each billing cycle.
               </p>
               <div className="w-full bg-muted rounded-full h-2 mt-3 overflow-hidden">
                 <div
@@ -773,7 +773,7 @@ print(response.choices[0].message.content)`;
             <div className="px-6 py-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Activity className="w-4 h-4 text-primary" />
-                <span className="font-semibold text-sm text-white">Real-Time Invocations Telemetry</span>
+                <span className="font-semibold text-sm text-foreground">Real-Time Invocations Telemetry</span>
               </div>
               <Link
                 href="/dashboard/logs"
@@ -815,7 +815,7 @@ print(response.choices[0].message.content)`;
                         <td className="px-6 py-3.5 text-zinc-400 font-medium">
                           {req.endpoint}
                         </td>
-                        <td className="px-6 py-3.5 font-medium text-white">
+                        <td className="px-6 py-3.5 font-medium text-foreground">
                           {req.modelIdentifier}
                         </td>
                         <td className="px-6 py-3.5">
@@ -834,7 +834,7 @@ print(response.choices[0].message.content)`;
                           )}
                         </td>
                         <td className="px-6 py-3.5 text-zinc-400">
-                          {req.promptTokens} / <span className="text-white font-semibold">{req.totalTokens}</span>
+                          {req.promptTokens} / <span className="text-foreground font-semibold">{req.totalTokens}</span>
                         </td>
                         <td className="px-6 py-3.5 text-cyan-400 font-semibold">
                           {req.latencyMs}ms
@@ -862,7 +862,7 @@ print(response.choices[0].message.content)`;
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
                 <Key className="w-5 h-5 text-amber-400" />
-                <h2 className="text-lg font-bold text-white">Developer API Key Provisioning</h2>
+                <h2 className="text-lg font-bold text-foreground">Developer API Key Provisioning</h2>
               </div>
               <p className="text-xs text-muted-foreground max-w-2xl">
                 API keys authorize programmatic requests to the YOYO Cloud Gateway. Keys are salted and hashed with SHA-256 HMAC. Rate limits (RPM/TPM), IP whitelists, and model scopes are enforced at line rate by Redis sliding windows.
@@ -887,7 +887,7 @@ print(response.choices[0].message.content)`;
                 </div>
                 <button
                   onClick={() => setCreatedSecret(null)}
-                  className="text-xs text-muted-foreground hover:text-white"
+                  className="text-xs text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -913,11 +913,11 @@ print(response.choices[0].message.content)`;
             <div className="px-6 py-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <ShieldCheck className="w-4 h-4 text-amber-400" />
-                <span className="font-semibold text-sm text-white">Active Authorized Keys ({keys.length})</span>
+                <span className="font-semibold text-sm text-foreground">Active Authorized Keys ({keys.length})</span>
               </div>
               <button
                 onClick={loadKeys}
-                className="text-xs text-muted-foreground hover:text-white flex items-center space-x-1"
+                className="text-xs text-muted-foreground hover:text-foreground flex items-center space-x-1"
               >
                 <RefreshCw className="w-3 h-3" />
                 <span>Refresh</span>
@@ -957,7 +957,7 @@ print(response.choices[0].message.content)`;
                   <tbody className="divide-y divide-border">
                     {keys.map((k) => (
                       <tr key={k.id} className="hover:bg-muted/20 transition-colors font-mono">
-                        <td className="px-6 py-3.5 font-semibold text-white flex items-center space-x-2">
+                        <td className="px-6 py-3.5 font-semibold text-foreground flex items-center space-x-2">
                           <Lock className="w-3.5 h-3.5 text-amber-400/80 shrink-0" />
                           <span>{k.name}</span>
                         </td>
@@ -966,7 +966,7 @@ print(response.choices[0].message.content)`;
                             <span>{k.keyPrefix}...</span>
                             <button
                               onClick={() => copyApiKey(k.keyPrefix, k.id)}
-                              className="text-muted-foreground hover:text-white"
+                              className="text-muted-foreground hover:text-foreground"
                               title="Copy prefix"
                             >
                               {copiedKeyId === k.id ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -1031,7 +1031,7 @@ print(response.choices[0].message.content)`;
                   <Terminal className="w-4 h-4" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-white">Live In-Dashboard Model Tester</h2>
+                  <h2 className="text-base font-bold text-foreground">Live In-Dashboard Model Tester</h2>
                   <p className="text-xs text-muted-foreground">
                     Invoke models directly against the live gateway without writing client code.
                   </p>
@@ -1088,7 +1088,7 @@ print(response.choices[0].message.content)`;
                     value={testUserPrompt}
                     onChange={(e) => setTestUserPrompt(e.target.value)}
                     rows={4}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-border text-xs text-white focus:outline-none focus:border-primary font-mono leading-relaxed"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-none focus:border-primary font-mono leading-relaxed"
                     placeholder="Enter prompt to execute on cluster..."
                   />
                 </div>
@@ -1213,7 +1213,7 @@ print(response.choices[0].message.content)`;
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-0.5">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                   <span>Available Cloud Foundation Models</span>
                   <span className="text-xs font-mono font-normal text-muted-foreground">({filteredCatalog.length} ready)</span>
                 </h3>
@@ -1230,7 +1230,7 @@ print(response.choices[0].message.content)`;
                   placeholder="Filter models or providers..."
                   value={modelSearch}
                   onChange={(e) => setModelSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-card border border-border text-xs focus:outline-none focus:border-primary font-mono text-white"
+                  className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-card border border-border text-xs focus:outline-none focus:border-primary font-mono text-foreground"
                 />
               </div>
             </div>
@@ -1251,7 +1251,7 @@ print(response.choices[0].message.content)`;
                   className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors whitespace-nowrap ${
                     selectedCategory === c.value
                       ? 'bg-primary text-primary-foreground font-semibold'
-                      : 'bg-card border border-border text-muted-foreground hover:text-white'
+                      : 'bg-card border border-border text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {c.label}
@@ -1272,7 +1272,7 @@ print(response.choices[0].message.content)`;
                         <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">
                           {m.providerFamily || 'Meta'}
                         </span>
-                        <h4 className="text-sm font-bold text-white mt-1.5 group-hover:text-primary transition-colors">
+                        <h4 className="text-sm font-bold text-foreground mt-1.5 group-hover:text-primary transition-colors">
                           {m.name}
                         </h4>
                       </div>
@@ -1285,7 +1285,7 @@ print(response.choices[0].message.content)`;
                       <span className="flex-1 truncate select-all">{m.apiIdentifier}</span>
                       <button
                         onClick={() => copyModelId(m.apiIdentifier)}
-                        className="text-muted-foreground hover:text-white"
+                        className="text-muted-foreground hover:text-foreground"
                         title="Copy model slug"
                       >
                         {copiedModelId === m.apiIdentifier ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -1301,7 +1301,7 @@ print(response.choices[0].message.content)`;
                     <div className="grid grid-cols-2 gap-2 text-[11px]">
                       <div>
                         <span className="text-muted-foreground">Context: </span>
-                        <span className="text-white font-semibold">{(m.defaultContextWindow || 131072).toLocaleString()} tokens</span>
+                        <span className="text-foreground font-semibold">{(m.defaultContextWindow || 131072).toLocaleString()} tokens</span>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Precision: </span>
@@ -1324,7 +1324,7 @@ print(response.choices[0].message.content)`;
                           window.scrollTo({ top: 120, behavior: 'smooth' });
                           info(`Selected ${m.name} in API Tester`);
                         }}
-                        className="w-full py-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] border border-white/[0.1] text-xs font-semibold text-white flex items-center justify-center space-x-1.5 transition-all"
+                        className="w-full py-2 rounded-xl bg-card border border-border hover:bg-muted text-xs font-semibold text-foreground flex items-center justify-center space-x-1.5 transition-all shadow-sm"
                       >
                         <Play className="w-3 h-3 text-cyan-400" />
                         <span>Quick Test</span>
@@ -1346,7 +1346,7 @@ print(response.choices[0].message.content)`;
           {/* Header */}
           <div className="p-6 rounded-2xl bg-card border border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <Layers className="w-5 h-5 text-cyan-400" />
                 <span>Developer Tooling, Workloads & SDK Integrations</span>
               </h2>
@@ -1372,7 +1372,7 @@ print(response.choices[0].message.content)`;
                   <Code className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">OpenAI Client Drop-In Migration</h3>
+                  <h3 className="text-sm font-bold text-foreground">OpenAI Client Drop-In Migration</h3>
                   <p className="text-xs text-muted-foreground">Use standard OpenAI libraries by changing 1 line of configuration.</p>
                 </div>
               </div>
@@ -1399,7 +1399,7 @@ print(response.choices[0].message.content)`;
                     <Layers className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">Asynchronous Batch Inference</h3>
+                    <h3 className="text-sm font-bold text-foreground">Asynchronous Batch Inference</h3>
                     <p className="text-xs text-muted-foreground">Upload JSONL files for off-peak execution.</p>
                   </div>
                 </div>
@@ -1432,7 +1432,7 @@ print(response.choices[0].message.content)`;
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Fine-Tuned LoRA Adapters</h3>
+                  <h3 className="text-sm font-bold text-foreground">Fine-Tuned LoRA Adapters</h3>
                   <p className="text-xs text-muted-foreground">Hot-swap custom weight deltas without dedicated GPUs.</p>
                 </div>
               </div>
@@ -1457,7 +1457,7 @@ print(response.choices[0].message.content)`;
                   <Webhook className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Event Webhooks & Alerts</h3>
+                  <h3 className="text-sm font-bold text-foreground">Event Webhooks & Alerts</h3>
                   <p className="text-xs text-muted-foreground">Receive real-time HTTP callbacks on batch completions.</p>
                 </div>
               </div>
@@ -1491,7 +1491,7 @@ print(response.choices[0].message.content)`;
                   <Server className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                     <span>Local Docker AI Engine (Zero OpenAI Keys)</span>
                     <span
                       className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold border ${
@@ -1506,7 +1506,7 @@ print(response.choices[0].message.content)`;
                   <p className="text-xs text-muted-foreground font-mono">
                     Endpoint: <span className="text-zinc-300">{localStatus?.endpoint || 'http://localhost:11434'}</span> •
                     Weights Volume: <span className="text-cyan-400 font-bold">F:\My Project\YOYO\data\ollama</span> •
-                    Installed Models: <span className="text-white font-bold">{localStatus?.totalModels ?? 0}</span>
+                    Installed Models: <span className="text-foreground font-bold">{localStatus?.totalModels ?? 0}</span>
                   </p>
                 </div>
               </div>
@@ -1529,7 +1529,7 @@ print(response.choices[0].message.content)`;
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Download className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white">Pull & Register New Local Model</h3>
+                <h3 className="text-sm font-bold text-foreground">Pull & Register New Local Model</h3>
               </div>
               <span className="text-[11px] text-muted-foreground font-mono">
                 Pulls directly into Docker container mounted on drive F:\
@@ -1544,7 +1544,7 @@ print(response.choices[0].message.content)`;
                 disabled={pulling}
                 onChange={(e) => setPullModelTag(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !pulling && handlePullModel()}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-black/40 border border-border text-white text-xs font-mono focus:outline-none focus:border-cyan-400"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-background border border-border text-foreground text-xs font-mono focus:outline-none focus:border-cyan-400"
               />
               <button
                 onClick={() => handlePullModel()}
@@ -1600,7 +1600,7 @@ print(response.choices[0].message.content)`;
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                     <span>{pullProgress.status}</span>
                   </div>
-                  <span className="text-white font-bold">{pullProgress.percent ?? 0}%</span>
+                  <span className="text-foreground font-bold">{pullProgress.percent ?? 0}%</span>
                 </div>
                 <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
                   <div
@@ -1624,7 +1624,7 @@ print(response.choices[0].message.content)`;
           {/* Installed Models Grid */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-indigo-400" />
                 <span>Installed Models on Disk (F:\ Drive)</span>
               </h3>
@@ -1649,12 +1649,12 @@ print(response.choices[0].message.content)`;
                       </span>
                     </div>
 
-                    <h4 className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors font-mono">
+                    <h4 className="text-sm font-bold text-foreground group-hover:text-emerald-400 transition-colors font-mono">
                       {m.name}
                     </h4>
 
                     <div className="space-y-1 text-[11px] font-mono text-muted-foreground">
-                      <div>Parameters: <span className="text-white">{m.parameterSize || 'N/A'}</span></div>
+                      <div>Parameters: <span className="text-foreground">{m.parameterSize || 'N/A'}</span></div>
                       <div>Quantization: <span className="text-amber-400">{m.quantizationLevel || 'GGUF'}</span></div>
                       {m.digest && <div>Digest: <span className="text-zinc-400">{m.digest}</span></div>}
                     </div>
@@ -1711,7 +1711,7 @@ print(response.choices[0].message.content)`;
                     key={rm.name}
                     className="p-3.5 rounded-xl bg-card/60 border border-border text-xs font-mono space-y-1.5"
                   >
-                    <div className="flex items-center justify-between text-white font-bold">
+                    <div className="flex items-center justify-between text-foreground font-bold">
                       <span>{rm.name}</span>
                       <span className="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
                         HOT
@@ -1740,11 +1740,11 @@ print(response.choices[0].message.content)`;
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
               <div className="flex items-center space-x-2">
                 <Key className="w-4 h-4 text-amber-400" />
-                <h3 className="text-sm font-bold text-white">Provision New Developer API Key</h3>
+                <h3 className="text-sm font-bold text-foreground">Provision New Developer API Key</h3>
               </div>
               <button
                 onClick={() => setShowCreateKeyModal(false)}
-                className="text-muted-foreground hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1761,7 +1761,7 @@ print(response.choices[0].message.content)`;
                   placeholder="e.g. Production Agent, Staging Backend"
                   value={keyName}
                   onChange={(e) => setKeyName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-border text-white focus:outline-none focus:border-amber-400 font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground focus:outline-none focus:border-amber-400 font-mono"
                 />
               </div>
 
@@ -1785,8 +1785,8 @@ print(response.choices[0].message.content)`;
                       }}
                       className={`p-2.5 rounded-xl border text-center transition-all ${
                         rateLimitRpm === p.rpm
-                          ? 'bg-amber-500/20 border-amber-500/60 text-white'
-                          : 'bg-card border-border text-muted-foreground hover:text-white'
+                          ? 'bg-amber-500/20 border-amber-500/60 text-amber-600 dark:text-amber-400 font-bold'
+                          : 'bg-card border-border text-muted-foreground hover:text-foreground'
                       }`}
                     >
                       <div className="font-bold text-[11px]">{p.label}</div>
@@ -1807,7 +1807,7 @@ print(response.choices[0].message.content)`;
                     onClick={() => setModelScopeMode('all')}
                     className={`flex-1 py-2 rounded-xl border text-center font-mono text-xs ${
                       modelScopeMode === 'all'
-                        ? 'bg-primary/20 border-primary text-white font-semibold'
+                        ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
                         : 'bg-card border-border text-muted-foreground'
                     }`}
                   >
@@ -1818,7 +1818,7 @@ print(response.choices[0].message.content)`;
                     onClick={() => setModelScopeMode('restricted')}
                     className={`flex-1 py-2 rounded-xl border text-center font-mono text-xs ${
                       modelScopeMode === 'restricted'
-                        ? 'bg-primary/20 border-primary text-white font-semibold'
+                        ? 'bg-primary text-primary-foreground font-semibold shadow-sm'
                         : 'bg-card border-border text-muted-foreground'
                     }`}
                   >
@@ -1833,7 +1833,7 @@ print(response.choices[0].message.content)`;
                       return (
                         <label
                           key={m.id || m.apiIdentifier}
-                          className="flex items-center space-x-2 text-xs font-mono text-zinc-300 hover:text-white cursor-pointer"
+                          className="flex items-center space-x-2 text-xs font-mono text-zinc-300 hover:text-foreground cursor-pointer"
                         >
                           <input
                             type="checkbox"
@@ -1866,7 +1866,7 @@ print(response.choices[0].message.content)`;
                     placeholder="* or 192.168.1.1, 10.0.0.0/24"
                     value={allowedIps}
                     onChange={(e) => setAllowedIps(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-card border border-border text-white font-mono text-xs"
+                    className="w-full px-3 py-2 rounded-xl bg-card border border-border text-foreground font-mono text-xs"
                   />
                 </div>
 
@@ -1877,7 +1877,7 @@ print(response.choices[0].message.content)`;
                   <select
                     value={expiresInDays}
                     onChange={(e) => setExpiresInDays(parseInt(e.target.value, 10))}
-                    className="w-full px-3 py-2 rounded-xl bg-card border border-border text-white font-mono text-xs"
+                    className="w-full px-3 py-2 rounded-xl bg-card border border-border text-foreground font-mono text-xs"
                   >
                     <option value={0}>Never Expire</option>
                     <option value={7}>7 Days</option>
@@ -1891,7 +1891,7 @@ print(response.choices[0].message.content)`;
                 <button
                   type="button"
                   onClick={() => setShowCreateKeyModal(false)}
-                  className="px-4 py-2 rounded-xl bg-muted text-muted-foreground hover:text-white text-xs"
+                  className="px-4 py-2 rounded-xl bg-muted text-muted-foreground hover:text-foreground text-xs"
                 >
                   Cancel
                 </button>
@@ -1923,15 +1923,15 @@ print(response.choices[0].message.content)`;
           <div className="bg-[#0B0D17] border border-red-500/30 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
             <div className="flex items-center space-x-2 text-red-400">
               <AlertTriangle className="w-5 h-5" />
-              <h3 className="text-sm font-bold text-white">Revoke API Key Authorization</h3>
+              <h3 className="text-sm font-bold text-foreground">Revoke API Key Authorization</h3>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Are you sure you want to permanently revoke API key <strong className="text-white">"{keyToDelete.name}"</strong>? Any active microservices or workloads using this key will immediately receive HTTP 401 Unauthorized.
+              Are you sure you want to permanently revoke API key <strong className="text-foreground">"{keyToDelete.name}"</strong>? Any active microservices or workloads using this key will immediately receive HTTP 401 Unauthorized.
             </p>
             <div className="flex items-center justify-end space-x-2 pt-2">
               <button
                 onClick={() => setKeyToDelete(null)}
-                className="px-4 py-2 rounded-xl bg-muted text-muted-foreground hover:text-white text-xs"
+                className="px-4 py-2 rounded-xl bg-muted text-muted-foreground hover:text-foreground text-xs"
               >
                 Cancel
               </button>

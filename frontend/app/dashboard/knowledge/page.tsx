@@ -159,7 +159,7 @@ export default function KnowledgePage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-6">
         <div>
           <div className="flex items-center space-x-2.5">
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-cyan-400" />
               <span>Local RAG & Document Knowledge Base</span>
             </h1>
@@ -182,7 +182,7 @@ export default function KnowledgePage() {
           </button>
           <button
             onClick={() => loadDocuments()}
-            className="p-2 rounded-xl bg-card border border-border hover:bg-muted text-muted-foreground hover:text-white transition-all"
+            className="p-2 rounded-xl bg-card border border-border hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
             title="Refresh documents"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loadingDocs ? 'animate-spin text-primary' : ''}`} />
@@ -228,7 +228,7 @@ export default function KnowledgePage() {
                     <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
                       {doc.category || 'General'}
                     </span>
-                    <h3 className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
+                    <h3 className="text-xs font-bold text-foreground group-hover:text-cyan-300 transition-colors">
                       {doc.title}
                     </h3>
                   </div>
@@ -269,7 +269,7 @@ export default function KnowledgePage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-border/60">
               <div className="flex items-center space-x-2">
                 <Sparkles className="w-4 h-4 text-cyan-400" />
-                <h2 className="text-sm font-bold text-white">Ask Grounded Knowledge Assistant</h2>
+                <h2 className="text-sm font-bold text-foreground">Ask Grounded Knowledge Assistant</h2>
               </div>
 
               {/* Model & Settings */}
@@ -277,7 +277,7 @@ export default function KnowledgePage() {
                 <select
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}
-                  className="px-2.5 py-1.5 rounded-lg bg-black/40 border border-border text-white font-mono text-xs focus:outline-none focus:border-cyan-400"
+                  className="px-2.5 py-1.5 rounded-lg bg-background border border-border text-foreground font-mono text-xs focus:outline-none focus:border-cyan-400"
                 >
                   <option value="llama3.2:1b">Llama 3.2 1B (Local)</option>
                   <option value="qwen2.5-coder:1.5b">Qwen 2.5 Coder 1.5B (Local)</option>
@@ -287,7 +287,7 @@ export default function KnowledgePage() {
                 <select
                   value={topK}
                   onChange={(e) => setTopK(Number(e.target.value))}
-                  className="px-2.5 py-1.5 rounded-lg bg-black/40 border border-border text-white font-mono text-xs focus:outline-none focus:border-cyan-400"
+                  className="px-2.5 py-1.5 rounded-lg bg-background border border-border text-foreground font-mono text-xs focus:outline-none focus:border-cyan-400"
                 >
                   <option value={2}>Top 2 Chunks</option>
                   <option value={3}>Top 3 Chunks</option>
@@ -309,7 +309,7 @@ export default function KnowledgePage() {
                       handleAsk();
                     }
                   }}
-                  className="w-full px-4 py-3 rounded-xl bg-black/40 border border-border text-white text-xs placeholder:text-muted-foreground focus:outline-none focus:border-cyan-400 font-sans leading-relaxed resize-none"
+                  className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground text-xs placeholder:text-muted-foreground focus:outline-none focus:border-cyan-400 font-sans leading-relaxed resize-none"
                 />
               </div>
 
@@ -429,11 +429,11 @@ export default function KnowledgePage() {
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
               <div className="flex items-center space-x-2">
                 <BookOpen className="w-4 h-4 text-cyan-400" />
-                <h3 className="text-sm font-bold text-white">Upload Knowledge Document</h3>
+                <h3 className="text-sm font-bold text-foreground">Upload Knowledge Document</h3>
               </div>
               <button
                 onClick={() => setShowUploadModal(false)}
-                className="text-muted-foreground hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 &times;
               </button>
@@ -450,7 +450,7 @@ export default function KnowledgePage() {
                   placeholder="e.g. Platform SLA, GPU Deployment Specs, API Guidelines"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-border text-white focus:outline-none focus:border-cyan-400 font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground focus:outline-none focus:border-cyan-400 font-mono"
                 />
               </div>
 
@@ -463,7 +463,7 @@ export default function KnowledgePage() {
                   placeholder="e.g. Architecture, Compliance, Infrastructure"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-border text-white focus:outline-none focus:border-cyan-400 font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground focus:outline-none focus:border-cyan-400 font-mono"
                 />
               </div>
 
@@ -477,7 +477,7 @@ export default function KnowledgePage() {
                   placeholder="Paste documentation, architecture diagrams, compliance rules, or policy text..."
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-border text-white focus:outline-none focus:border-cyan-400 font-mono leading-relaxed"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-card border border-border text-foreground focus:outline-none focus:border-cyan-400 font-mono leading-relaxed"
                 />
               </div>
 
@@ -485,7 +485,7 @@ export default function KnowledgePage() {
                 <button
                   type="button"
                   onClick={() => setShowUploadModal(false)}
-                  className="px-4 py-2 rounded-xl bg-muted text-muted-foreground hover:text-white font-semibold transition-all"
+                  className="px-4 py-2 rounded-xl bg-muted text-muted-foreground hover:text-foreground font-semibold transition-all"
                 >
                   Cancel
                 </button>

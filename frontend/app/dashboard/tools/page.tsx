@@ -182,7 +182,7 @@ export default function ToolsWorkbenchPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/60 pb-6">
         <div>
           <div className="flex items-center space-x-2.5">
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
+            <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-cyan-400" />
               <span>Agentic Function Calling & Tools Workbench</span>
             </h1>
@@ -287,7 +287,7 @@ export default function ToolsWorkbenchPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border/60">
           <div className="flex items-center space-x-2">
             <Terminal className="w-4 h-4 text-cyan-400" />
-            <h2 className="text-sm font-bold text-white">Autonomous Agent Loop Execution</h2>
+            <h2 className="text-sm font-bold text-foreground">Autonomous Agent Loop Execution</h2>
           </div>
 
           <div className="flex items-center space-x-2 text-xs">
@@ -295,7 +295,7 @@ export default function ToolsWorkbenchPage() {
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
-              className="px-2.5 py-1.5 rounded-lg bg-black/40 border border-border text-white font-mono text-xs focus:outline-none focus:border-cyan-400"
+              className="px-2.5 py-1.5 rounded-lg bg-background border border-border text-foreground font-mono text-xs focus:outline-none focus:border-cyan-400"
             >
               <option value="qwen2.5-coder:1.5b">Qwen 2.5 Coder 1.5B (Local)</option>
               <option value="llama3.2:1b">Llama 3.2 1B (Local)</option>
@@ -311,7 +311,7 @@ export default function ToolsWorkbenchPage() {
             placeholder="Assign a multi-step objective that requires tool invocation (e.g. calculation, weather check, database query)..."
             value={goal}
             onChange={(e) => setGoal(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-black/40 border border-border text-white text-xs placeholder:text-muted-foreground focus:outline-none focus:border-cyan-400 font-sans leading-relaxed resize-none"
+            className="w-full px-4 py-3 rounded-xl bg-background border border-border text-foreground text-xs placeholder:text-muted-foreground focus:outline-none focus:border-cyan-400 font-sans leading-relaxed resize-none"
           />
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -444,7 +444,7 @@ export default function ToolsWorkbenchPage() {
         <div className="flex items-center justify-between pb-3 border-b border-border/60">
           <div className="flex items-center space-x-2">
             <Code className="w-4 h-4 text-cyan-400" />
-            <h3 className="text-sm font-bold text-white">Manual Tool Sandbox & Direct Invocation</h3>
+            <h3 className="text-sm font-bold text-foreground">Manual Tool Sandbox & Direct Invocation</h3>
           </div>
           <span className="text-xs text-muted-foreground font-mono">
             Execute tools directly without agent orchestration
@@ -467,7 +467,7 @@ export default function ToolsWorkbenchPage() {
                   else if (t === 'db_query') setManualArgsJson('{"table": "inferences", "filter": "latest_24h"}');
                   else setManualArgsJson('{"query": "speculative decoding"}');
                 }}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-border text-white text-xs font-mono focus:outline-none focus:border-cyan-400"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground text-xs font-mono focus:outline-none focus:border-cyan-400"
               >
                 {tools.map((t) => (
                   <option key={t.function.name} value={t.function.name}>
@@ -485,7 +485,7 @@ export default function ToolsWorkbenchPage() {
                 rows={4}
                 value={manualArgsJson}
                 onChange={(e) => setManualArgsJson(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-border text-white text-xs font-mono focus:outline-none focus:border-cyan-400"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-foreground text-xs font-mono focus:outline-none focus:border-cyan-400"
               />
             </div>
 

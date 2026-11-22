@@ -7,6 +7,19 @@ html {
 }
 
 :root {
+  --background: 210 20% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --border: 214 32% 91%;
+  --accent: 250 85% 65%;
+}
+
+.dark {
   --background: 224 71% 3%;
   --foreground: 213 31% 94%;
   --card: 224 71% 5%;
@@ -24,10 +37,17 @@ body {
   color: hsl(var(--foreground));
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   overflow-x: hidden;
+  background-attachment: fixed;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(139, 92, 246, 0.04), transparent);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.dark body {
   background-image: 
     radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.15), transparent),
     radial-gradient(ellipse 60% 40% at 90% 10%, rgba(139, 92, 246, 0.08), transparent);
-  background-attachment: fixed;
 }
 
 /* Custom Sleek Scrollbar */
@@ -39,18 +59,28 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(148, 163, 184, 0.25);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }
 
 /* Glassmorphism & Glow Utilities */
 .glass-panel {
-  background: rgba(13, 17, 23, 0.7);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.dark .glass-panel {
+  background: rgba(13, 17, 23, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -58,10 +88,15 @@ body {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .glass-panel-hover:hover {
+  background: rgba(241, 245, 249, 0.95);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+.dark .glass-panel-hover:hover {
   background: rgba(19, 26, 38, 0.85);
   border-color: rgba(96, 165, 250, 0.3);
   box-shadow: 0 10px 30px -10px rgba(59, 130, 246, 0.2);
-  transform: translateY(-2px);
 }
 
 .glow-primary {
@@ -80,12 +115,27 @@ body {
 .bg-grid-pattern {
   background-size: 32px 32px;
   background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+}
+.dark .bg-grid-pattern {
+  background-image: 
     linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
 }
 
 /* Gradient Text Shimmer */
 .shimmer-text {
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.9) 0%,
+    rgba(30, 41, 59, 1) 50%,
+    rgba(59, 130, 246, 1) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.dark .shimmer-text {
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0.8) 0%,

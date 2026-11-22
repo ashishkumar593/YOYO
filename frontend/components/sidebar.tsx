@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -21,8 +21,10 @@ import {
   Swords,
   ShieldCheck,
   Sparkles,
+  X,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { useSidebar } from '@/lib/sidebar-context';
 import { cn } from '@/lib/utils';
 import { YoyoLogo } from '@/components/ui/logo';
 
@@ -42,9 +44,10 @@ interface SidebarSection {
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { isOpen, closeSidebar } = useSidebar();
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
 
-  // DEVELOPER DASHBOARD: strictly developer capabilities
+  // DEVELOPER DASHBOARD: developer capabilities
   const developerSections: SidebarSection[] = [
     {
       group: 'Developer Dashboard',
@@ -72,7 +75,7 @@ export function Sidebar() {
     },
   ];
 
-  // ADMIN DASHBOARD: strictly admin infrastructure, developer fleet, and billing
+  // ADMIN DASHBOARD: admin infrastructure, developer fleet, and billing
   const adminSections: SidebarSection[] = [
     {
       group: 'Admin Operations',
@@ -96,11 +99,11 @@ export function Sidebar() {
 
   const sections = isAdmin ? adminSections : developerSections;
 
-  return (
-    <aside className="w-64 border-r border-border/80 bg-[#0A0C14]/90 backdrop-blur-xl flex flex-col h-screen sticky top-0 select-none">
+  const renderNavContent = () => (
+    <div className="flex flex-col h-full select-none">
       {/* Brand Header */}
-      <div className="h-16 px-5 border-b border-border/80 flex items-center justify-between">
-        <Link href="/" className="flex items-center">
+      <div className="h-16 px-5 border-b border-border/80 flex items-center justify-between shrink-0">
+        <Link href="/" className="flex items-center" onClick={closeSidebar}>
           <YoyoLogo size={28} showText={true} />
         </Link>
         <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border/60">
@@ -112,7 +115,7 @@ export function Sidebar() {
       <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
         {sections.map((section) => (
           <div key={section.group} className="space-y-1">
-            <div className="px-3 pb-1.5 text-[10px] uppercase font-bold tracking-wider text-muted-foreground/60 font-mono">
+            <div className="px-3 pb-1.5 text-[10px] uppercase font-bold tracking-wider text-muted-foreground/70 font-mono">
               {section.group}
             </div>
             {section.links.map((link) => {
@@ -122,23 +125,35 @@ export function Sidebar() {
                 <Link
                   key={link.href}
                   href={link.href}
+                  onClick={closeSidebar}
                   className={cn(
                     'flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all group',
                     isActive
                       ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/25 font-semibold'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                   )}
                 >
                   <div className="flex items-center space-x-2.5 min-w-0">
-                    <Icon className={cn('w-4 h-4 shrink-0', isActive ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground')} />
+                    <Icon
+                      className={cn(
+                        'w-4 h-4 shrink-0 transition-colors',
+                        isActive
+                          ? 'text-primary-foreground'
+                          : 'text-muted-foreground group-hover:text-foreground'
+                      )}
+                    />
                     <span className="truncate">{link.label}</span>
                   </div>
 
                   {link.badge && (
-                    <span className={cn(
-                      "text-[9px] font-bold px-1.5 py-0.5 rounded-full font-mono",
-                      isActive ? "bg-white/20 text-white" : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                    )}>
+                    <span
+                      className={cn(
+                        'text-[9px] font-bold px-1.5 py-0.5 rounded-full font-mono',
+                        isActive
+                          ? 'bg-white/20 text-white'
+                          : 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20'
+                      )}
+                    >
                       {link.badge}
                     </span>
                   )}
@@ -157,8 +172,8 @@ export function Sidebar() {
       </nav>
 
       {/* User profile card & logout */}
-      <div className="p-3.5 border-t border-border/80 bg-card/30">
-        <div className="flex items-center justify-between mb-2.5 p-2 rounded-xl bg-muted/30 border border-border/40">
+      <div className="p-3.5 border-t border-border/80 bg-muted/20 shrink-0">
+        <div className="flex items-center justify-between mb-2.5 p-2 rounded-xl bg-card border border-border/60 shadow-sm">
           <div className="flex flex-col truncate pr-2">
             <span className="text-xs font-semibold truncate text-foreground">
               {user?.fullName || user?.email?.split('@')[0]}
@@ -171,13 +186,50 @@ export function Sidebar() {
         </div>
 
         <button
+          type="button"
           onClick={logout}
-          className="w-full flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs font-medium text-muted-foreground hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all"
+          className="w-full flex items-center justify-center space-x-1.5 py-2 px-3 rounded-lg text-xs font-medium text-muted-foreground hover:text-red-500 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all"
         >
           <LogOut className="w-3.5 h-3.5" />
           <span>Sign Out</span>
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Sticky Sidebar */}
+      <aside className="hidden md:flex w-64 border-r border-border/80 bg-card/90 backdrop-blur-xl flex-col h-screen sticky top-0 select-none z-30 transition-colors duration-200">
+        {renderNavContent()}
+      </aside>
+
+      {/* Mobile Drawer (Slide-Over) */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex">
+          {/* Backdrop overlay */}
+          <div
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity duration-200"
+            onClick={closeSidebar}
+            aria-hidden="true"
+          />
+
+          {/* Slide-over panel */}
+          <aside className="relative flex flex-col w-72 max-w-[85vw] h-full bg-card border-r border-border shadow-2xl z-50">
+            <div className="absolute right-3 top-4 z-10">
+              <button
+                type="button"
+                onClick={closeSidebar}
+                aria-label="Close navigation"
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted border border-border/60 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {renderNavContent()}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

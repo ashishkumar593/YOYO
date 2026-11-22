@@ -707,7 +707,7 @@ export default function ModelsPage() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-950/90 border border-cyan-500/30 backdrop-blur-md px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-4 animate-in fade-in slide-in-from-bottom-4">
           <div className="flex items-center space-x-2 text-xs">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="font-mono font-bold text-white">
+            <span className="font-mono font-bold text-foreground">
               {selectedForCompare.length} / 3 Selected for Comparison
             </span>
           </div>
@@ -721,7 +721,7 @@ export default function ModelsPage() {
             </button>
             <button
               onClick={() => setSelectedForCompare([])}
-              className="text-xs text-zinc-400 hover:text-white px-2 py-1"
+              className="text-xs text-zinc-400 hover:text-foreground px-2 py-1"
             >
               Clear
             </button>
@@ -739,7 +739,7 @@ export default function ModelsPage() {
                   <ArrowLeftRight className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-base text-white">Side-by-Side Model Comparison</h3>
+                  <h3 className="font-bold text-base text-foreground">Side-by-Side Model Comparison</h3>
                   <p className="text-xs text-zinc-400">
                     Compare technical parameters, pricing per million tokens, and cloud infrastructure requirements.
                   </p>
@@ -747,7 +747,7 @@ export default function ModelsPage() {
               </div>
               <button
                 onClick={() => setShowCompareModal(false)}
-                className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.05] transition-all"
+                className="p-2 rounded-xl text-zinc-400 hover:text-foreground hover:bg-white/[0.05] transition-all"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -772,7 +772,7 @@ export default function ModelsPage() {
                           {m.category}
                         </span>
                       </div>
-                      <h4 className="text-base font-bold text-white tracking-tight">{m.name}</h4>
+                      <h4 className="text-base font-bold text-foreground tracking-tight">{m.name}</h4>
                       <code className="text-[11px] font-mono text-zinc-400 block mt-1 break-all">
                         {m.apiIdentifier}
                       </code>
@@ -781,7 +781,7 @@ export default function ModelsPage() {
                       <div className="mt-5 space-y-3 text-xs">
                         <div className="flex items-center justify-between py-1.5 border-b border-white/[0.05]">
                           <span className="text-zinc-400">Context Window</span>
-                          <span className="font-mono font-bold text-white">
+                          <span className="font-mono font-bold text-foreground">
                             {m.defaultContextWindow >= 1000
                               ? `${(m.defaultContextWindow / 1024).toFixed(0)}k (${m.defaultContextWindow.toLocaleString()} tokens)`
                               : `${m.defaultContextWindow} tokens`}
@@ -835,7 +835,7 @@ export default function ModelsPage() {
                       </Link>
                       <button
                         onClick={() => toggleCompare(m.id)}
-                        className="p-2.5 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white transition-all"
+                        className="p-2.5 rounded-xl bg-zinc-800 text-zinc-400 hover:text-foreground transition-all"
                         title="Remove from comparison"
                       >
                         <X className="w-3.5 h-3.5" />

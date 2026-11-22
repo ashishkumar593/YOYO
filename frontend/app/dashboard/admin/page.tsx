@@ -497,7 +497,7 @@ export default function AdminDashboardPage() {
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h1 className="text-2xl font-bold tracking-tight text-white">Admin Dashboard</h1>
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">Admin Dashboard</h1>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
               Supervise platform tenants, allocate monthly token ceilings, configure model limits &amp; pricing, and monitor cloud GPU clusters.
@@ -612,7 +612,7 @@ export default function AdminDashboardPage() {
                 <Users className="w-4 h-4 text-amber-400" />
               </div>
               <div className="mt-3">
-                <span className="text-3xl font-extrabold tracking-tight font-mono text-white">
+                <span className="text-3xl font-extrabold tracking-tight font-mono text-foreground">
                   {formatNumber(stats?.totalUsers || 104280)}
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 font-mono">
@@ -628,7 +628,7 @@ export default function AdminDashboardPage() {
                 <Activity className="w-4 h-4 text-primary" />
               </div>
               <div className="mt-3">
-                <span className="text-3xl font-extrabold tracking-tight font-mono text-white">
+                <span className="text-3xl font-extrabold tracking-tight font-mono text-foreground">
                   {formatNumber(stats?.totalRequests || 4829100)}
                 </span>
                 <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1 font-mono">
@@ -674,7 +674,7 @@ export default function AdminDashboardPage() {
           <div className="p-5 rounded-2xl bg-card/80 border border-border/80 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <Activity className="w-4 h-4 text-amber-400" />
                   Cluster Resilience &amp; Circuit Breaker Fleet
                 </h3>
@@ -700,7 +700,7 @@ export default function AdminDashboardPage() {
                     className="p-3.5 rounded-xl bg-background/60 border border-border/60 flex items-center justify-between text-xs"
                   >
                     <div>
-                      <span className="font-mono font-bold text-white block">{cb.name}</span>
+                      <span className="font-mono font-bold text-foreground block">{cb.name}</span>
                       <span className="text-[11px] text-muted-foreground font-mono">
                         Failures: {cb.failureCount} / {cb.threshold || 5}
                       </span>
@@ -736,7 +736,7 @@ export default function AdminDashboardPage() {
                 <Users className="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-mono text-muted-foreground">Manage &rarr;</span>
               </div>
-              <h4 className="font-bold text-white text-sm">Developer Quotas &amp; Balances</h4>
+              <h4 className="font-bold text-foreground text-sm">Developer Quotas &amp; Balances</h4>
               <p className="text-xs text-muted-foreground mt-1">
                 Search, filter, update token ceilings (5M to 1B), grant credits, or suspend tenants.
               </p>
@@ -750,7 +750,7 @@ export default function AdminDashboardPage() {
                 <Cpu className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-mono text-muted-foreground">Configure &rarr;</span>
               </div>
-              <h4 className="font-bold text-white text-sm">Model Limits &amp; Pricing Matrix</h4>
+              <h4 className="font-bold text-foreground text-sm">Model Limits &amp; Pricing Matrix</h4>
               <p className="text-xs text-muted-foreground mt-1">
                 Configure context windows, set per-million token pricing rates, or toggle model availability.
               </p>
@@ -764,7 +764,7 @@ export default function AdminDashboardPage() {
                 <Server className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
                 <span className="text-xs font-mono text-muted-foreground">Supervise &rarr;</span>
               </div>
-              <h4 className="font-bold text-white text-sm">GPU Infrastructure Nodes</h4>
+              <h4 className="font-bold text-foreground text-sm">GPU Infrastructure Nodes</h4>
               <p className="text-xs text-muted-foreground mt-1">
                 Probe vLLM / Ollama hardware nodes, track VRAM usage, and deploy foundation weights.
               </p>
@@ -932,7 +932,7 @@ export default function AdminDashboardPage() {
                             </div>
                           </td>
 
-                          <td className="py-3.5 px-4 font-mono font-bold text-white text-xs">
+                          <td className="py-3.5 px-4 font-mono font-bold text-foreground text-xs">
                             ${(dev.creditBalance || 0).toFixed(2)}
                           </td>
 
@@ -1050,7 +1050,7 @@ export default function AdminDashboardPage() {
           {/* Header Banner */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-emerald-400" />
                 Developer Billing &amp; Credit Reserves
               </h3>
@@ -1084,7 +1084,7 @@ export default function AdminDashboardPage() {
                   <DollarSign className="w-4 h-4" />
                 </span>
               </div>
-              <div className="mt-2 text-2xl font-bold font-mono text-white">
+              <div className="mt-2 text-2xl font-bold font-mono text-foreground">
                 ${(billingSummary?.totalCirculatingCreditsUsd ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               <span className="text-[11px] text-muted-foreground mt-1 block">
@@ -1101,7 +1101,7 @@ export default function AdminDashboardPage() {
                   <CreditCard className="w-4 h-4" />
                 </span>
               </div>
-              <div className="mt-2 text-2xl font-bold font-mono text-white">
+              <div className="mt-2 text-2xl font-bold font-mono text-foreground">
                 ${(billingSummary?.totalDepositedUsd ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               <span className="text-[11px] text-muted-foreground mt-1 block">
@@ -1118,7 +1118,7 @@ export default function AdminDashboardPage() {
                   <Users className="w-4 h-4" />
                 </span>
               </div>
-              <div className="mt-2 text-2xl font-bold font-mono text-white">
+              <div className="mt-2 text-2xl font-bold font-mono text-foreground">
                 {billingSummary?.totalDevelopers ?? usersTotal ?? 0}
               </div>
               <span className="text-[11px] text-muted-foreground mt-1 block">
@@ -1311,7 +1311,7 @@ export default function AdminDashboardPage() {
           <div className="rounded-2xl bg-card/80 border border-border/80 overflow-hidden shadow-sm">
             <div className="p-4 border-b border-border/80 flex items-center justify-between">
               <div>
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+                <h4 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono flex items-center gap-2">
                   <Activity className="w-3.5 h-3.5 text-emerald-400" />
                   Live Platform Billing Transactions &amp; Ledger
                 </h4>
@@ -1391,7 +1391,7 @@ export default function AdminDashboardPage() {
         <div className="space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
             <div>
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-primary" />
                 Platform Foundation Models &amp; Rate Limit Controls
               </h3>
@@ -1427,7 +1427,7 @@ export default function AdminDashboardPage() {
                   {modelsList.map((m: any) => (
                     <tr key={m.id} className="hover:bg-muted/30 transition-colors">
                       <td className="py-3.5 px-4">
-                        <div className="font-bold text-white text-xs">{m.name}</div>
+                        <div className="font-bold text-foreground text-xs">{m.name}</div>
                         <div className="font-mono text-cyan-400 text-[11px]">{m.apiIdentifier}</div>
                         <span className="text-[10px] text-muted-foreground">{m.providerFamily}</span>
                       </td>
@@ -1459,7 +1459,7 @@ export default function AdminDashboardPage() {
 
                       <td className="py-3.5 px-4 font-mono text-[11px]">
                         <div>
-                          Prompt: <strong className="text-white">${m.pricing?.inputCostPerMillion ?? 0.20}</strong>
+                          Prompt: <strong className="text-foreground">${m.pricing?.inputCostPerMillion ?? 0.20}</strong>
                         </div>
                         <div>
                           Output: <strong className="text-cyan-400">${m.pricing?.outputCostPerMillion ?? 0.40}</strong>
@@ -1506,7 +1506,7 @@ export default function AdminDashboardPage() {
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-card/80 border border-border/80 shadow-sm">
             <div>
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <Server className="w-4 h-4 text-primary" />
                 Cloud GPU Inference Worker Nodes
               </h3>
@@ -1627,14 +1627,14 @@ export default function AdminDashboardPage() {
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
-              <h3 className="font-bold text-white text-sm flex items-center gap-2">
+              <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-amber-400" />
                 Update Developer Monthly Token Ceiling
               </h3>
               <button
                 type="button"
                 onClick={() => setEditingQuotaUser(null)}
-                className="text-muted-foreground hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 ✕
               </button>
@@ -1642,7 +1642,7 @@ export default function AdminDashboardPage() {
 
             <div>
               <span className="text-xs text-muted-foreground block mb-1">Target Developer:</span>
-              <span className="font-mono text-xs font-bold text-white">{editingQuotaUser.email}</span>
+              <span className="font-mono text-xs font-bold text-foreground">{editingQuotaUser.email}</span>
             </div>
 
             <div>
@@ -1653,7 +1653,7 @@ export default function AdminDashboardPage() {
                 type="number"
                 value={quotaInput}
                 onChange={(e) => setQuotaInput(parseInt(e.target.value, 10) || 0)}
-                className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
               />
             </div>
 
@@ -1678,7 +1678,7 @@ export default function AdminDashboardPage() {
               <button
                 type="button"
                 onClick={() => setEditingQuotaUser(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-white"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </button>
@@ -1702,14 +1702,14 @@ export default function AdminDashboardPage() {
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
-              <h3 className="font-bold text-white text-sm flex items-center gap-2">
+              <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-emerald-400" />
                 Adjust Developer Credit Balance
               </h3>
               <button
                 type="button"
                 onClick={() => setEditingCreditUser(null)}
-                className="text-muted-foreground hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 ✕
               </button>
@@ -1717,7 +1717,7 @@ export default function AdminDashboardPage() {
 
             <div>
               <span className="text-xs text-muted-foreground block mb-1">Target Developer:</span>
-              <span className="font-mono text-xs font-bold text-white">{editingCreditUser.email}</span>
+              <span className="font-mono text-xs font-bold text-foreground">{editingCreditUser.email}</span>
             </div>
 
             <div>
@@ -1729,7 +1729,7 @@ export default function AdminDashboardPage() {
                 step="0.01"
                 value={creditInput}
                 onChange={(e) => setCreditInput(parseFloat(e.target.value) || 0)}
-                className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"
               />
             </div>
 
@@ -1754,7 +1754,7 @@ export default function AdminDashboardPage() {
               <button
                 type="button"
                 onClick={() => setEditingCreditUser(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-white"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </button>
@@ -1778,14 +1778,14 @@ export default function AdminDashboardPage() {
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
-              <h3 className="font-bold text-white text-sm flex items-center gap-2">
+              <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-primary" />
                 Configure Limits: {editingModel.name}
               </h3>
               <button
                 type="button"
                 onClick={() => setEditingModel(null)}
-                className="text-muted-foreground hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 ✕
               </button>
@@ -1799,7 +1799,7 @@ export default function AdminDashboardPage() {
                 type="number"
                 value={modelContextInput}
                 onChange={(e) => setModelContextInput(parseInt(e.target.value, 10) || 0)}
-                className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <div className="flex gap-1.5 mt-1.5">
                 {[8192, 32768, 65536, 131072].map((v) => (
@@ -1807,7 +1807,7 @@ export default function AdminDashboardPage() {
                     key={v}
                     type="button"
                     onClick={() => setModelContextInput(v)}
-                    className="px-2 py-0.5 rounded bg-muted text-[10px] font-mono text-muted-foreground hover:text-white"
+                    className="px-2 py-0.5 rounded bg-muted text-[10px] font-mono text-muted-foreground hover:text-foreground"
                   >
                     {v / 1024}k
                   </button>
@@ -1825,7 +1825,7 @@ export default function AdminDashboardPage() {
                   step="0.05"
                   value={modelInputPrice}
                   onChange={(e) => setModelInputPrice(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
@@ -1838,7 +1838,7 @@ export default function AdminDashboardPage() {
                   step="0.05"
                   value={modelOutputPrice}
                   onChange={(e) => setModelOutputPrice(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
@@ -1847,7 +1847,7 @@ export default function AdminDashboardPage() {
               <button
                 type="button"
                 onClick={() => setEditingModel(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-white"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </button>
@@ -1874,14 +1874,14 @@ export default function AdminDashboardPage() {
             className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4"
           >
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
-              <h3 className="font-bold text-white text-sm flex items-center gap-2">
+              <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
                 <Plus className="w-4 h-4 text-primary" />
                 Register New Foundation Model
               </h3>
               <button
                 type="button"
                 onClick={() => setShowAddModelModal(false)}
-                className="text-muted-foreground hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 ✕
               </button>
@@ -1898,7 +1898,7 @@ export default function AdminDashboardPage() {
                   value={newModelIdentifier}
                   onChange={(e) => setNewModelIdentifier(e.target.value)}
                   placeholder="mistral-7b-instruct"
-                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
@@ -1912,7 +1912,7 @@ export default function AdminDashboardPage() {
                   value={newModelName}
                   onChange={(e) => setNewModelName(e.target.value)}
                   placeholder="Mistral 7B Instruct"
-                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
@@ -1927,7 +1927,7 @@ export default function AdminDashboardPage() {
                   value={newModelProvider}
                   onChange={(e) => setNewModelProvider(e.target.value)}
                   placeholder="Mistral / Meta / DeepSeek"
-                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
@@ -1938,7 +1938,7 @@ export default function AdminDashboardPage() {
                 <select
                   value={newModelCategory}
                   onChange={(e) => setNewModelCategory(e.target.value)}
-                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 >
                   <option value="GENERAL">GENERAL</option>
                   <option value="CODING">CODING</option>
@@ -1958,7 +1958,7 @@ export default function AdminDashboardPage() {
                   type="number"
                   value={newModelContext}
                   onChange={(e) => setNewModelContext(parseInt(e.target.value, 10) || 131072)}
-                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
               <div>
@@ -1970,7 +1970,7 @@ export default function AdminDashboardPage() {
                   step="0.05"
                   value={newModelInputPrice}
                   onChange={(e) => setNewModelInputPrice(parseFloat(e.target.value) || 0.2)}
-                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
               <div>
@@ -1982,7 +1982,7 @@ export default function AdminDashboardPage() {
                   step="0.05"
                   value={newModelOutputPrice}
                   onChange={(e) => setNewModelOutputPrice(parseFloat(e.target.value) || 0.4)}
-                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
             </div>
@@ -1991,7 +1991,7 @@ export default function AdminDashboardPage() {
               <button
                 type="button"
                 onClick={() => setShowAddModelModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-white"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </button>
@@ -2017,14 +2017,14 @@ export default function AdminDashboardPage() {
             className="w-full max-w-lg bg-card border border-border rounded-2xl p-6 shadow-2xl space-y-4"
           >
             <div className="flex items-center justify-between border-b border-border/60 pb-3">
-              <h3 className="font-bold text-white text-sm flex items-center gap-2">
+              <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
                 <Server className="w-4 h-4 text-primary" />
                 Add Cloud GPU Worker Node
               </h3>
               <button
                 type="button"
                 onClick={() => setShowAddWorkerModal(false)}
-                className="text-muted-foreground hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 ✕
               </button>
@@ -2040,7 +2040,7 @@ export default function AdminDashboardPage() {
                 value={newWorkerName}
                 onChange={(e) => setNewWorkerName(e.target.value)}
                 placeholder="cloud-gpu-node-03"
-                className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
 
@@ -2054,7 +2054,7 @@ export default function AdminDashboardPage() {
                 value={newEndpointUrl}
                 onChange={(e) => setNewEndpointUrl(e.target.value)}
                 placeholder="http://10.0.1.45:8000"
-                className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
 
@@ -2066,7 +2066,7 @@ export default function AdminDashboardPage() {
                 <select
                   value={newEngineType}
                   onChange={(e) => setNewEngineType(e.target.value)}
-                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 >
                   <option value="VLLM">vLLM (PagedAttention)</option>
                   <option value="OLLAMA">Ollama Container</option>
@@ -2081,7 +2081,7 @@ export default function AdminDashboardPage() {
                 <select
                   value={newGpuModel}
                   onChange={(e) => setNewGpuModel(e.target.value)}
-                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                 >
                   <option value="NVIDIA H100 80GB SXM5">NVIDIA H100 80GB SXM5</option>
                   <option value="NVIDIA A100 80GB PCIe">NVIDIA A100 80GB PCIe</option>
@@ -2099,7 +2099,7 @@ export default function AdminDashboardPage() {
                 type="number"
                 value={newVramGb}
                 onChange={(e) => setNewVramGb(parseInt(e.target.value, 10) || 80)}
-                className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full bg-background border border-border/80 rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
 
@@ -2107,7 +2107,7 @@ export default function AdminDashboardPage() {
               <button
                 type="button"
                 onClick={() => setShowAddWorkerModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-white"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:text-foreground"
               >
                 Cancel
               </button>
@@ -2133,7 +2133,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-start justify-between border-b border-border/60 pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-white text-base flex items-center gap-2">
+                  <h3 className="font-bold text-foreground text-base flex items-center gap-2">
                     <CreditCard className="w-5 h-5 text-emerald-400" />
                     Developer Billing &amp; Quota Dossier
                   </h3>
@@ -2148,7 +2148,7 @@ export default function AdminDashboardPage() {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground font-mono mt-1">
-                  Tenant: <span className="text-white font-semibold">{selectedBillingUser.email}</span> (ID: {selectedBillingUser.id})
+                  Tenant: <span className="text-foreground font-semibold">{selectedBillingUser.email}</span> (ID: {selectedBillingUser.id})
                 </p>
               </div>
               <button
@@ -2157,7 +2157,7 @@ export default function AdminDashboardPage() {
                   setSelectedBillingUser(null);
                   setDeveloperBillingDetails(null);
                 }}
-                className="text-muted-foreground hover:text-white p-1 rounded-lg hover:bg-muted"
+                className="text-muted-foreground hover:text-foreground p-1 rounded-lg hover:bg-muted"
               >
                 ✕
               </button>
@@ -2184,7 +2184,7 @@ export default function AdminDashboardPage() {
 
                   <div className="p-3.5 rounded-xl bg-background border border-border/80">
                     <span className="text-[10px] font-mono text-muted-foreground uppercase">Token Ceiling</span>
-                    <div className="mt-1 text-xl font-bold font-mono text-white">
+                    <div className="mt-1 text-xl font-bold font-mono text-foreground">
                       {formatNumber(developerBillingDetails?.quota?.monthlyTokenLimit ?? selectedBillingUser.quota?.monthlyTokenLimit ?? 5000000)}
                     </div>
                     <span className="text-[10px] text-muted-foreground font-mono">
@@ -2194,7 +2194,7 @@ export default function AdminDashboardPage() {
 
                   <div className="p-3.5 rounded-xl bg-background border border-border/80">
                     <span className="text-[10px] font-mono text-muted-foreground uppercase">Total Lifetime Requests</span>
-                    <div className="mt-1 text-xl font-bold font-mono text-white">
+                    <div className="mt-1 text-xl font-bold font-mono text-foreground">
                       {developerBillingDetails?.usageSummary?.totalRequests ?? selectedBillingUser._count?.apiRequests ?? 0}
                     </div>
                     <span className="text-[10px] text-muted-foreground font-mono">
@@ -2207,7 +2207,7 @@ export default function AdminDashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Action 1: Credit Balance Modification */}
                   <div className="p-4 rounded-xl bg-background border border-border/80 space-y-3">
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono flex items-center gap-1.5">
                       <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
                       Adjust Credit Balance
                     </h4>
@@ -2220,7 +2220,7 @@ export default function AdminDashboardPage() {
                         className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition-all ${
                           creditAdjustmentMode === 'adjust'
                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40 font-bold'
-                            : 'bg-muted/40 text-muted-foreground border-transparent hover:text-white'
+                            : 'bg-muted/40 text-muted-foreground border-transparent hover:text-foreground'
                         }`}
                       >
                         Top-up / Deduct (+/-)
@@ -2231,7 +2231,7 @@ export default function AdminDashboardPage() {
                         className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold border transition-all ${
                           creditAdjustmentMode === 'set'
                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/40 font-bold'
-                            : 'bg-muted/40 text-muted-foreground border-transparent hover:text-white'
+                            : 'bg-muted/40 text-muted-foreground border-transparent hover:text-foreground'
                         }`}
                       >
                         Set Exact Balance
@@ -2247,7 +2247,7 @@ export default function AdminDashboardPage() {
                         step="0.01"
                         value={creditAdjustmentAmount}
                         onChange={(e) => setCreditAdjustmentAmount(parseFloat(e.target.value) || 0)}
-                        className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"
                       />
                     </div>
 
@@ -2274,7 +2274,7 @@ export default function AdminDashboardPage() {
                         value={creditAdjustmentReason}
                         onChange={(e) => setCreditAdjustmentReason(e.target.value)}
                         placeholder="e.g. Enterprise pilot grant, Billing adjustment"
-                        className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-emerald-500"
                       />
                     </div>
 
@@ -2290,7 +2290,7 @@ export default function AdminDashboardPage() {
 
                   {/* Action 2: Quota & Account Controls */}
                   <div className="p-4 rounded-xl bg-background border border-border/80 space-y-3">
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono flex items-center gap-1.5">
                       <Sliders className="w-3.5 h-3.5 text-amber-400" />
                       Token Quota &amp; Policy
                     </h4>
@@ -2304,7 +2304,7 @@ export default function AdminDashboardPage() {
                         step="1000000"
                         value={developerTokenLimitInput}
                         onChange={(e) => setDeveloperTokenLimitInput(parseInt(e.target.value, 10) || 0)}
-                        className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
                       />
                     </div>
 
@@ -2346,7 +2346,7 @@ export default function AdminDashboardPage() {
                       <button
                         type="button"
                         onClick={() => handleResetUsage(selectedBillingUser)}
-                        className="px-2.5 py-1 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground hover:text-white text-[11px] font-semibold transition-colors flex items-center gap-1"
+                        className="px-2.5 py-1 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground text-[11px] font-semibold transition-colors flex items-center gap-1"
                       >
                         <RotateCcw className="w-3 h-3" />
                         <span>Reset MTD Usage</span>
@@ -2358,13 +2358,13 @@ export default function AdminDashboardPage() {
                 {/* Developer Recent Billing Transactions Table */}
                 <div className="p-4 rounded-xl bg-background border border-border/80 space-y-2">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono flex items-center gap-1.5">
                       <Activity className="w-3.5 h-3.5 text-emerald-400" />
                       Transaction Ledger ({developerBillingDetails?.transactions?.length || 0})
                     </h4>
                   </div>
 
-                  <div className="max-h-48 overflow-y-auto">
+                  <div className="max-h-48 overflow-auto">
                     <table className="w-full text-left text-xs">
                       <thead className="text-[10px] font-mono text-muted-foreground uppercase border-b border-border/60">
                         <tr>
