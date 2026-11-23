@@ -1,10 +1,15 @@
+import os
 from setuptools import setup, find_packages
+
+here = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(here, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
 
 setup(
     name="yoyo-ai",
     version="1.0.0",
     description="Official Python Client for the YOYO Cloud AI Model API Platform",
-    long_description=open("README.md").read(),
+    long_description=long_description,
     long_description_content_type="text/markdown",
     author="YOYO AI Platform Team",
     author_email="engineering@yoyo.ai",
